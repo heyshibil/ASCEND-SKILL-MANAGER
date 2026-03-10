@@ -1,4 +1,5 @@
 import express, { type Application } from "express";
+import authRoutes from './modules/auth/auth.routes.js'
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
@@ -14,8 +15,7 @@ app.get("/",(_, res) => {
   res.send("hello")
 })
 
-app.get("/health", (_, res) => {
-  res.status(200).json({ status: "active", timestamp: new Date() });
-});
+// Routes
+app.use("/api/auth", authRoutes)
 
 export default app;
