@@ -1,9 +1,10 @@
-import React from 'react'
+import React from "react";
+import { Outlet } from "react-router-dom";
 
 const App = () => {
   return (
-    <div className='text-5xl text-red-500'>App</div>
-  )
-}
+    <Outlet />
+  );
+};
 
-export default App
+export default App;
