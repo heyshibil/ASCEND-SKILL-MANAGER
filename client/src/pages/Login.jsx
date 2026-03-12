@@ -2,8 +2,17 @@ import React from 'react';
 
 export default function Login() {
   const handleGithubLogin = () => {
-    // Redirects to your backend/OAuth handler
-    window.location.href = '/auth/github';
+    const CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID;
+    const REDIRECT_URI = 'http://localhost:5000/api/auth/github/callback';
+
+    // We need 'repo' and 'read:user' scopes to scan the user's code later
+    const scope = "read:user,repo"
+
+    // Github url
+    const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&scope=${scope}`;
+
+    // Redirect the whole page to github
+    window.location.href = githubAuthUrl;
   };
 
   return (
