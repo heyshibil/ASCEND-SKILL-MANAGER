@@ -20,16 +20,16 @@ export default function Login() {
       
       {/* --- Background Ambient Gradients --- */}
       {/* Top Left Violet Glow */}
-      <div className="absolute top-[-15%] left-[-10%] w-[500px] h-[500px] bg-[#312e81] rounded-full mix-blend-screen filter blur-[150px] opacity-25 pointer-events-none"></div>
+      <div className="absolute top-[-15%] left-[-10%] w-125 h-125 bg-[#312e81] rounded-full mix-blend-screen filter blur-[150px] opacity-25 pointer-events-none"></div>
       
       {/* Bottom Right Deep Indigo/Blue Glow */}
-      <div className="absolute bottom-[-15%] right-[-10%] w-[600px] h-[600px] bg-[#1a1029] rounded-full mix-blend-screen filter blur-[150px] opacity-30 pointer-events-none"></div>
+      <div className="absolute bottom-[-15%] right-[-10%] w-150 h-150 bg-[#1a1029] rounded-full mix-blend-screen filter blur-[150px] opacity-30 pointer-events-none"></div>
       
       {/* Center Muted Blue Accent */}
-      <div className="absolute top-[40%] left-[60%] w-[300px] h-[300px] bg-[#0f172a] rounded-full mix-blend-screen filter blur-[120px] opacity-30 pointer-events-none"></div>
+      <div className="absolute top-[40%] left-[60%] w-75 h-75 bg-[#0f172a] rounded-full mix-blend-screen filter blur-[120px] opacity-30 pointer-events-none"></div>
 
       {/* --- Main Content Wrapper --- */}
-      <div className="relative z-10 w-full max-w-[450px] px-6 flex flex-col items-center">
+      <div className="relative z-10 w-full max-w-112.5 px-6 flex flex-col items-center">
         
         {/* Header Section */}
         <div className="text-center mb-10 w-full flex flex-col items-center">
@@ -56,14 +56,14 @@ export default function Login() {
         </div>
 
         {/* Login Card */}
-        <div className="w-full bg-white/[0.02] border border-white/10 backdrop-blur-xl rounded-2xl p-8 shadow-2xl hover:shadow-[0_8px_30px_rgb(49,46,129,0.15)] hover:-translate-y-[1px] transition-all duration-500 flex flex-col items-center group/card">
+        <div className="w-full bg-white/2 border border-white/10 backdrop-blur-xl rounded-2xl p-8 shadow-2xl hover:shadow-[0_8px_30px_rgb(49,46,129,0.15)] hover:-translate-y-1px transition-all duration-500 flex flex-col items-center group/card">
           
           <button
             onClick={handleGithubLogin}
-            className="group relative flex items-center justify-center w-full gap-3 bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-white px-4 py-3.5 rounded-xl transition-all duration-300 overflow-hidden shadow-lg cursor-pointer"
+            className="group relative flex items-center justify-center w-full gap-3 bg-white/4 hover:bg-white/8 border border-white/10 text-white px-4 py-3.5 rounded-xl transition-all duration-300 overflow-hidden shadow-lg cursor-pointer"
           >
             {/* Soft inner glow on hover */}
-            <div className="absolute inset-0 w-full h-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-r from-transparent via-white/[0.05] to-transparent shadow-[inset_0_0_20px_rgba(255,255,255,0.05)]"></div>
+            <div className="absolute inset-0 w-full h-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-linear-to-r from-transparent via-white/5 to-transparent shadow-[inset_0_0_20px_rgba(255,255,255,0.05)]"></div>
             
             {/* GitHub SVG */}
             <svg
