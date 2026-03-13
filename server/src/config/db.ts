@@ -6,5 +6,5 @@ export const connectDB = async () => {
   if (!MONGO_URI) throw new Error("MONGO_URI is not defined in .env");
 
   await mongoose.connect(MONGO_URI);
-  console.log(`MongoDB connected: ${mongoose.connection.host}`);
+  console.log(`✅ MongoDB connected: ${mongoose.connection.host}`);
 };
