@@ -37,11 +37,11 @@ export default function Login() {
             <span className="text-2xl font-bold tracking-tighter text-white">Talvix</span>
           </div> */}
           
-          <h1 className="text-5xl font-semibold text-white tracking-tight mb-2">
-            Welcome to Talvix
+          <h1 className="text-4xl font-semibold text-white tracking-tight mb-2">
+            Welcome to Ascend
           </h1>
           
-          <h2 className="text-lg text-slate-300 mb-6 font-medium tracking-tight">
+          <h2 className="text-md text-slate-300 mb-6 font-medium tracking-tight">
             Understand your skill momentum.
           </h2>
           
