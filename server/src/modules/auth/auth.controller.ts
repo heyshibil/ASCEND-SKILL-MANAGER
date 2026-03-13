@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import axios from "axios";
 import jwt from "jsonwebtoken";
 import { User } from "../../models/User.js";
+import { scanQueue } from "../../queues/scan.queue.js";
 
 export const githubCallback = async (req: Request, res: Response) => {
   const { code } = req.query;
@@ -45,6 +46,13 @@ export const githubCallback = async (req: Request, res: Response) => {
       });
     }
 
+    // Trigger background scan
+    await scanQueue.add(`initial_scan_${user?._id}`, {
+      userId: user?._id,
+      accessToken,
+      username: user?.username,
+    });
+
     // Issue the JWT
     const token = jwt.sign(
       { userId: user._id },
@@ -58,7 +66,10 @@ export const githubCallback = async (req: Request, res: Response) => {
       user,
     });
   } catch (error: any) {
-    console.error('OAuth Handshake Error:', error.response?.data || error.message);
-    res.status(500).json({ message: 'Authentication failed' });
+    console.error(
+      "OAuth Handshake Error:",
+      error.response?.data || error.message,
+    );
+    res.status(500).json({ message: "Authentication failed" });
   }
 };
