@@ -3,10 +3,30 @@ import type { IUser } from "../types/index.js";
 
 const userSchema = new Schema<IUser & Document>(
   {
-    githubId: { type: String, required: true, unique: true },
+    // Auth
+    authProvider: {
+      type: String,
+      enum: ["github", "manual"],
+      required: true,
+    },
+    githubId: { type: String, unique: true, sparse: true },
+    password: { type: String, select: false },
+    isEmailVerified: { type: Boolean, default: false },
+    emailVerificationToken: { type: String },
+    emailVerificationExpires: { type: Date },
+
+    // Profile
     username: { type: String, required: true },
-    email: { type: String, required: true },
-    targetRole: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    avatarUrl: { type: String },
+    careerGoal: { type: String, default: "Fullstack Developer" },
+    onboardingStatus: {
+      type: String,
+      enum: ["pending_scan", "pending_discovery", "pending_test", "completed"],
+      default: "pending_discovery",
+    },
+
+    // Scores
     liquidityScore: {
       current: { type: Number, default: 0 },
       history: [
@@ -16,6 +36,8 @@ const userSchema = new Schema<IUser & Document>(
         },
       ],
     },
+
+    // Preference
     settings: {
       decayNotifications: { type: Boolean, default: true },
       weeklyReport: { type: Boolean, default: true },

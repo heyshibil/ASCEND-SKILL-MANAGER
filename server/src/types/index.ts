@@ -13,14 +13,28 @@ export interface ILiquidityHistory {
 // User 
 export interface IUser {
   _id?: Types.ObjectId;
-  githubId: string;
+  // Auth fields
+  authProvider: "github" | "manual";
+  githubId?: string;
+  password?: string; //manual users
+  isEmailVerified: boolean;
+  emailVerificationToken?: string;
+  emailVerificationExpires?: Date;
+
+  // Profile
   username: string;
   email: string;
-  targetRole: string;
+  avatarUrl?: string; //from github
+  careerGoal: string;
+  onboardingStatus: "pending_scan" | "pending_discovery" | "pending_test" | "completed";
+
+  // Score
   liquidityScore: {
     current: number;
     history: ILiquidityHistory[];
   };
+
+  // Preferences
   settings: IUserSettings;
   lastProcessedAt?: Date;
 }
