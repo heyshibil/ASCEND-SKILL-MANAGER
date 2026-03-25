@@ -10,6 +10,7 @@ export interface ILiquidityHistory {
   date: Date;
 }
 
+// User 
 export interface IUser {
   _id?: Types.ObjectId;
   githubId: string;
@@ -24,6 +25,7 @@ export interface IUser {
   lastProcessedAt?: Date;
 }
 
+// Skill
 export interface ISkill {
   _id?: Types.ObjectId;
   userId: Types.ObjectId;
@@ -36,4 +38,29 @@ export interface ISkill {
   stabilityConstant: number; // Stability Constant
   masteryMultiplier: number; // Bonus for experiance
   dependsOn?: Types.ObjectId[]; // Dependency graph
+}
+
+// Question
+export interface ITestCase {
+  input: string;
+  output: string;
+}
+
+export interface IQuestion {
+  questionId: string;
+  skill: string;
+  level: "beginner" | "intermediate" | "advanced";
+  topic: string;
+  type: "mcq" | "code";
+  
+  // MCQ Fields
+  question?: string;
+  options?: string[];
+  correctAnswerIndex?: number;
+
+  // Code Fields
+  problemStatement?: string;
+  starterCode?: string;
+  validationScript?: string;
+  testCases?: ITestCase[];
 }
