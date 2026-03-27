@@ -1,8 +1,16 @@
-import {Router} from 'express';
-import { githubCallback } from './auth.controller.js';
+import { Router } from "express";
+import * as authController from "./auth.controller.js";
+import { authenticate } from "../../middlewares/auth.middleware.js";
 
 const router = Router();
 
-router.get("/github/callback", githubCallback);
+// Public routes
+router.get("/github/callback", authController.githubCallback);
+router.post("/register", authController.register);
+router.post("/login", authController.login);
+router.get("/verify-email/:token", authController.verifyEmail);
+
+// Protected routes
+router.get("/me", authenticate, authController.getMe);
 
 export default router;
