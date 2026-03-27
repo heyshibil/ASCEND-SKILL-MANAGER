@@ -83,6 +83,7 @@ export const registerUser = async (input: RegisterInput) => {
     authProvider: "manual",
     username: input.username,
     email: input.email,
+    password: hashedPassword,
     careerGoal: input.careerGoal,
     isEmailVerified: false,
     emailVerificationToken: verificationToken,
