@@ -15,11 +15,11 @@ export interface IUser {
   _id?: Types.ObjectId;
   // Auth fields
   authProvider: "github" | "manual";
-  githubId?: string;
-  password?: string; //manual users
+  githubId?: string | undefined;
+  password?: string | undefined; //manual users
   isEmailVerified: boolean;
-  emailVerificationToken?: string;
-  emailVerificationExpires?: Date;
+  emailVerificationToken?: string | undefined;
+  emailVerificationExpires?: Date | undefined;
 
   // Profile
   username: string;
