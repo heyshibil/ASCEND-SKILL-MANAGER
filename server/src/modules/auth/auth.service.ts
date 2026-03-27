@@ -59,7 +59,7 @@ export const handleGithubAuth = async (code: string) => {
 
   // Generate JWT token
   const token = generateJWT(user._id!.toString());
-  return { user, token, isNewUser, githubToken };
+  return { user, token, isNewUser, accessToken: githubToken };
 };
 
 // -- Manual Register --
