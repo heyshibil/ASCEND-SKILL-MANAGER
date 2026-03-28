@@ -1,7 +1,7 @@
 import type { Types } from "mongoose";
 
 export interface IUserSettings {
-  decayNotification: boolean;
+  decayNotifications: boolean;
   weeklyReport: boolean;
 }
 

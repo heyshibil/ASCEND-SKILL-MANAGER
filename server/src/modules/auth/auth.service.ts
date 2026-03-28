@@ -62,6 +62,11 @@ export const handleGithubAuth = async (code: string) => {
   return { user, token, isNewUser, accessToken: githubToken };
 };
 
+// hash email verfication token
+const hashToken = (token: string) => {
+  return crypto.createHash("sha256").update(token).digest("hex");
+}
+
 // -- Manual Register --
 export const registerUser = async (input: RegisterInput) => {
   // Check email exists
@@ -76,6 +81,7 @@ export const registerUser = async (input: RegisterInput) => {
 
   // Generate email verfication token
   const verificationToken = crypto.randomBytes(32).toString("hex");
+  const hashedVerficationToken = hashToken(verificationToken);
   const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); //24h
 
   // Create User
@@ -86,7 +92,7 @@ export const registerUser = async (input: RegisterInput) => {
     password: hashedPassword,
     careerGoal: input.careerGoal,
     isEmailVerified: false,
-    emailVerificationToken: verificationToken,
+    emailVerificationToken: hashedVerficationToken,
     emailVerificationExpires: verificationExpires,
     onboardingStatus: "pending_discovery", //manual user skip scan
   });
@@ -133,7 +139,7 @@ export const loginUser = async (input: LoginInput) => {
 //  -- Email Verification --
 export const verifyUserEmail = async (token: string) => {
   const user = await User.findOne({
-    emailVerificationToken: token,
+    emailVerificationToken: hashToken(token),
     emailVerificationExpires: { $gt: new Date() },
   });
 
