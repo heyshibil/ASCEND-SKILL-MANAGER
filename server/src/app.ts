@@ -4,6 +4,7 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import { errorHandler } from "./middlewares/error.middleware.js";
+import cookieParser from "cookie-parser";
 
 const app: Application = express();
 
@@ -11,6 +12,7 @@ app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
 app.use(helmet());
 app.use(morgan("dev"));
 app.use(express.json());
+app.use(cookieParser())
 
 // --- Health Check ---
 app.get("/", (_, res) => {
