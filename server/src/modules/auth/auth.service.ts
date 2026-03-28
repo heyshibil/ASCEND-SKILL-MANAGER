@@ -152,8 +152,14 @@ export const verifyUserEmail = async (token: string) => {
 // ---- Get Current User ----
 export const getCurrentUser = async (userId: string) => {
   const user = await User.findById(userId);
+
   if (!user) {
     throw new AppError("User not found", 404);
   }
+
+  if (!user.isEmailVerified && user.authProvider === "manual") {
+    throw new AppError("Please verify your email first", 403);
+  }
+
   return user;
 };

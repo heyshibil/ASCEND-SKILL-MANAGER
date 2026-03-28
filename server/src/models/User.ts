@@ -9,7 +9,7 @@ const userSchema = new Schema<IUser & Document>(
       enum: ["github", "manual"],
       required: true,
     },
-    githubId: { type: String, unique: true, sparse: true },
+    githubId: { type: String, unique: true, sparse: true, default: undefined },
     password: { type: String, select: false },
     isEmailVerified: { type: Boolean, default: false },
     emailVerificationToken: { type: String },
