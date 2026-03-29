@@ -2,6 +2,7 @@ import type { Request, Response, NextFunction } from "express";
 import { scanQueue } from "../../queues/scan.queue.js";
 import { registerSchema, loginSchema } from "./auth.validation.js";
 import * as authService from "./auth.service.js";
+import { setTokenCookie } from "../../utils/setTokenCookie.js";
 
 export const githubCallback = async (
   req: Request,
@@ -30,9 +31,9 @@ export const githubCallback = async (
       });
     }
 
-    // Redirect to frontend with token
-    const redirectUrl = `${process.env.CLIENT_URL}/auth/callback?token=${token}`;
-    res.redirect(redirectUrl);
+    setTokenCookie(res, token);
+
+    res.redirect(`${process.env.CLIENT_URL}/dashboard`);
   } catch (error: any) {
     next(error);
   }
@@ -47,6 +48,8 @@ export const register = async (
   try {
     const validatedData = registerSchema.parse(req.body);
     const result = await authService.registerUser(validatedData);
+
+    setTokenCookie(res, result.token);
 
     res.status(201).json({
       success: true,
@@ -69,6 +72,8 @@ export const login = async (
     const validatedData = loginSchema.parse(req.body);
     const result = await authService.loginUser(validatedData);
 
+    setTokenCookie(res, result.token);
+
     res.status(200).json({
       success: true,
       message: "Login successful",
@@ -78,6 +83,12 @@ export const login = async (
   } catch (error) {
     next(error);
   }
+};
+
+// Logout
+export const logout = async (req: Request, res: Response) => {
+  res.cookie("token", "", { httpOnly: true, expires: new Date(0) });
+  res.status(200).json({ success: true, message: "Logged out" });
 };
 
 // Verify Email

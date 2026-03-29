@@ -9,6 +9,7 @@ router.get("/github/callback", authController.githubCallback);
 router.post("/register", authController.register);
 router.post("/login", authController.login);
 router.get("/verify-email/:token", authController.verifyEmail);
+router.post("/logout", authController.logout)
 
 // Protected routes
 router.get("/me", authenticate, authController.getMe);
