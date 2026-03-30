@@ -4,6 +4,7 @@ import Login from "./pages/Login";
 import DashboardLayout from "./layouts/DashboardLayout";
 import DashboardHome from "./pages/DashboardHome";
 import VerifyEmail from "./pages/VerifyEmail";
+import SkillSelect from "./pages/SkillSelect";
 
 export const router = createBrowserRouter([
   {
@@ -13,6 +14,10 @@ export const router = createBrowserRouter([
   {
     path: "/verify-email/:token",
     element: <VerifyEmail />,
+  },
+  {
+    path: "/discovery",
+    element: <SkillSelect />,
   },
   {
     path: "/dashboard",
