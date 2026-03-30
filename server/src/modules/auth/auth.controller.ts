@@ -54,7 +54,6 @@ export const register = async (
     res.status(201).json({
       success: true,
       message: "Account created. Please check your email to verify.",
-      token: result.token,
       user: result.user,
     });
   } catch (error) {
@@ -77,7 +76,6 @@ export const login = async (
     res.status(200).json({
       success: true,
       message: "Login successful",
-      token: result.token,
       user: result.user,
     });
   } catch (error) {
@@ -109,11 +107,13 @@ export const verifyEmail = async (
     // set the cookie, so that the user can logged in
     setTokenCookie(res, result.token);
 
-    // redirect to react app /discovery
-    res.redirect(`${process.env.CLIENT_URL}/discovery`)
-
-
-    res.status(200).json({ success: true, ...result });
+    res
+      .status(200)
+      .json({
+        success: true,
+        message: "Email verified successfully",
+        user: result.user,
+      });
   } catch (error) {
     next(error);
   }

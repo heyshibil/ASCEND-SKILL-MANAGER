@@ -123,6 +123,14 @@ export const loginUser = async (input: LoginInput) => {
     throw new AppError("Invalid email or password", 401);
   }
 
+  // Prevent login for not verified users
+  if (!user.isEmailVerified) {
+    throw new AppError(
+      "Please check your email and verify your account before logging in.",
+      403,
+    );
+  }
+
   const isPasswordValid = await argon2.verify(user.password, input.password);
 
   if (!isPasswordValid) {
