@@ -3,6 +3,7 @@ import App from "./App";
 import Login from "./pages/Login";
 import DashboardLayout from "./layouts/DashboardLayout";
 import DashboardHome from "./pages/DashboardHome";
+import VerifyEmail from "./pages/VerifyEmail";
 
 export const router = createBrowserRouter([
   {
@@ -10,10 +11,12 @@ export const router = createBrowserRouter([
     element: <Login />,
   },
   {
+    path: "/verify-email/:token",
+    element: <VerifyEmail />,
+  },
+  {
     path: "/dashboard",
     element: <DashboardLayout />,
-    children: [
-      { index: true, element: <DashboardHome /> }
-    ],
+    children: [{ index: true, element: <DashboardHome /> }],
   },
 ]);
