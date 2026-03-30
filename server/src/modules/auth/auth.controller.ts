@@ -106,6 +106,13 @@ export const verifyEmail = async (
 
     const result = await authService.verifyUserEmail(token);
 
+    // set the cookie, so that the user can logged in
+    setTokenCookie(res, result.token);
+
+    // redirect to react app /discovery
+    res.redirect(`${process.env.CLIENT_URL}/discovery`)
+
+
     res.status(200).json({ success: true, ...result });
   } catch (error) {
     next(error);

@@ -65,7 +65,7 @@ export const handleGithubAuth = async (code: string) => {
 // hash email verfication token
 const hashToken = (token: string) => {
   return crypto.createHash("sha256").update(token).digest("hex");
-}
+};
 
 // -- Manual Register --
 export const registerUser = async (input: RegisterInput) => {
@@ -152,7 +152,10 @@ export const verifyUserEmail = async (token: string) => {
   user.emailVerificationExpires = undefined;
   await user.save();
 
-  return { message: "Email verified successfully" };
+  // Generate token for direct login
+  const jwtToken = generateJWT(user._id!.toString());
+
+  return { message: "Email verified successfully", token: jwtToken, user };
 };
 
 // ---- Get Current User ----
