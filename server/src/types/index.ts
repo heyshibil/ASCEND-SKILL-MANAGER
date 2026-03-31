@@ -1,5 +1,12 @@
 import type { Types } from "mongoose";
 
+// Define common fields once
+interface IBaseEntity {
+  _id?: Types.ObjectId;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
 export interface IUserSettings {
   decayNotifications: boolean;
   weeklyReport: boolean;
@@ -10,9 +17,8 @@ export interface ILiquidityHistory {
   date: Date;
 }
 
-// User 
-export interface IUser {
-  _id?: Types.ObjectId;
+// User
+export interface IUser extends IBaseEntity {
   // Auth fields
   authProvider: "github" | "manual";
   githubId?: string | undefined;
@@ -26,7 +32,11 @@ export interface IUser {
   email: string;
   avatarUrl?: string; //from github
   careerGoal: string;
-  onboardingStatus: "pending_scan" | "pending_discovery" | "pending_test" | "completed";
+  onboardingStatus:
+    | "pending_scan"
+    | "pending_discovery"
+    | "pending_test"
+    | "completed";
 
   // Score
   liquidityScore: {
@@ -40,8 +50,7 @@ export interface IUser {
 }
 
 // Skill
-export interface ISkill {
-  _id?: Types.ObjectId;
+export interface ISkill extends IBaseEntity {
   userId: Types.ObjectId;
   name: string;
   category: "Foundational" | "Framework" | "Tooling" | "Language";
@@ -60,13 +69,13 @@ export interface ITestCase {
   output: string;
 }
 
-export interface IQuestion {
+export interface IQuestion extends IBaseEntity {
   questionId: string;
   skill: string;
   level: "beginner" | "intermediate" | "advanced";
   topic: string;
   type: "mcq" | "code";
-  
+
   // MCQ Fields
   question?: string;
   options?: string[];
@@ -77,4 +86,11 @@ export interface IQuestion {
   starterCode?: string;
   validationScript?: string;
   testCases?: ITestCase[];
+}
+
+// TestHistory
+export interface ITestHistory extends IBaseEntity {
+  userId: Types.ObjectId;
+  skillName: string;
+  questionIds: string[];
 }
