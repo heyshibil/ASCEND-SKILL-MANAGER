@@ -6,6 +6,7 @@ import DashboardHome from "./pages/DashboardHome";
 import VerifyEmail from "./pages/VerifyEmail";
 import SkillSelect from "./pages/SkillSelect";
 import VerificationTest from "./pages/VerificationTest"
+import ScoreReport from "./pages/ScoreReport";
 
 export const router = createBrowserRouter([
   {
@@ -23,6 +24,10 @@ export const router = createBrowserRouter([
   {
     path: "/test",
     element: <VerificationTest />,
+  },
+  {
+    path: "/report",
+    element: <ScoreReport />,
   },
   {
     path: "/dashboard",
