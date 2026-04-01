@@ -17,10 +17,17 @@ export const generateTest = async (
   const existingSession = await redisConnection.get(`test_session:${userId}`);
 
   if (existingSession) {
-    throw new AppError(
-      "You already have an active test session! Please finish it.",
-      429,
+    const activeTest = JSON.parse(existingSession);
+
+    // Load exact same questions assigned, from redis
+    const mcqs = await Question.find(
+      { questionId: { $in: activeTest.mcqIds } },
+      { _id: 1, questionId: 1, question: 1, options: 1, level: 1 },
     );
+
+    const codeTest = await Question.findOne({ questionId: activeTest.codeId });
+
+    return { mcqs, codeTest };
   }
 
   // Find questions seen in the last 4 weeks
@@ -104,6 +111,11 @@ export const executeCodeTest = async (
   validationScript: string,
   language: string,
 ) => {
+  if (!testCases || testCases.length === 0) {
+    console.warn(`WARNING: Code question executed with ZERO test cases!`);
+    return { compilerScore: 0, passedCases: 0, totalCases: 0 };
+  }
+
   const runtime =
     PISTON_LANGUAGE_MAP[language.toLowerCase()] ||
     PISTON_LANGUAGE_MAP["javascript"];
@@ -222,14 +234,26 @@ export const gradeVerificationTest = async (
 
   // Grade MCQs (40)
   let correctMcqs = 0;
+  const mcqResults = []; // store user MCQ answers
 
   // compare with db options
   for (const answerSet of mcqAnswers) {
     const dbQuestion = await Question.findOne({
       questionId: answerSet.questionId,
     });
-    if (dbQuestion && dbQuestion.correctAnswerIndex === answerSet.answerIndex) {
-      correctMcqs++;
+
+    if (dbQuestion) {
+      const isCorrect = dbQuestion.correctAnswerIndex === answerSet.answerIndex;
+      if (isCorrect) correctMcqs++;
+
+      mcqResults.push({
+        questionId: dbQuestion.questionId,
+        question: dbQuestion.question,
+        options: dbQuestion.options,
+        userAnswerIndex: answerSet.answerIndex,
+        correctAnswerIndex: dbQuestion.correctAnswerIndex,
+        isCorrect,
+      });
     }
   }
 
@@ -248,7 +272,7 @@ export const gradeVerificationTest = async (
   // Gemini Audit (10)
   const { aiScore, feedback } = await auditCodeWithGemini(
     codeAnswer,
-    dbCodeQ!.problemStatement!,
+    dbCodeQ!.question!,
   );
 
   // Final calculation (MCQ + Code + AI audit)
@@ -289,5 +313,6 @@ export const gradeVerificationTest = async (
     },
     finalScore: Math.floor(finalScore),
     feedback,
+    mcqResults,
   };
 };

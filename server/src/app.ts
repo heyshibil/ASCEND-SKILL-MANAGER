@@ -1,6 +1,7 @@
 import express, { type Application } from "express";
 import authRoutes from "./modules/auth/auth.routes.js";
 import skillRoutes from "./modules/skills/skill.routes.js";
+import verificationRoutes from "./modules/verification/verification.routes.js";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
@@ -23,6 +24,7 @@ app.get("/", (_, res) => {
 // -- Routes --
 app.use("/api/auth", authRoutes);
 app.use("/api/skills", skillRoutes);
+app.use("/api/verification", verificationRoutes);
 
 // -- Error Handler --
 app.use(errorHandler);
