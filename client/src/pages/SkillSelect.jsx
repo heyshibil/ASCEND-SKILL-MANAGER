@@ -92,7 +92,7 @@ export default function SkillSelect({ initialSkills = [] }) {
 
     try {
       await skillService.initSkills(selectedSkills);
-      navigate("/test");
+      navigate("/test?skill=JavaScript");
     } catch (error) {
       console.error("Failed to save skills:", error);
       alert("Failed to save skills. Please try again.");
