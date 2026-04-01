@@ -10,11 +10,11 @@ export const verificationService = {
     return data;
   },
 
-  submitTest: async (skillName, mcqAnswers, codeAnwser, codeQuestionId) => {
+  submitTest: async (skillName, mcqAnswers, codeAnswer, codeQuestionId) => {
     const { data } = await API.post("/verification/submit", {
       skillName,
       mcqAnswers,
-      codeAnwser,
+      codeAnswer,
       codeQuestionId,
     });
 
