@@ -1,15 +1,15 @@
 import React, { useState, useRef, useEffect } from "react";
 import * as skillService from "../services/skillService";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
-export default function SkillSelect({ initialSkills = [] }) {
-  // initialSkills would be populated if coming from the GitHub scan prediction
-  const [selectedSkills, setSelectedSkills] = useState(initialSkills);
+export default function SkillSelect() {
+  const [selectedSkills, setSelectedSkills] = useState([]);
   const [inputValue, setInputValue] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   // Pre-populated suggestions
   const defaultSuggestions = [
@@ -19,17 +19,27 @@ export default function SkillSelect({ initialSkills = [] }) {
     "MongoDB",
     "JavaScript",
     "TypeScript",
-    "Zustand",
-    "Redux",
     "HTML",
     "CSS",
-    "Python",
-    "Django",
-    ".NET",
-    "C#",
-    "PostreSQL",
-    "SQL",
+    "tailwindCSS",
   ];
+
+  // -- Load predicted skills - github --
+  useEffect(() => {
+    const predictedParam = searchParams.get("predicted");
+
+    // Hydrate if predictions exists and the user hasn't added anything yet
+    if (predictedParam && selectedSkills.length === 0) {
+      const predictedArray = predictedParam.split(",");
+
+      const hydratedSkills = predictedArray.map((skillName) => ({
+        name: skillName,
+        confidence: 50,
+      }));
+
+      setSelectedSkills(hydratedSkills);
+    }
+  }, [searchParams, selectedSkills.length]);
 
   // Filter out already selected skills
   const availableSuggestions = defaultSuggestions.filter(
