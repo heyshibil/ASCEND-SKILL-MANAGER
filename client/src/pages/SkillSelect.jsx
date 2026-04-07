@@ -101,7 +101,7 @@ export default function SkillSelect({ initialSkills = [] }) {
     }
   };
 
-  // Helper to calculate the slider's gradient color based on confidence (20 to 80)
+  // Helper to calculate the slider's gradient (20 to 80)
   const getSliderBackground = (confidence) => {
     const percentage = ((confidence - 20) / (80 - 20)) * 100;
     // Shifts smoothly from indigo-500 to violet-400

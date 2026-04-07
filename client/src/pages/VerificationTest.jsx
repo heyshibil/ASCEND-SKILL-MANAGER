@@ -39,6 +39,11 @@ export default function VerificationTest() {
         );
         setMcqQuestions(data.mcqs);
         setCodeQuestion(data.codeTest);
+
+        // Add starter code
+        if (data.codeTest?.starterCode) {
+          setCodeAnswer(data.codeTest.starterCode);
+        }
       } catch (error) {
         toast.error(
           error.response?.data?.message ||
@@ -99,7 +104,6 @@ export default function VerificationTest() {
         codeQuestion.questionId,
       );
 
-      // Fixed String Interpolation issue for React!
       toast.success(
         "Verification Complete! Score: " + result.finalScore + "/100",
         { id: "grading" },
@@ -267,6 +271,27 @@ export default function VerificationTest() {
                         <li>Do not change the function signature</li>
                       </ul>
                     </div>
+
+                    {/* Test cases */}
+                    {codeQuestion.testCases && codeQuestion.testCases.length > 0 && (
+                      <div className="mt-8 pt-6 border-t border-white/5">
+                        <h3 className="text-xs font-medium text-indigo-300 mb-4 uppercase tracking-wider">Example Test Cases:</h3>
+                        <div className="flex flex-col gap-3">
+                          {codeQuestion.testCases.map((tc, idx) => (
+                            <div key={idx} className="bg-black/30 border border-white/5 p-4 rounded-xl font-mono text-xs flex flex-col gap-2">
+                              <div className="flex items-start">
+                                <span className="text-slate-500 w-24 shrink-0 select-none">Input:</span>
+                                <span className="text-blue-200">{tc.input}</span>
+                              </div>
+                              <div className="flex items-start mt-1 pt-2 border-t border-white/5">
+                                <span className="text-slate-500 w-24 shrink-0 select-none">Expected:</span>
+                                <span className="text-emerald-300 font-bold">{tc.output}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="col-span-1 lg:col-span-2 flex flex-col border border-white/10 rounded-xl overflow-hidden bg-[#1e1e1e]">

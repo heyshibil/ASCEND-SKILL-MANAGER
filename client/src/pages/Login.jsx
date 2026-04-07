@@ -53,7 +53,6 @@ export default function Login() {
       if (isLogin) {
         // --- LOGIN FLOW ---
         await authService.login(formData.email, formData.password);
-        // On success, redirect to dashboard or discovery
         navigate('/discovery'); 
       } else {
         // --- REGISTER FLOW ---
@@ -61,16 +60,14 @@ export default function Login() {
           username: formData.username,
           email: formData.email,
           password: formData.password,
-          careerGoal: formData.careergoal, // Ensure this matches backend expected key
+          careerGoal: formData.careergoal,
         });
         
-        // Show success, clear form, and flip to login tab
         setSuccess(response.message || "Please check your email to verify.");
         setFormData({ username: '', email: '', password: '', careergoal: '' });
         setIsLogin(true);
       }
     } catch (err) {
-      // Extract error message from Axios response
       const errorMessage = err.response?.data?.message || 'Something went wrong. Please try again.';
       setError(errorMessage);
     } finally {

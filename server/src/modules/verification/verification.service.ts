@@ -123,14 +123,15 @@ export const executeCodeTest = async (
   let passedCases = 0;
 
   // Test the code against each test case silently
-  for (const tc of testCases) {
+ for (const tc of testCases) {
     const executableCode = `${userCode}\n\n${validationScript.replace("{{input}}", tc.input)}`;
     try {
-      const { data } = await axios.post("https://emacsx.com/api/v2/execute", {
+      const { data } = await axios.post("https://emkc.org/api/v2/piston/execute", {
         language: runtime?.language,
         version: runtime?.version,
         files: [{ content: executableCode }],
       });
+      
       // Piston puts the terminal output in data.run.stdout
       const output = data.run.stdout ? data.run.stdout.trim() : "";
 
