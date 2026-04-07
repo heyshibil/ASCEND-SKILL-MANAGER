@@ -3,6 +3,12 @@ import { scanQueue } from "../../queues/scan.queue.js";
 import { registerSchema, loginSchema } from "./auth.validation.js";
 import * as authService from "./auth.service.js";
 import { setTokenCookie } from "../../utils/setTokenCookie.js";
+import { QueueEvents } from "bullmq";
+import { redisConnection } from "../../config/redis.js";
+
+const queueEvents = new QueueEvents("GITHUB_SCAN", {
+  connection: redisConnection as any,
+});
 
 export const githubCallback = async (
   req: Request,
@@ -21,19 +27,32 @@ export const githubCallback = async (
 
     const { user, token, isNewUser, accessToken } =
       await authService.handleGithubAuth(code);
+    let redirectUrl = `${process.env.CLIENT_URL}/dashboard`;
 
-    // Queue GitHub scan for new users
     if (isNewUser) {
-      await scanQueue.add(`initial_scan_${user._id}`, {
+      //  job to the worker
+      const job = await scanQueue.add(`initial_scan_${user._id}`, {
         userId: user._id,
         accessToken,
         username: user.username,
       });
+
+      // Pause and wait for the worker to finish
+      const result = await job.waitUntilFinished(queueEvents);
+
+      // Extract predicted skill array
+      const predictedSkills = result.predictedSkills || [];
+
+      if (predictedSkills.length > 0) {
+        redirectUrl = `${process.env.CLIENT_URL}/discovery?predicted=${encodeURIComponent(predictedSkills.join(","))}`;
+      } else {
+        redirectUrl = `${process.env.CLIENT_URL}/discovery`;
+      }
     }
 
     setTokenCookie(res, token);
 
-    res.redirect(`${process.env.CLIENT_URL}/dashboard`);
+    res.redirect(redirectUrl);
   } catch (error: any) {
     next(error);
   }
@@ -107,13 +126,11 @@ export const verifyEmail = async (
     // set the cookie, so that the user can logged in
     setTokenCookie(res, result.token);
 
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: "Email verified successfully",
-        user: result.user,
-      });
+    res.status(200).json({
+      success: true,
+      message: "Email verified successfully",
+      user: result.user,
+    });
   } catch (error) {
     next(error);
   }
