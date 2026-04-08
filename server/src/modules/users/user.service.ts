@@ -1,0 +1,72 @@
+import { Skill } from "../../models/Skill.js";
+import { User } from "../../models/User.js";
+import { AppError } from "../../middlewares/error.middleware.js";
+
+const computeLiquidityScore = (skills: { currentScore: number }[]): number => {
+  if (skills.length === 0) return 0;
+  const total = skills.reduce((acc, s) => acc + (s.currentScore || 0), 0);
+  return Math.round(total / skills.length);
+};
+
+export const refreshLiquidityScore = async (
+  userId: string,
+): Promise<number> => {
+  const skills = await Skill.find({ userId }).select("currentScore");
+  const newScore = computeLiquidityScore(skills);
+
+  const result = await User.findByIdAndUpdate(
+    userId,
+    {
+      $set: { "liquidityScore.current": newScore },
+      $push: {
+        "liquidityScore.history": { score: newScore, date: new Date() },
+      },
+    },
+    { new: true },
+  );
+
+  if (!result) {
+    throw new AppError("User not found while updating liquidity score", 404);
+  }
+
+  return newScore;
+};
+
+export const getDashboardData = async (userId: string) => {
+  // Refresh and persist score
+  const currentScore = await refreshLiquidityScore(userId);
+
+  const user = await User.findById(userId).select("liquidityScore");
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
+
+  // Skill debts
+  const skills = await Skill.find({ userId });
+  
+  const skillDebtsList = skills.filter((s) => s.currentScore < 50);
+
+  const criticalDebts = skillDebtsList.filter(
+    (s) => s.currentScore < 30,
+  ).length;
+
+  const drainingSkills = skills.filter((s) => s.currentScore < 70).length;
+
+  // Top skills
+  const topSkills = [...skills]
+    .sort((a, b) => b.currentScore - a.currentScore)
+    .slice(0, 5)
+    .map((s) => ({ name: s.name, score: Math.round(s.currentScore) }));
+
+  return {
+    score: currentScore,
+    scoreHistory: user.liquidityScore.history,
+    activeSkills: skills.length,
+    skillDebts: {
+      total: skillDebtsList.length,
+      critical: criticalDebts,
+      drainingSkills,
+    },
+    topSkills,
+  };
+};

@@ -6,6 +6,7 @@ import axios from "axios";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { Skill } from "../../models/Skill.js";
 import { User } from "../../models/User.js";
+import { refreshLiquidityScore } from "../users/user.service.js";
 
 // -- Generate the Test and create active section --
 export const generateTest = async (
@@ -288,6 +289,9 @@ export const gradeVerificationTest = async (
     skillRecord.currentScore = Math.floor(finalScore);
     await skillRecord.save();
   }
+
+  // refresh user liquidity score
+   await refreshLiquidityScore(userId);
 
   // Log the Test History to prevent repetition (4w)
   const allQuestionIds = mcqAnswers
