@@ -10,9 +10,15 @@ import {
   Settings,
 } from "lucide-react";
 import useDashboardData from "../hooks/useDashboardData";
+import { useAuth } from "../context/AuthContext";
 
 export default function DashboardLayout() {
   const { data } = useDashboardData();
+  const { user } = useAuth();
+
+  const username = user?.username || "Guest";
+  const displayInitial = user?.username.charAt(0).toUpperCase() || "G";
+
   return (
     <div className="flex h-screen bg-[#0b0b0f] text-slate-300 font-sans overflow-hidden">
       {/* --- Left Sidebar --- */}
@@ -82,11 +88,15 @@ export default function DashboardLayout() {
           </p>
           <div className="flex justify-between items-center text-sm">
             <span className="text-slate-400">Critical Debts</span>
-            <span className="text-red-400 font-semibold font-mono">{data.skillDebts.critical}</span>
+            <span className="text-red-400 font-semibold font-mono">
+              {data.skillDebts.critical}
+            </span>
           </div>
           <div className="flex justify-between items-center text-sm">
             <span className="text-slate-400">Draining Skills</span>
-            <span className="text-amber-400 font-semibold font-mono">{data.skillDebts.drainingSkills}</span>
+            <span className="text-amber-400 font-semibold font-mono">
+              {data.skillDebts.drainingSkills}
+            </span>
           </div>
         </div>
       </aside>
@@ -124,11 +134,19 @@ export default function DashboardLayout() {
             </button>
 
             <div className="flex items-center gap-2 pl-4 border-l border-white/10 ml-2">
-              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-fuchsia-500 to-indigo-600 flex items-center justify-center text-[10px] font-bold text-white border border-white/10 shadow-lg cursor-pointer">
-                AK
-              </div>
+              {user?.avatarUrl ? (
+                <img
+                  src={user.avatarUrl}
+                  alt={username}
+                  className="w-7 h-7 rounded-full border border-white/10 shadow-lg cursor-pointer object-cover"
+                />
+              ) : (
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-fuchsia-500 to-indigo-600 flex items-center justify-center text-[10px] font-bold text-white border border-white/10 shadow-lg cursor-pointer">
+                  {displayInitial}
+                </div>
+              )}
               <span className="text-sm font-medium text-slate-200 hidden xl:block">
-                Alex K.
+                {username}
               </span>
             </div>
           </div>
