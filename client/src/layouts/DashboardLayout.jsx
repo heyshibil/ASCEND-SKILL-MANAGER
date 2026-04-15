@@ -1,5 +1,5 @@
-import React from "react";
-import { Outlet, NavLink } from "react-router-dom";
+import React, { useState } from "react";
+import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import {
   Search,
   RotateCw,
@@ -8,16 +8,28 @@ import {
   Sliders,
   TrendingUp,
   Settings,
+  LogOut,
 } from "lucide-react";
 import useDashboardData from "../hooks/useDashboardData";
 import { useAuth } from "../context/AuthContext";
+import LogoutModal from "../components/LogoutModal";
 
 export default function DashboardLayout() {
   const { data } = useDashboardData();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   const username = user?.username || "Guest";
   const displayInitial = user?.username.charAt(0).toUpperCase() || "G";
+
+  // Logout handler
+  const handleLogout = async () => {
+    setIsLogoutModalOpen(false);
+    await logout();
+    navigate("/");
+  };
 
   return (
     <div className="flex h-screen bg-[#0b0b0f] text-slate-300 font-sans overflow-hidden">
@@ -99,6 +111,17 @@ export default function DashboardLayout() {
             </span>
           </div>
         </div>
+
+        {/* Logout */}
+        <div className="px-4 mt-auto mb-6 w-full">
+          <button
+            onClick={() => setIsLogoutModalOpen(true)}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-red-500/10 bg-red-500/[0.02] text-slate-400 hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/20 transition-all group cursor-pointer"
+          >
+            <LogOut className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+            <span className="text-sm font-medium">Log out</span>
+          </button>
+        </div>
       </aside>
 
       {/* --- Main Content Area --- */}
@@ -159,6 +182,11 @@ export default function DashboardLayout() {
           <Outlet />
         </main>
       </div>
+      <LogoutModal
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+        onConfirm={handleLogout}
+      />
     </div>
   );
 }
