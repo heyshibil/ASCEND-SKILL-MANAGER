@@ -13,11 +13,11 @@ export const authService = {
     await API.post("/auth/logout");
   },
   getMe: async () => {
-    const data = await API.get("/auth/me");
+    const { data } = await API.get("/auth/me");
     return data;
   },
   verifyEmail: async (token) => {
-    const data = await API.get(`/auth/verify-email/${token}`);
+    const { data } = await API.get(`/auth/verify-email/${token}`);
     return data;
   },
 };

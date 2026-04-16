@@ -2,11 +2,11 @@ import { Question } from "../../models/Question.js";
 import { TestHistory } from "../../models/TestHistory.js";
 import { AppError } from "../../middlewares/error.middleware.js";
 import { redisConnection } from "../../config/redis.js";
-import axios from "axios";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { Skill } from "../../models/Skill.js";
 import { User } from "../../models/User.js";
 import { refreshLiquidityScore } from "../users/user.service.js";
+import { executeCodeTest } from "./compiler.service.js";
 
 // -- Generate the Test and create active section --
 export const generateTest = async (
@@ -94,61 +94,7 @@ export const generateTest = async (
   return { mcqs, codeTest };
 };
 
-// -- Piston Compiler service --
 
-const PISTON_LANGUAGE_MAP: Record<
-  string,
-  { language: string; version: string }
-> = {
-  javascript: { language: "javascript", version: "18.15.0" },
-  python: { language: "python", version: "3.10.0" },
-  // add whatever piston supports
-};
-
-// -- Score the code via Piston --
-export const executeCodeTest = async (
-  userCode: string,
-  testCases: any[],
-  validationScript: string,
-  language: string,
-) => {
-  if (!testCases || testCases.length === 0) {
-    console.warn(`WARNING: Code question executed with ZERO test cases!`);
-    return { compilerScore: 0, passedCases: 0, totalCases: 0 };
-  }
-
-  const runtime =
-    PISTON_LANGUAGE_MAP[language.toLowerCase()] ||
-    PISTON_LANGUAGE_MAP["javascript"];
-
-  let passedCases = 0;
-
-  // Test the code against each test case silently
- for (const tc of testCases) {
-    const executableCode = `${userCode}\n\n${validationScript.replace("{{input}}", tc.input)}`;
-    try {
-      const { data } = await axios.post("https://emkc.org/api/v2/piston/execute", {
-        language: runtime?.language,
-        version: runtime?.version,
-        files: [{ content: executableCode }],
-      });
-      
-      // Piston puts the terminal output in data.run.stdout
-      const output = data.run.stdout ? data.run.stdout.trim() : "";
-
-      // Strict matching
-      if (output === tc.output.trim()) {
-        passedCases++;
-      }
-    } catch (error) {
-      console.error("Piston API failed", error);
-    }
-  }
-  // Calculate score chunk
-  const percentagePassed = passedCases / testCases.length; // e.g., 4/5 = 80%
-  const compilerScore = percentagePassed * 50; // out of 50 points
-  return { compilerScore, passedCases, totalCases: testCases.length };
-};
 
 // -- Gemini Audit --
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);

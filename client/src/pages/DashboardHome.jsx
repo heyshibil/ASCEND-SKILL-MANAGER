@@ -11,7 +11,7 @@ import {
   Box,
   Network,
   Container,
-  BrainCircuit
+  BrainCircuit,
 } from "lucide-react";
 import useDashboardData from "../hooks/useDashboardData";
 
@@ -122,7 +122,7 @@ export default function DashboardHome() {
           </div>
           <div>
             <h3 className="text-3xl font-bold text-white tracking-tight">
-              {data?.activeSkills || 0}
+              {loading ? "--" : data?.activeSkills || 0}
             </h3>
             {/* <span className="text-xs text-slate-500 font-medium">
               +2 this month
@@ -145,7 +145,7 @@ export default function DashboardHome() {
           </div>
           <div>
             <h3 className="text-3xl font-bold text-white tracking-tight">
-              {data?.skillDebts?.total || 0}
+              {loading ? "--" :data?.skillDebts?.total || 0}
             </h3>
             {/* <span className="text-xs text-slate-500 font-medium">
               {data?.skillDebts.critical} Critcial debts
@@ -266,7 +266,7 @@ export default function DashboardHome() {
                   className="text-6xl font-bold tracking-tighter"
                   style={{ color: scoreColor }}
                 >
-                  {score}
+                  {loading ? "--" :score}
                 </motion.span>
                 <span className="text-slate-500 text-xs tracking-widest font-medium mt-1">
                   /100

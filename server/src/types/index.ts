@@ -94,3 +94,22 @@ export interface ITestHistory extends IBaseEntity {
   skillName: string;
   questionIds: string[];
 }
+
+// Lambda types
+export interface TestCase {
+  input: string;
+  output: string;
+}
+
+export interface LambdaResponse {
+  statusCode: number;
+  stdout: string;
+  stderr: string;
+  timedOut: boolean;
+}
+
+export interface CompilerResult {
+  compilerScore: number;
+  passedCases: number;
+  totalCases: number;
+}
