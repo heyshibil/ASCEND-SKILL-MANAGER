@@ -6,14 +6,10 @@ import {
   CheckCircle2,
   Flame,
   Star,
-  Atom,
-  FileCode2,
-  Box,
-  Network,
-  Container,
-  BrainCircuit,
 } from "lucide-react";
 import useDashboardData from "../hooks/useDashboardData";
+import { getDashboardOffset, getScoreColors } from "../utils/themeUtils";
+import { getIconForSkill } from "../utils/iconMap";
 
 // Animation variants for smooth mounting
 const containerVariants = {
@@ -31,66 +27,13 @@ const itemVariants = {
 
 export default function DashboardHome() {
   const { data, error, loading } = useDashboardData();
-
-  // Icon Mapper
-  const getIconForSkill = (name) => {
-    const iconMap = {
-      React: <Atom className="w-4 h-4" />,
-      TypeScript: <FileCode2 className="w-4 h-4" />,
-      "Node.js": <Box className="w-4 h-4" />,
-      GraphQL: <Network className="w-4 h-4" />,
-      Docker: <Container className="w-4 h-4" />,
-      JavaScript: <FileCode2 className="w-4 h-4" />,
-    };
-    return iconMap[name] || <BrainCircuit className="w-4 h-4" />;
-  };
-
-  // HSL color engine
   const score = data?.score || 0;
-  const hue = Math.floor((score / 100) * 120);
-  const scoreColor = `hsl(${hue}, 80%, 50%)`;
-  const scoreShadow = `hsla(${hue}, 80%, 50%, 0.4)`;
-
   const circumference = 2 * Math.PI * 90;
-  // Hold the bar empty (circumference) until loading completely finishes!
-  const dashOffset = loading
-    ? circumference
-    : circumference - (score / 100) * (circumference * 0.75);
 
-  // Mock Data
-  // const topSkills = [
-  //   {
-  //     name: "React",
-  //     score: 87,
-  //     color: "#10b981",
-  //     icon: <Atom className="w-4 h-4" />,
-  //   },
-  //   {
-  //     name: "TypeScript",
-  //     score: 72,
-  //     color: "#10b981",
-  //     icon: <FileCode2 className="w-4 h-4" />,
-  //   },
-  //   {
-  //     name: "Node.js",
-  //     score: 54,
-  //     color: "#f59e0b",
-  //     icon: <Box className="w-4 h-4" />,
-  //   },
-  //   {
-  //     name: "GraphQL",
-  //     score: 38,
-  //     color: "#f59e0b",
-  //     icon: <Network className="w-4 h-4" />,
-  //   },
-  //   {
-  //     name: "Docker",
-  //     score: 22,
-  //     color: "#ef4444",
-  //     icon: <Container className="w-4 h-4" />,
-  //   },
-  // ];
+  const { scoreColor, scoreShadow } = getScoreColors(score);
+  const dashOffset = getDashboardOffset(score, loading, circumference);
 
+  // -- Hot skills section --
   const hotSkills = [
     { name: "TypeScript", demand: "+18%", roles: 2980 },
     { name: "Next.js", demand: "+24%", roles: 2150 },
@@ -145,7 +88,7 @@ export default function DashboardHome() {
           </div>
           <div>
             <h3 className="text-3xl font-bold text-white tracking-tight">
-              {loading ? "--" :data?.skillDebts?.total || 0}
+              {loading ? "--" : data?.skillDebts?.total || 0}
             </h3>
             {/* <span className="text-xs text-slate-500 font-medium">
               {data?.skillDebts.critical} Critcial debts
@@ -266,7 +209,7 @@ export default function DashboardHome() {
                   className="text-6xl font-bold tracking-tighter"
                   style={{ color: scoreColor }}
                 >
-                  {loading ? "--" :score}
+                  {loading ? "--" : score}
                 </motion.span>
                 <span className="text-slate-500 text-xs tracking-widest font-medium mt-1">
                   /100
