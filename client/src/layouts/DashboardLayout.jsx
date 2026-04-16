@@ -11,12 +11,13 @@ import {
   LogOut,
 } from "lucide-react";
 import useDashboardData from "../hooks/useDashboardData";
-import { useAuth } from "../context/AuthContext";
 import LogoutModal from "../components/LogoutModal";
+import useAuthStore from "../store/useAuthStore";
 
 export default function DashboardLayout() {
   const { data } = useDashboardData();
-  const { user, logout } = useAuth();
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore(state => state.logout);
   const navigate = useNavigate();
 
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
