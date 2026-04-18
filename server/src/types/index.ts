@@ -19,7 +19,7 @@ export interface ILiquidityHistory {
 
 // User
 export interface IUser extends IBaseEntity {
-  // Auth fields
+  role: "user" | "admin";
   authProvider: "github" | "manual";
   githubId?: string | undefined;
   password?: string | undefined; //manual users
