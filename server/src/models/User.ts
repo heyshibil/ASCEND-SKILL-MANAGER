@@ -4,6 +4,11 @@ import type { IUser } from "../types/index.js";
 const userSchema = new Schema<IUser & Document>(
   {
     // Auth
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
+    },
     authProvider: {
       type: String,
       enum: ["github", "manual"],
