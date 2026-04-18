@@ -7,6 +7,9 @@ import VerifyEmail from "./pages/VerifyEmail";
 import SkillSelect from "./pages/SkillSelect";
 import VerificationTest from "./pages/VerificationTest";
 import ScoreReport from "./pages/ScoreReport";
+import AdminRoute from "./components/AdminRoute";
+import AdminLayout from "./layouts/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 
 export const router = createBrowserRouter([
   {
@@ -34,6 +37,18 @@ export const router = createBrowserRouter([
         path: "dashboard",
         element: <DashboardLayout />,
         children: [{ index: true, element: <DashboardHome /> }],
+      },
+
+      // -- Admin Branch --
+      {
+        path: "admin",
+        element: <AdminRoute />,
+        children: [
+          {
+            element: <AdminLayout />,
+            children: [{ index: true, element: <AdminDashboard /> }],
+          },
+        ],
       },
     ],
   },
