@@ -1,10 +1,14 @@
 import React, { useEffect } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import useAuthStore from "./store/useAuthStore";
+import { Toaster } from "sonner";
 
 const App = () => {
   const checkAuth = useAuthStore((state) => state.checkAuth);
   const isCheckingAuth = useAuthStore((state) => state.isCheckingAuth);
+
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith("/admin");
 
   useEffect(() => {
     checkAuth();
@@ -21,6 +25,12 @@ const App = () => {
   return (
     <>
       <Outlet />
+      <Toaster
+        theme={isAdminRoute ? "light" : "dark"}
+        position="top-center"
+        richColors
+        duration={3000}
+      />
     </>
   );
 };
