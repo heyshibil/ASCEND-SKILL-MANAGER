@@ -36,6 +36,7 @@ const useAuthStore = create(
 
       register: async (userData) => {
         const data = await authService.register(userData);
+        return data;
       },
 
       logout: async () => {
