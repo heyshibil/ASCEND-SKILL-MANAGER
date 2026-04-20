@@ -3,6 +3,7 @@ import authRoutes from "./modules/auth/auth.routes.js";
 import skillRoutes from "./modules/skills/skill.routes.js";
 import verificationRoutes from "./modules/verification/verification.routes.js";
 import userRoutes from "./modules/users/user.routes.js";
+import questionRoutes from "./modules/questions/questions.routes.js";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
@@ -26,7 +27,10 @@ app.get("/", (_, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/skills", skillRoutes);
 app.use("/api/verification", verificationRoutes);
-app.use("/api/users", userRoutes)
+app.use("/api/users", userRoutes);
+
+// -- Admin Routes --
+app.use("/api/admin/questions", questionRoutes);
 
 // -- Error Handler --
 app.use(errorHandler);
