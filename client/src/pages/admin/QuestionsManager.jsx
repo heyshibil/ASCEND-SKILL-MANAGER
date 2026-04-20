@@ -26,7 +26,7 @@ export default function QuestionsManager() {
 
   // --- CODE SPECIFIC DATA ---
   const [codeData, setCodeData] = useState({
-    problemStatement: "",
+    question: "",
     starterCode: "// Write starter code here\n",
     validationScript: "function assertEqual(a, b) {\n  if(JSON.stringify(a) === JSON.stringify(b)) console.log('PASS'); \n  else console.log('FAIL'); \n}",
     testCases: [{ input: "", output: "" }],
@@ -86,7 +86,7 @@ export default function QuestionsManager() {
         });
       } else {
         setCodeData({
-          problemStatement: "",
+          question: "",
           starterCode: "// Write your solution here\n",
           validationScript: "function validate(userCode) {\n  return true;\n}",
           testCases: [{ input: "", output: "" }],
@@ -241,9 +241,9 @@ export default function QuestionsManager() {
               </label>
               <textarea
                 rows="3"
-                value={codeData.problemStatement}
+                value={codeData.question}
                 onChange={(e) =>
-                  setCodeData({ ...codeData, problemStatement: e.target.value })
+                  setCodeData({ ...codeData, question: e.target.value })
                 }
                 placeholder="Write a function that calculates..."
                 className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none resize-none"
