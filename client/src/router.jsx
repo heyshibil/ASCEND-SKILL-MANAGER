@@ -10,6 +10,7 @@ import ScoreReport from "./pages/ScoreReport";
 import AdminRoute from "./components/AdminRoute";
 import AdminLayout from "./layouts/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import QuestionsManager from "./pages/admin/QuestionsManager";
 
 export const router = createBrowserRouter([
   {
@@ -46,7 +47,10 @@ export const router = createBrowserRouter([
         children: [
           {
             element: <AdminLayout />,
-            children: [{ index: true, element: <AdminDashboard /> }],
+            children: [
+              { index: true, element: <AdminDashboard /> },
+              { path: "questions", element: <QuestionsManager /> },
+            ],
           },
         ],
       },
