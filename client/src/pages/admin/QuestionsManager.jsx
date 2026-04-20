@@ -1,14 +1,24 @@
 import React, { useState } from "react";
 import CodeMirror from "@uiw/react-codemirror";
 import { javascript } from "@codemirror/lang-javascript";
-import { Plus, Trash2, Save, Code, CheckSquare, ChevronDown } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  Save,
+  Code,
+  CheckSquare,
+  ChevronDown,
+} from "lucide-react";
 import { adminService } from "../../services/adminServices";
 import { toast } from "sonner";
 import { CustomSelect } from "../../components/ui/CustomSelect";
+import { Database } from "lucide-react";
+import BulkSeedModal from "../../components/admin/BulkSeedModal";
 
 export default function QuestionsManager() {
   const [activeTab, setActiveTab] = useState("mcq"); // "mcq" | "code"
   const [loading, setLoading] = useState(false);
+  const [isBulkOpen, setIsBulkOpen] = useState(false);
 
   // --- SHARED FORM DATA ---
   const [baseData, setBaseData] = useState({
@@ -28,7 +38,8 @@ export default function QuestionsManager() {
   const [codeData, setCodeData] = useState({
     question: "",
     starterCode: "// Write starter code here\n",
-    validationScript: "function assertEqual(a, b) {\n  if(JSON.stringify(a) === JSON.stringify(b)) console.log('PASS'); \n  else console.log('FAIL'); \n}",
+    validationScript:
+      "function assertEqual(a, b) {\n  if(JSON.stringify(a) === JSON.stringify(b)) console.log('PASS'); \n  else console.log('FAIL'); \n}",
     testCases: [{ input: "", output: "" }],
   });
 
@@ -111,6 +122,16 @@ export default function QuestionsManager() {
           </p>
         </div>
 
+        <div className="flex flex-wrap items-center gap-4">
+          {/* New Bulk Button */}
+          <button 
+            onClick={() => setIsBulkOpen(true)}
+            className="flex items-center gap-2 px-5 py-2.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 text-sm font-semibold rounded-xl border border-indigo-100/50 transition-all shadow-sm"
+          >
+             <Database className="w-4 h-4" /> Bulk JSON Seed
+          </button>
+        </div>
+
         {/* Modern Tab Switcher */}
         <div className="relative flex bg-slate-100 p-1 rounded-xl border border-slate-200 shadow-inner w-full md:w-[380px]">
           {/* Animated Sliding Pill */}
@@ -118,13 +139,16 @@ export default function QuestionsManager() {
             className="absolute top-1 bottom-1 left-1 bg-white rounded-lg shadow-[0_2px_8px_-2px_rgba(0,0,0,0.1)] border border-slate-200/50 transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] z-0"
             style={{
               width: "calc(50% - 4px)",
-              transform: activeTab === "mcq" ? "translateX(0)" : "translateX(100%)",
+              transform:
+                activeTab === "mcq" ? "translateX(0)" : "translateX(100%)",
             }}
           />
           <button
             onClick={() => setActiveTab("mcq")}
             className={`relative z-10 flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-300 ${
-              activeTab === "mcq" ? "text-indigo-700" : "text-slate-500 hover:text-slate-700"
+              activeTab === "mcq"
+                ? "text-indigo-700"
+                : "text-slate-500 hover:text-slate-700"
             }`}
           >
             <CheckSquare className="w-4 h-4" /> Multiple Choice
@@ -132,7 +156,9 @@ export default function QuestionsManager() {
           <button
             onClick={() => setActiveTab("code")}
             className={`relative z-10 flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-300 ${
-              activeTab === "code" ? "text-indigo-700" : "text-slate-500 hover:text-slate-700"
+              activeTab === "code"
+                ? "text-indigo-700"
+                : "text-slate-500 hover:text-slate-700"
             }`}
           >
             <Code className="w-4 h-4" /> Code Compiler
@@ -364,6 +390,8 @@ export default function QuestionsManager() {
           </button>
         </div>
       </div>
+      {/* Mount Modal */}
+      <BulkSeedModal isOpen={isBulkOpen} onClose={() => setIsBulkOpen(false)} />
     </div>
   );
 }
