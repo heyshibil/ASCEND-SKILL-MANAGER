@@ -75,14 +75,13 @@ export interface IQuestion extends IBaseEntity {
   level: "beginner" | "intermediate" | "advanced";
   topic: string;
   type: "mcq" | "code";
+  question?: string;
 
   // MCQ Fields
-  question?: string;
   options?: string[];
   correctAnswerIndex?: number;
 
   // Code Fields
-  problemStatement?: string;
   starterCode?: string;
   validationScript?: string;
   testCases?: ITestCase[];

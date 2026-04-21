@@ -2,9 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Editor from "@monaco-editor/react";
 import { toast, Toaster } from "sonner";
-
 import { verificationService } from "../services/verificationService";
-
 import {
   Tabs,
   TabsContent,
