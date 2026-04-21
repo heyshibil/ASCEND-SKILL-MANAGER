@@ -72,7 +72,7 @@ export default function Login() {
           careerGoal: formData.careergoal,
         });
 
-        setSuccess(response.message || "Please check your email to verify.");
+        setSuccess(response?.message || "Please check your email to verify.");
         setFormData({ username: "", email: "", password: "", careergoal: "" });
         setIsLogin(true);
       }

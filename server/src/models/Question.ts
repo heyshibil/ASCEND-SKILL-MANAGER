@@ -13,14 +13,13 @@ const questionSchema = new Schema<IQuestion & Document>(
     },
     topic: { type: String, required: true },
     type: { type: String, enum: ["mcq", "code"], required: true },
+    question: { type: String },
 
     // MCQ Fields
-    question: { type: String },
     options: [{ type: String }],
     correctAnswerIndex: { type: Number },
 
     // Code Fields
-    problemStatement: { type: String },
     starterCode: { type: String },
     validationScript: { type: String },
     testCases: [
