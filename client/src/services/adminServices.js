@@ -12,4 +12,31 @@ export const adminService = {
     });
     return data;
   },
+
+  // Market
+  createMarketSkill: async (formData) => {
+    const { data } = await API.post(
+      "http://localhost:5000/api/market/trending",
+      formData,
+      { withCredentials: true },
+    );
+
+    return data;
+  },
+
+  updateMarketSkill: async (skillId, formData) => {
+    const { data } = await API.put(
+      `http://localhost:5000/api/market/trending/${skillId}`,
+      formData,
+      { withCredentials: true },
+    );
+
+    return data;
+  },
+
+  deleteMarketSkill: async (skillId) => {
+    await API.delete(`http://localhost:5000/api/market/trending/${skillId}`, {
+      withCredentials: true,
+    });
+  },
 };

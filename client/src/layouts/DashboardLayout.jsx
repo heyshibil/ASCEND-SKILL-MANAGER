@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import {
   Search,
@@ -13,11 +13,27 @@ import {
 import useDashboardData from "../hooks/useDashboardData";
 import LogoutModal from "../components/LogoutModal";
 import useAuthStore from "../store/useAuthStore";
+import { useMarketStore } from "../store/useMarketStore";
 
 export default function DashboardLayout() {
+  const initializeMarketStream = useMarketStore(
+    (state) => state.initializeMarketStream,
+  );
+
+  const closeMarketStream = useMarketStore((state) => state.closeMarketStream);
+
+  // Kickstart the SSE stream
+  useEffect(() => {
+    initializeMarketStream();
+
+    return () => {
+      closeMarketStream();
+    };
+  }, [initializeMarketStream, closeMarketStream]);
+
   const { data } = useDashboardData();
   const user = useAuthStore((state) => state.user);
-  const logout = useAuthStore(state => state.logout);
+  const logout = useAuthStore((state) => state.logout);
   const navigate = useNavigate();
 
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);

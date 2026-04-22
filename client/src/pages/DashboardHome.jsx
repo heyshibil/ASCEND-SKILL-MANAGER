@@ -1,15 +1,10 @@
 import React from "react";
-import { motion } from "framer-motion";
-import {
-  Activity,
-  Zap,
-  CheckCircle2,
-  Flame,
-  Star,
-} from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Activity, Zap, CheckCircle2, Flame, Star } from "lucide-react";
 import useDashboardData from "../hooks/useDashboardData";
 import { getDashboardOffset, getScoreColors } from "../utils/themeUtils";
 import { getIconForSkill } from "../utils/iconMap";
+import { useMarketStore } from "../store/useMarketStore";
 
 // Animation variants for smooth mounting
 const containerVariants = {
@@ -33,13 +28,11 @@ export default function DashboardHome() {
   const { scoreColor, scoreShadow } = getScoreColors(score);
   const dashOffset = getDashboardOffset(score, loading, circumference);
 
-  // -- Hot skills section --
-  const hotSkills = [
-    { name: "TypeScript", demand: "+18%", roles: 2980 },
-    { name: "Next.js", demand: "+24%", roles: 2150 },
-    { name: "Go", demand: "+31%", roles: 1540 },
-    { name: "LLM/AI", demand: "+67%", roles: 2700 },
-  ];
+
+  const hotSkills = useMarketStore((state) => state.skills);
+  const topFiveHotSkills = [...hotSkills]
+    .sort((a, b) => Number(b.demandPercentage) - Number(a.demandPercentage))
+    .slice(0, 5);
 
   return (
     <motion.div
@@ -301,29 +294,36 @@ export default function DashboardHome() {
             </div>
 
             <div className="flex flex-col gap-3">
-              {hotSkills.map((skill, i) => (
-                <div
-                  key={i}
-                  className="p-4 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-between hover:bg-white/[0.04] transition-colors cursor-default"
-                >
-                  <div className="flex flex-col gap-1">
-                    <span className="font-medium text-slate-200 text-sm">
-                      {skill.name}
-                    </span>
-                    <span className="text-[10px] text-slate-500">
-                      {skill.roles} open roles
-                    </span>
-                  </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <span className="text-emerald-400 font-bold text-sm">
-                      {skill.demand}
-                    </span>
-                    <span className="text-[10px] text-slate-500 uppercase tracking-wide">
-                      Demand
-                    </span>
-                  </div>
-                </div>
-              ))}
+              <AnimatePresence mode="popLayout">
+                {topFiveHotSkills.map((skill, i) => (
+                  <motion.div
+                    layout
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    transition={{ type: "spring", stiffness: 180, damping: 28 }}
+                    key={skill._id}
+                    className="p-4 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-between hover:bg-white/[0.04] transition-colors cursor-default"
+                  >
+                    <div className="flex flex-col gap-1">
+                      <span className="font-medium text-slate-200 text-sm">
+                        {skill.skillName}
+                      </span>
+                      <span className="text-[10px] text-slate-500">
+                        {skill.openRoles} open roles
+                      </span>
+                    </div>
+                    <div className="flex flex-col items-end gap-1">
+                      <span className="text-emerald-400 font-bold text-sm">
+                        {skill.demandPercentage}
+                      </span>
+                      <span className="text-[10px] text-slate-500 uppercase tracking-wide">
+                        Demand
+                      </span>
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
           </div>
 
