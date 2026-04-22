@@ -11,6 +11,7 @@ import AdminRoute from "./components/AdminRoute";
 import AdminLayout from "./layouts/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import QuestionsManager from "./pages/admin/QuestionsManager";
+import AdminMarket from "./pages/admin/AdminMarket";
 
 export const router = createBrowserRouter([
   {
@@ -50,6 +51,7 @@ export const router = createBrowserRouter([
             children: [
               { index: true, element: <AdminDashboard /> },
               { path: "questions", element: <QuestionsManager /> },
+              { path: "market", element: <AdminMarket /> },
             ],
           },
         ],
