@@ -112,3 +112,11 @@ export interface CompilerResult {
   passedCases: number;
   totalCases: number;
 }
+
+// Hot skills
+export interface ITrendingSkill extends IBaseEntity {
+  skillName: string;
+  demandPercentage: number;
+  parentLanguage?: string;
+  openRoles: number;
+}
