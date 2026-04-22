@@ -4,6 +4,7 @@ import skillRoutes from "./modules/skills/skill.routes.js";
 import verificationRoutes from "./modules/verification/verification.routes.js";
 import userRoutes from "./modules/users/user.routes.js";
 import questionRoutes from "./modules/questions/questions.routes.js";
+import marketRoutes from "./modules/market/market.routes.js";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
@@ -31,6 +32,7 @@ app.use("/api/users", userRoutes);
 
 // -- Admin Routes --
 app.use("/api/admin/questions", questionRoutes);
+app.use("/api/market", marketRoutes);
 
 // -- Error Handler --
 app.use(errorHandler);

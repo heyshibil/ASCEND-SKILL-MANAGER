@@ -118,9 +118,9 @@ export default function AdminLayout() {
                 <p className="text-sm font-semibold text-slate-800 leading-tight">
                   {username}
                 </p>
-                <p className="text-[10px] uppercase tracking-wider text-slate-500 font-medium">
-                  Administrator
-                </p>
+                  {/* <p className="text-[10px] uppercase tracking-wider text-slate-500 font-medium">
+                    Administrator
+                  </p> */}
               </div>
               {user?.avatarUrl ? (
                 <img
