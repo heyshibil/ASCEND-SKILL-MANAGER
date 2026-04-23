@@ -99,5 +99,5 @@ export const applySkillBoost = async (
   // refresh dashboard liquidity
   await refreshLiquidityScore(userId);
 
-  return { success: true, newScore: skill.currentScore };
+  return skill.currentScore;
 };
