@@ -4,6 +4,13 @@ export const SKILL_THRESHOLDS = {
   DEBT_MAX: 30,
 };
 
+export const BOOST_HIKES = {
+  MCQ: 5,
+  CODE_BEGINNER: 10,
+  CODE_INTERMEDIATE: 25,
+  CODE_ADVANCED: 50,
+};
+
 export const determineSkillStatus = (
   score: number,
 ): "healthy" | "draining" | "debt" => {
