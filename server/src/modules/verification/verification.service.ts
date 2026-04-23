@@ -64,7 +64,12 @@ export const generateTest = async (
   // Find 1 random compiler question (nin 4w)
   const codeDbs = await Question.aggregate([
     {
-      $match: { skill: skillName, type: "code", questionId: { $nin: seenIds } },
+      $match: {
+        skill: skillName,
+        type: "code",
+        level: expectedLevel.toLowerCase(),
+        questionId: { $nin: seenIds },
+      },
     },
     { $sample: { size: 1 } },
   ]);
@@ -93,8 +98,6 @@ export const generateTest = async (
 
   return { mcqs, codeTest };
 };
-
-
 
 // -- Gemini Audit --
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
@@ -237,7 +240,7 @@ export const gradeVerificationTest = async (
   }
 
   // refresh user liquidity score
-   await refreshLiquidityScore(userId);
+  await refreshLiquidityScore(userId);
 
   // Log the Test History to prevent repetition (4w)
   const allQuestionIds = mcqAnswers
