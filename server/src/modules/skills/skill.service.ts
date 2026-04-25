@@ -48,6 +48,59 @@ export const initUserSkills = async (
   return insertedSkills;
 };
 
+export const addSkills = async (userId: string, newSkills: SkillInput[]) => {
+  if (!newSkills || newSkills.length === 0) {
+    throw new AppError("No skills provided", 400);
+  }
+
+  // No duplicate skills
+  const existingSkills = await Skill.find({ userId });
+  const existingSkillNames = new Set(
+    existingSkills.map((s) => s.name.toLowerCase()),
+  );
+
+  const skillsToInsert = [];
+
+  for (const skill of newSkills) {
+    if (!existingSkillNames.has(skill.name.toLowerCase())) {
+      const defaults = getSkillDefaults(skill.name);
+      skillsToInsert.push({
+        userId,
+        name: skill.name,
+        category: defaults?.category || "Foundational",
+        baselineScore: skill.confidence,
+        currentScore: skill.confidence,
+        verificationMethod: "manual",
+        stabilityConstant: defaults?.stabilityConstant || 0.5,
+        masteryMultiplier: 1.0,
+      });
+    }
+  }
+
+  if (skillsToInsert.length === 0) {
+    throw new AppError(
+      "All provided skills already exist in your profile.",
+      400,
+    );
+  }
+
+  const insertedSkills = await Skill.insertMany(skillsToInsert);
+
+  await refreshLiquidityScore(userId);
+  return insertedSkills;
+};
+
+export const deleteSkill = async (userId: string, skillId: string) => {
+  const deletedSkill = await Skill.findOneAndDelete({ _id: skillId, userId });
+
+  if (!deletedSkill) {
+    throw new AppError("Skill not found", 404);
+  }
+
+  await refreshLiquidityScore(userId);
+  return deletedSkill;
+};
+
 export const getCategorizedUserSkills = async (userId: string) => {
   const skills = await Skill.find({ userId });
 
