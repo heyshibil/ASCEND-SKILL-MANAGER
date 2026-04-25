@@ -1,6 +1,7 @@
 import { Skill } from "../../models/Skill.js";
 import { User } from "../../models/User.js";
 import { AppError } from "../../middlewares/error.middleware.js";
+import { determineSkillStatus } from "../../utils/skillConstants.js";
 
 const computeLiquidityScore = (skills: { currentScore: number }[]): number => {
   if (skills.length === 0) return 0;
@@ -43,14 +44,15 @@ export const getDashboardData = async (userId: string) => {
 
   // Skill debts
   const skills = await Skill.find({ userId });
-  
-  const skillDebtsList = skills.filter((s) => s.currentScore < 50);
 
-  const criticalDebts = skillDebtsList.filter(
-    (s) => s.currentScore < 30,
-  ).length;
+  let debtCount = 0;
+  let drainingSkills = 0;
 
-  const drainingSkills = skills.filter((s) => s.currentScore < 70).length;
+  skills.forEach((skill) => {
+    const status = determineSkillStatus(skill.currentScore);
+    if (status === "debt") debtCount++;
+    if (status === "draining") drainingSkills++;
+  });
 
   // Top skills
   const topSkills = [...skills]
@@ -63,8 +65,8 @@ export const getDashboardData = async (userId: string) => {
     scoreHistory: user.liquidityScore.history,
     activeSkills: skills.length,
     skillDebts: {
-      total: skillDebtsList.length,
-      critical: criticalDebts,
+      total: debtCount + drainingSkills,
+      critical: debtCount,
       drainingSkills,
     },
     topSkills,

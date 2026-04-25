@@ -116,7 +116,7 @@ export default function DashboardLayout() {
             Quick Stats
           </p>
           <div className="flex justify-between items-center text-sm">
-            <span className="text-slate-400">Critical Debts</span>
+            <span className="text-slate-400">Skill Debts</span>
             <span className="text-red-400 font-semibold font-mono">
               {data.skillDebts.critical}
             </span>
