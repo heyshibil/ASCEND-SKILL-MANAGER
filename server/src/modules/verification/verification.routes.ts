@@ -9,10 +9,30 @@ router.post(
   authenticate,
   verificationController.startVerificationTest,
 );
+
 router.post(
   "/submit",
   authenticate,
   verificationController.submitVerificationTest,
+);
+
+// Boost skill routes
+router.get(
+  "/boost/generate",
+  authenticate,
+  verificationController.generateBoost,
+);
+
+router.post(
+  "/boost/mcq/submit",
+  authenticate,
+  verificationController.submitMcqBoost,
+);
+
+router.post(
+  "/boost/compiler/submit",
+  authenticate,
+  verificationController.submitCompilerBoost,
 );
 
 export default router;

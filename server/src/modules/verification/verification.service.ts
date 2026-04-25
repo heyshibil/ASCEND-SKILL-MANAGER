@@ -270,3 +270,217 @@ export const gradeVerificationTest = async (
     mcqResults,
   };
 };
+
+// -- Generate Boost test --
+export const generateBoostTest = async (
+  userId: string,
+  skillName: string,
+  type: "mcq" | "compiler",
+  level?: string,
+) => {
+  const fourWeeksAgo = new Date(Date.now() - 4 * 7 * 24 * 60 * 60 * 1000);
+
+  const recentHistories = await TestHistory.find({
+    userId,
+    skillName,
+    createdAt: { $gte: fourWeeksAgo },
+  });
+  const seenIds = recentHistories.flatMap((history) => history.questionIds);
+
+  let mcqs = null;
+  let codeTest = null;
+  let mcqIds: string[] = [];
+  let codeId = null;
+
+  if (type === "mcq") {
+    const rawMcqs = await Question.aggregate([
+      {
+        $match: {
+          skill: skillName,
+          type: "mcq",
+          questionId: { $nin: seenIds },
+        },
+      },
+      { $sample: { size: 5 } },
+      { $project: { _id: 1, questionId: 1, question: 1, options: 1 } },
+    ]);
+
+    if (rawMcqs.length < 5) {
+      throw new AppError("Not enough unique MCQ questions available.", 400);
+    }
+
+    mcqs = rawMcqs;
+    mcqIds = mcqs.map((q) => q.questionId);
+  } else if (type === "compiler") {
+    if (!level) {
+      throw new AppError("Level is required for compiler test.", 400);
+    }
+
+    const codeDbs = await Question.aggregate([
+      {
+        $match: {
+          skill: skillName,
+          type: "code",
+          level: level.toLowerCase(),
+          questionId: { $nin: seenIds },
+        },
+      },
+      { $sample: { size: 1 } },
+    ]);
+
+    if (codeDbs.length < 1) {
+      throw new AppError(
+        "Not enough unique code questions available for this level.",
+        400,
+      );
+    }
+
+    codeTest = codeDbs[0];
+    codeId = codeTest.questionId;
+  }
+
+  // Cache specific boost session
+  const sessionData = {
+    skillName,
+    type,
+    mcqIds,
+    codeId,
+    level,
+    startTime: Date.now(),
+  };
+
+  await redisConnection.set(
+    `boost_session:${userId}`,
+    JSON.stringify(sessionData),
+    "EX",
+    1200,
+  );
+
+  return { mcqs, codeTest };
+};
+
+// -- Grade MCQ boost test --
+export const gradeMcqBoost = async (
+  userId: string,
+  skillName: string,
+  mcqAnswers: { questionId: string; answerIndex: number }[],
+) => {
+  const sessionString = await redisConnection.get(`boost_session:${userId}`);
+
+  if (!sessionString) {
+    throw new AppError("Boost session expired! Too much time taken.", 400);
+  }
+
+  const activeSession = JSON.parse(sessionString);
+
+  if (activeSession.type !== "mcq" || activeSession.skillName !== skillName) {
+    await redisConnection.del(`boost_session:${userId}`);
+    throw new AppError("Invalid session data. Session invalidated.", 403);
+  }
+
+  let correctMcqs = 0;
+
+  for (const answerSet of mcqAnswers) {
+    if (!activeSession.mcqIds.includes(answerSet.questionId)) {
+      throw new AppError("Invalid MCQ ID", 403);
+    }
+
+    const dbQuestion = await Question.findOne({
+      questionId: answerSet.questionId,
+    });
+
+    if (dbQuestion && dbQuestion.correctAnswerIndex === answerSet.answerIndex) {
+      correctMcqs++;
+    }
+  }
+
+  // 1% hike per right answer
+  const hike = correctMcqs * 1;
+
+  const skillRecord = await Skill.findOne({ userId, name: skillName });
+  if (skillRecord) {
+    skillRecord.currentScore = Math.min(100, skillRecord.currentScore + hike);
+    await skillRecord.save();
+  }
+
+  await refreshLiquidityScore(userId);
+  await TestHistory.create({
+    userId,
+    skillName,
+    questionIds: activeSession.mcqIds,
+  });
+  await redisConnection.del(`boost_session:${userId}`);
+
+  return {
+    correctCount: correctMcqs,
+    hikeApplied: hike,
+    newScore: skillRecord?.currentScore,
+  };
+};
+
+// -- Grade Compiler boost test --
+export const gradeCompilerBoost = async (
+  userId: string,
+  skillName: string,
+  codeAnswer: string,
+  codeQuestionId: string,
+) => {
+  const sessionString = await redisConnection.get(`boost_session:${userId}`);
+  if (!sessionString) {
+    throw new AppError("Boost session expired!", 400);
+  }
+
+  const activeSession = JSON.parse(sessionString);
+
+  if (
+    activeSession.type !== "compiler" ||
+    activeSession.codeId !== codeQuestionId ||
+    activeSession.skillName !== skillName
+  ) {
+    await redisConnection.del(`boost_session:${userId}`);
+    throw new AppError("Invalid session data. Session invalidated.", 403);
+  }
+
+  const dbCodeQ = await Question.findOne({ questionId: codeQuestionId });
+  if (!dbCodeQ) {
+    throw new AppError("Question not found", 404);
+  }
+
+  const { compilerScore, passedCases, totalCases } = await executeCodeTest(
+    codeAnswer,
+    dbCodeQ.testCases!,
+    dbCodeQ.validationScript!,
+    skillName,
+  );
+
+  let hike = 0;
+
+  if (passedCases === totalCases && totalCases > 0) {
+    if (activeSession.level === "beginner") hike = 10;
+    else if (activeSession.level === "intermediate") hike = 25;
+    else if (activeSession.level === "advanced") hike = 50;
+  }
+
+  const skillRecord = await Skill.findOne({ userId, name: skillName });
+  if (skillRecord) {
+    skillRecord.currentScore = Math.min(100, skillRecord.currentScore + hike);
+    await skillRecord.save();
+  }
+
+  await refreshLiquidityScore(userId);
+
+  await TestHistory.create({
+    userId,
+    skillName,
+    questionIds: [codeQuestionId],
+  });
+
+  await redisConnection.del(`boost_session:${userId}`);
+
+  return {
+    passedCases,
+    totalCases,
+    hikeApplied: hike,
+    newScore: skillRecord?.currentScore,
+  };
+};
