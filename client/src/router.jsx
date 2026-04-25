@@ -15,6 +15,7 @@ import AdminMarket from "./pages/admin/AdminMarket";
 import SkillControl from "./pages/SkillControl";
 import BoostMcqTest from "./pages/BoostMcqTest";
 import BoostCompilerTest from "./pages/BoostCompilerTest";
+import MarketIntel from "./pages/MarketIntel";
 
 export const router = createBrowserRouter([
   {
@@ -46,6 +47,7 @@ export const router = createBrowserRouter([
           { path: "skill-control", element: <SkillControl /> },
           { path: "boost/mcq", element: <BoostMcqTest /> },
           { path: "boost/compiler", element: <BoostCompilerTest /> },
+          { path: "market-intel", element: <MarketIntel /> },
         ],
       },
 
