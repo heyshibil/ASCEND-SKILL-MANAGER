@@ -73,7 +73,7 @@ export default function DashboardHome() {
         >
           <div className="flex justify-between items-start">
             <span className="text-slate-400 text-sm font-medium">
-              Skill Debts
+              Decaying Skills
             </span>
             <div className="p-1.5 rounded-lg bg-red-400/10 text-red-400">
               <Zap className="w-4 h-4" />
@@ -238,7 +238,7 @@ export default function DashboardHome() {
                       <div className="flex items-center gap-2">
                         <span
                           className="text-sm p-1.5 rounded-lg bg-white/5 shadow"
-                          style={{ color: skillColor }}
+                          // style={{ color: skillColor }}
                         >
                           {getIconForSkill(skill.name)}
                         </span>
