@@ -21,6 +21,45 @@ export const initializeSkills = async (
   }
 };
 
+export const addSkills = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { skills } = req.body;
+
+    const result = await skillService.addSkills(req.userId!, skills);
+
+    res.status(201).json({
+      success: true,
+      message: "Skills added successfully",
+      skills: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteSkill = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { skillId } = req.params;
+
+    await skillService.deleteSkill(req.userId!, skillId as string);
+
+    res.status(200).json({
+      success: true,
+      message: "Skill deleted successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const categorizeSkills = async (
   req: Request,
   res: Response,
