@@ -87,7 +87,9 @@ export default function DashboardLayout() {
 
           <NavLink
             to="/dashboard/skill-control"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm font-medium ${isActive ? "bg-indigo-500/10 text-indigo-300 border border-indigo-500/20" : "text-slate-400 hover:text-white hover:bg-white/5"}`
+            }
           >
             <Sliders className="w-4 h-4" />
             Skill Control
@@ -95,7 +97,9 @@ export default function DashboardLayout() {
 
           <NavLink
             to="/dashboard/market-intel"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm font-medium ${isActive ? "bg-indigo-500/10 text-indigo-300 border border-indigo-500/20" : "text-slate-400 hover:text-white hover:bg-white/5"}`
+            }
           >
             <TrendingUp className="w-4 h-4" />
             Market Intel
@@ -103,7 +107,9 @@ export default function DashboardLayout() {
 
           <NavLink
             to="/dashboard/settings"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm font-medium ${isActive ? "bg-indigo-500/10 text-indigo-300 border border-indigo-500/20" : "text-slate-400 hover:text-white hover:bg-white/5"}`
+            }
           >
             <Settings className="w-4 h-4" />
             Settings

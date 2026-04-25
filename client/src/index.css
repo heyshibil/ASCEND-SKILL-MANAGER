@@ -3,3 +3,47 @@
 button {
   cursor: pointer;
 }
+
+@keyframes shine-right-to-left {
+  0% { transform: translateX(150%) skewX(-20deg); opacity: 0; }
+  5% { opacity: 0.6; }
+  15% { transform: translateX(-150%) skewX(-20deg); opacity: 0; }
+  100% { transform: translateX(-150%) skewX(-20deg); opacity: 0; }
+}
+
+.animate-shine-elite {
+  position: absolute;
+  top: 0;
+  left: -25%;
+  width: 50%;
+  height: 100%;
+  animation: shine-right-to-left 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Modern Minimalist Scrollbar (Global) */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.5); /* subtle indigo glow on hover */
+}
+
+/* Firefox Support */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}

@@ -1,3 +1,4 @@
+import { AppError } from "../../middlewares/error.middleware.js";
 import { TrendingSkill } from "../../models/TrendingSkill.js";
 import type { ITrendingSkill } from "../../types/index.js";
 
@@ -16,12 +17,46 @@ export const createTrendingSkill = async (data: ITrendingSkill) => {
 export const updateTrendingSkill = async (
   id: string,
   updateData: Partial<ITrendingSkill>,
-  // why this partial??
 ) => {
-  return await TrendingSkill.findByIdAndUpdate(id, updateData, {
-    new: true,
-    runValidators: true,
-  });
+  const skill = await TrendingSkill.findById(id);
+
+  if (!skill) {
+    throw new AppError("Trending skill not found", 404);
+  }
+
+  let metricsChanged = false;
+
+  if (updateData.skillName !== undefined)
+    skill.skillName = updateData.skillName;
+
+  if (updateData.parentLanguage !== undefined)
+    skill.parentLanguage = updateData.parentLanguage;
+
+  if (
+    updateData.demandPercentage !== undefined &&
+    updateData.demandPercentage !== skill.demandPercentage
+  ) {
+    skill.demandPercentage = updateData.demandPercentage;
+    metricsChanged = true;
+  }
+
+  if (
+    updateData.openRoles !== undefined &&
+    updateData.openRoles !== skill.openRoles
+  ) {
+    skill.openRoles = updateData.openRoles;
+    metricsChanged = true;
+  }
+
+  if (metricsChanged) {
+    skill.history.push({
+      date: new Date(),
+      demandPercentage: skill.demandPercentage,
+      openRoles: skill.openRoles,
+    });
+  }
+
+  return await skill.save();
 };
 
 export const deleteTrendingSkill = async (id: string) => {
