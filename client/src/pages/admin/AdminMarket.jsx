@@ -112,76 +112,72 @@ export default function AdminMarket() {
     }
   };
 
+  const inputClass = "w-full border rounded-[var(--radius-md)] px-3 h-9 text-[14px] outline-none transition-all focus:border-[var(--accent)] focus:ring-2 focus:ring-[rgba(37,99,235,0.15)]";
+
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto flex flex-col gap-8">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-            <TrendingUp className="w-6 h-6 text-indigo-600" /> Market
-            Intelligence
+          <h1 className="text-[24px] font-medium text-[var(--text-primary)] tracking-[-0.01em] flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-[var(--accent)]" /> Market intelligence
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-[14px] text-[var(--text-secondary)] mt-1">
             Push real-time trending skills directly to the users.
           </p>
         </div>
-        <div className="text-sm px-3 py-1.5 bg-emerald-50 text-emerald-700 font-medium rounded-md border border-emerald-100 flex items-center gap-2 transition-all">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse bypass"></span>
-          SSE System Connected
+        <div className="text-[13px] px-3 py-1.5 rounded-[var(--radius-md)] font-medium flex items-center gap-2" style={{ background: 'var(--success-bg)', color: 'var(--success)' }}>
+          <span className="w-2 h-2 rounded-full bg-[var(--success)] animate-pulse"></span>
+          SSE system connected
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Market Injection / Update Form */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Form */}
         <div className="lg:col-span-1">
           <div
-            className={`bg-white rounded-xl border shadow-sm overflow-hidden sticky top-6 transition-all ${
-              editMode
-                ? "border-amber-300 shadow-amber-500/10"
-                : "border-slate-200"
-            }`}
+            className="rounded-[var(--radius-lg)] border overflow-hidden sticky top-6 transition-all"
+            style={{
+              background: 'var(--bg-surface)',
+              borderColor: editMode ? 'var(--warning)' : 'var(--border-subtle)',
+            }}
           >
-            <div
-              className={`px-6 py-5 border-b flex justify-between items-center ${
-                editMode
-                  ? "bg-amber-50/50 border-amber-200"
-                  : "bg-slate-50/50 border-slate-200"
-              }`}
-            >
+            <div className="px-6 py-4 border-b flex justify-between items-center" style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-raised)' }}>
               <div className="flex items-center gap-2">
                 {editMode ? (
-                  <Edit3 className="w-5 h-5 text-amber-600" />
+                  <Edit3 className="w-4 h-4 text-[var(--warning)]" />
                 ) : (
-                  <Plus className="w-5 h-5 text-indigo-600" />
+                  <Plus className="w-4 h-4 text-[var(--accent)]" />
                 )}
-                <h3 className="text-base font-semibold text-slate-800">
-                  {editMode ? "Update Market Data" : "Inject Market Trend"}
+                <h3 className="text-[15px] font-medium text-[var(--text-primary)]">
+                  {editMode ? "Update market data" : "Inject market trend"}
                 </h3>
               </div>
               {editMode && (
                 <button
                   onClick={cancelEdit}
-                  className="p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                  className="w-7 h-7 flex items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-raised)] transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>
               )}
             </div>
             <div className="p-6">
-              <form onSubmit={handleSubmit} className="space-y-5">
+              <form onSubmit={handleSubmit} className="flex flex-col gap-5">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">
-                    Skill Name
+                  <label className="block text-[11px] font-medium text-[var(--text-tertiary)] tracking-[0.02em] mb-2">
+                    Skill name
                   </label>
                   <div className="relative group">
-                    <Code2 className="w-4 h-4 text-slate-400 absolute left-3 top-[11px] group-focus-within:text-indigo-500 transition-colors" />
+                    <Code2 className="w-4 h-4 text-[var(--text-tertiary)] absolute left-3 top-[10px] group-focus-within:text-[var(--accent)] transition-colors" />
                     <input
                       type="text"
                       name="skillName"
                       value={formData.skillName}
                       onChange={handleInputChange}
                       required
-                      className="w-full pl-10 pr-3 py-2 bg-slate-50 hover:bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all shadow-sm"
+                      className={inputClass + " pl-10"}
+                      style={{ background: 'var(--bg-raised)', borderColor: 'var(--border-base)', color: 'var(--text-primary)' }}
                       placeholder="e.g. Next.js App Router"
                     />
                   </div>
@@ -189,11 +185,11 @@ export default function AdminMarket() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">
+                    <label className="block text-[11px] font-medium text-[var(--text-tertiary)] tracking-[0.02em] mb-2">
                       Demand %
                     </label>
                     <div className="relative group">
-                      <Activity className="w-4 h-4 text-slate-400 absolute left-3 top-[11px] group-focus-within:text-indigo-500 transition-colors" />
+                      <Activity className="w-4 h-4 text-[var(--text-tertiary)] absolute left-3 top-[10px] group-focus-within:text-[var(--accent)] transition-colors" />
                       <input
                         type="number"
                         min="0"
@@ -202,17 +198,18 @@ export default function AdminMarket() {
                         value={formData.demandPercentage}
                         onChange={handleInputChange}
                         required
-                        className="w-full pl-10 pr-3 py-2 bg-slate-50 hover:bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all shadow-sm"
+                        className={inputClass + " pl-10"}
+                        style={{ background: 'var(--bg-raised)', borderColor: 'var(--border-base)', color: 'var(--text-primary)' }}
                         placeholder="85"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">
-                      Open Roles
+                    <label className="block text-[11px] font-medium text-[var(--text-tertiary)] tracking-[0.02em] mb-2">
+                      Open roles
                     </label>
                     <div className="relative group">
-                      <Briefcase className="w-4 h-4 text-slate-400 absolute left-3 top-[11px] group-focus-within:text-indigo-500 transition-colors" />
+                      <Briefcase className="w-4 h-4 text-[var(--text-tertiary)] absolute left-3 top-[10px] group-focus-within:text-[var(--accent)] transition-colors" />
                       <input
                         type="number"
                         min="0"
@@ -220,7 +217,8 @@ export default function AdminMarket() {
                         value={formData.openRoles}
                         onChange={handleInputChange}
                         required
-                        className="w-full pl-10 pr-3 py-2 bg-slate-50 hover:bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all shadow-sm"
+                        className={inputClass + " pl-10"}
+                        style={{ background: 'var(--bg-raised)', borderColor: 'var(--border-base)', color: 'var(--text-primary)' }}
                         placeholder="1250"
                       />
                     </div>
@@ -228,18 +226,16 @@ export default function AdminMarket() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">
-                    Parent Language{" "}
-                    <span className="lowercase text-slate-400 font-normal">
-                      (optional)
-                    </span>
+                  <label className="block text-[11px] font-medium text-[var(--text-tertiary)] tracking-[0.02em] mb-2">
+                    Parent language <span className="text-[var(--text-disabled)]">(optional)</span>
                   </label>
                   <input
                     type="text"
                     name="parentLanguage"
                     value={formData.parentLanguage}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 bg-slate-50 hover:bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all shadow-sm"
+                    className={inputClass}
+                    style={{ background: 'var(--bg-raised)', borderColor: 'var(--border-base)', color: 'var(--text-primary)' }}
                     placeholder="e.g. JavaScript, Python"
                   />
                 </div>
@@ -248,24 +244,25 @@ export default function AdminMarket() {
                   <button
                     disabled={isSubmitting}
                     type="submit"
-                    className={`w-full text-white font-medium py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm shadow-sm ring-1 active:scale-[0.98] ${
+                    className={`w-full text-white font-medium h-9 rounded-[var(--radius-md)] transition-colors flex items-center justify-center gap-2 text-[14px] ${
                       editMode
-                        ? "bg-amber-500 hover:bg-amber-600 ring-amber-600 shadow-amber-500/20 disabled:bg-amber-400"
-                        : "bg-indigo-600 hover:bg-indigo-700 ring-indigo-700 shadow-indigo-600/20 disabled:bg-indigo-400"
-                    }`}
+                        ? "bg-[var(--warning)] hover:opacity-90"
+                        : "bg-[var(--accent)] hover:bg-[var(--accent-hover)]"
+                    } disabled:opacity-50`}
                   >
                     {isSubmitting
                       ? "Broadcasting..."
                       : editMode
-                        ? "Broadcast System Update"
-                        : "Broadcast Sub-system Update"}
+                        ? "Broadcast system update"
+                        : "Broadcast sub-system update"}
                   </button>
 
                   {editMode && (
                     <button
                       type="button"
                       onClick={cancelEdit}
-                      className="w-full bg-white hover:bg-slate-50 text-slate-700 font-medium py-2 rounded-lg transition-colors border border-slate-200 text-sm shadow-sm active:scale-[0.98]"
+                      className="w-full h-9 border rounded-[var(--radius-md)] text-[var(--text-secondary)] text-[14px] font-medium transition-colors hover:bg-[var(--bg-raised)]"
+                      style={{ borderColor: 'var(--border-base)' }}
                     >
                       Cancel
                     </button>
@@ -276,20 +273,20 @@ export default function AdminMarket() {
           </div>
         </div>
 
-        {/* Live Market Stream Viewer */}
+        {/* Live Market Stream */}
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full min-h-[500px]">
-            <div className="px-6 py-5 border-b border-slate-200 bg-slate-50/50 flex justify-between items-center">
-              <h3 className="text-base font-semibold text-slate-800">
-                Active Market Stream Feed
+          <div className="rounded-[var(--radius-lg)] border overflow-hidden flex flex-col h-full min-h-[500px]" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}>
+            <div className="px-6 py-4 border-b flex justify-between items-center" style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-raised)' }}>
+              <h3 className="text-[15px] font-medium text-[var(--text-primary)]">
+                Active market stream feed
               </h3>
             </div>
 
-            <div className="flex-1 p-6 flex flex-col gap-4 overflow-y-auto max-h-[700px] bg-slate-50/30">
+            <div className="flex-1 p-6 flex flex-col gap-4 overflow-y-auto max-h-[700px]">
               {skills.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-slate-400 mt-20">
-                  <Activity className="w-12 h-12 mb-3 text-slate-300" />
-                  <p className="text-sm font-medium text-slate-500">
+                <div className="flex flex-col items-center justify-center h-full text-[var(--text-tertiary)] mt-20">
+                  <Activity className="w-10 h-10 mb-3" />
+                  <p className="text-[14px] font-medium text-[var(--text-secondary)]">
                     Awaiting market activity...
                   </p>
                 </div>
@@ -297,62 +294,44 @@ export default function AdminMarket() {
                 skills.map((skill, idx) => (
                   <div
                     key={skill._id || idx}
-                    className="group relative bg-white border border-slate-200/80 rounded-xl p-5 hover:border-indigo-300 hover:shadow-lg hover:shadow-indigo-500/5 shadow-sm transition-all duration-300 transform origin-top animate-in fade-in slide-in-from-top-4"
+                    className="group relative rounded-[var(--radius-lg)] border p-5 transition-all hover:bg-[var(--bg-raised)]"
+                    style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}
                   >
                     <div className="absolute top-0 right-0 p-4">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 text-xs font-bold tracking-tight">
-                        <TrendingUp className="w-3.5 h-3.5" />{" "}
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[var(--radius-sm)] text-[12px] font-medium" style={{ background: 'var(--success-bg)', color: 'var(--success)' }}>
+                        <TrendingUp className="w-3.5 h-3.5" />
                         {skill.demandPercentage}% Demand
                       </span>
                     </div>
 
                     <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center border border-slate-100 group-hover:bg-indigo-50 group-hover:border-indigo-100 transition-colors shrink-0">
-                        <Code2 className="w-6 h-6 text-slate-600 group-hover:text-indigo-600 transition-colors" />
+                      <div className="w-10 h-10 rounded-[var(--radius-lg)] flex items-center justify-center shrink-0" style={{ background: 'var(--bg-raised)' }}>
+                        <Code2 className="w-5 h-5 text-[var(--text-tertiary)]" />
                       </div>
                       <div className="pt-1 flex-1">
-                        <h4 className="text-lg font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                        <h4 className="text-[16px] font-medium text-[var(--text-primary)]">
                           {skill.skillName}
                         </h4>
                         {skill.parentLanguage && (
-                          <span className="text-[11px] font-semibold text-indigo-500 uppercase tracking-wider inline-block mt-0.5">
+                          <span className="text-[11px] font-medium text-[var(--accent)] tracking-[0.02em] inline-block mt-0.5">
                             {skill.parentLanguage}
                           </span>
                         )}
-                        <div className="mt-3.5 flex flex-wrap items-center justify-between gap-4 w-full">
-                          {/* <div className="flex items-center gap-5">
-                            <div className="flex items-center gap-2 text-sm text-slate-600 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-100">
-                              <Briefcase className="w-4 h-4 text-slate-400" />
-                              <span className="font-medium">
-                                {skill.openRoles.toLocaleString()} open roles
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-1.5 text-sm font-medium text-emerald-600 hidden sm:flex">
-                              <span className="relative flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                              </span>
-                              Now Trending
-                            </div>
-                          </div> */}
-
-                          {/* ACTION BUTTONS */}
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => handleEditClick(skill)}
-                              className="px-2.5 py-1.5 flex items-center gap-1.5 text-xs font-semibold text-slate-600 bg-slate-50 border border-slate-200 hover:text-amber-700 hover:bg-amber-50 hover:border-amber-200 rounded-md transition-colors shadow-sm"
-                              title="Edit Trend"
-                            >
-                              <Edit3 className="w-3.5 h-3.5" /> Edit
-                            </button>
-                            <button
-                              onClick={() => handleDeleteClick(skill._id)}
-                              className="px-2.5 py-1.5 flex items-center gap-1.5 text-xs font-semibold text-slate-600 bg-slate-50 border border-slate-200 hover:text-red-700 hover:bg-red-50 hover:border-red-200 rounded-md transition-colors shadow-sm"
-                              title="Delete Trend"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" /> Delete
-                            </button>
-                          </div>
+                        <div className="mt-3 flex items-center gap-2">
+                          <button
+                            onClick={() => handleEditClick(skill)}
+                            className="px-2 py-1 flex items-center gap-1.5 text-[12px] font-medium rounded-[var(--radius-sm)] border transition-colors text-[var(--text-secondary)] hover:text-[var(--warning)] hover:bg-[var(--warning-bg)]"
+                            style={{ borderColor: 'var(--border-base)' }}
+                          >
+                            <Edit3 className="w-3 h-3" /> Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteClick(skill._id)}
+                            className="px-2 py-1 flex items-center gap-1.5 text-[12px] font-medium rounded-[var(--radius-sm)] border transition-colors text-[var(--text-secondary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)]"
+                            style={{ borderColor: 'var(--border-base)' }}
+                          >
+                            <Trash2 className="w-3 h-3" /> Delete
+                          </button>
                         </div>
                       </div>
                     </div>

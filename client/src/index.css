@@ -1,28 +1,109 @@
 @import "tailwindcss";
 
+/* ================================================================
+   ASCEND DESIGN SYSTEM
+   A premium, production-grade token system.
+   Light mode = Admin side (default :root)
+   Dark mode  = User side  (.theme-dark)
+   ================================================================ */
+
+/* --- Light Mode Tokens (Admin Side — default) --- */
+:root {
+  /* Backgrounds */
+  --bg-canvas:     #F9F9F8;
+  --bg-surface:    #FFFFFF;
+  --bg-raised:     #F4F4F2;
+  --bg-overlay:    #EDEDEB;
+
+  /* Borders */
+  --border-subtle: #E8E7E3;
+  --border-base:   #D4D3CE;
+  --border-strong: #A8A7A1;
+
+  /* Text */
+  --text-primary:  #141413;
+  --text-secondary:#5A5A56;
+  --text-tertiary: #9A9994;
+  --text-disabled: #C4C3BE;
+
+  /* Semantic — meaning only */
+  --accent:        #2563EB;
+  --accent-hover:  #1D4ED8;
+  --accent-bg:     #EFF6FF;
+  --success:       #16A34A;
+  --success-bg:    #F0FDF4;
+  --warning:       #D97706;
+  --warning-bg:    #FFFBEB;
+  --danger:        #DC2626;
+  --danger-bg:     #FEF2F2;
+
+  /* Typography */
+  --font-sans: 'Inter', 'SF Pro Text', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+
+  /* Radius */
+  --radius-sm:  4px;
+  --radius-md:  6px;
+  --radius-lg:  8px;
+  --radius-xl:  12px;
+
+  /* Shadows */
+  --shadow-sm:  0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md:  0 2px 8px rgba(0,0,0,0.08);
+  --shadow-lg:  0 8px 24px rgba(0,0,0,0.10);
+}
+
+/* --- Dark Mode Tokens (User Side) --- */
+.theme-dark {
+  --bg-canvas:     #111110;
+  --bg-surface:    #1A1A18;
+  --bg-raised:     #222220;
+  --bg-overlay:    #2C2C29;
+
+  --border-subtle: #2E2E2B;
+  --border-base:   #3D3D3A;
+  --border-strong: #525250;
+
+  --text-primary:  #F2F1EE;
+  --text-secondary:#A8A7A1;
+  --text-tertiary: #6B6A65;
+  --text-disabled: #3D3D3A;
+
+  --accent-bg:     rgba(37,99,235,0.12);
+  --success-bg:    rgba(22,163,74,0.12);
+  --warning-bg:    rgba(217,119,6,0.12);
+  --danger-bg:     rgba(220,38,38,0.12);
+
+  --shadow-sm:  0 1px 2px rgba(0,0,0,0.20);
+  --shadow-md:  0 2px 8px rgba(0,0,0,0.28);
+  --shadow-lg:  0 8px 24px rgba(0,0,0,0.36);
+}
+
+/* ================================================================
+   BASE STYLES
+   ================================================================ */
+
+html {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background: var(--bg-canvas);
+}
+
 button {
   cursor: pointer;
 }
 
-@keyframes shine-right-to-left {
-  0% { transform: translateX(150%) skewX(-20deg); opacity: 0; }
-  5% { opacity: 0.6; }
-  15% { transform: translateX(-150%) skewX(-20deg); opacity: 0; }
-  100% { transform: translateX(-150%) skewX(-20deg); opacity: 0; }
-}
+/* ================================================================
+   SCROLLBAR
+   ================================================================ */
 
-.animate-shine-elite {
-  position: absolute;
-  top: 0;
-  left: -25%;
-  width: 50%;
-  height: 100%;
-  animation: shine-right-to-left 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-  pointer-events: none;
-  z-index: 5;
-}
-
-/* Modern Minimalist Scrollbar (Global) */
 ::-webkit-scrollbar {
   width: 4px;
   height: 4px;
@@ -33,17 +114,50 @@ button {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--border-base);
   border-radius: 10px;
-  transition: background 0.3s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(99, 102, 241, 0.5); /* subtle indigo glow on hover */
+  background: var(--border-strong);
 }
 
-/* Firefox Support */
+/* Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+  scrollbar-color: var(--border-base) transparent;
+}
+
+/* ================================================================
+   LOADING ANIMATION
+   ================================================================ */
+
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s ease-in-out infinite;
+}
+
+/* ================================================================
+   CUSTOM SCROLLBAR (scoped)
+   ================================================================ */
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--border-subtle);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--border-base);
 }
