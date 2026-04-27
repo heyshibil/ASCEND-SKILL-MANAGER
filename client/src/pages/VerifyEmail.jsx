@@ -36,10 +36,10 @@ export default function VerifyEmail() {
   }, [token, navigate]);
 
   return (
-    <div className="min-h-screen bg-[#0b0b0f] flex items-center justify-center text-white">
-      <div className="bg-white/5 border border-white/10 p-8 rounded-xl max-w-md text-center">
-        <h2 className="text-xl font-semibold mb-2">Account Verification</h2>
-        <p className="text-slate-400">{status}</p>
+    <div className="theme-dark min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-canvas)' }}>
+      <div className="p-8 rounded-[var(--radius-lg)] max-w-md text-center" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
+        <h2 className="text-[18px] font-medium text-[var(--text-primary)] mb-2">Account verification</h2>
+        <p className="text-[14px] text-[var(--text-secondary)]">{status}</p>
       </div>
     </div>
   );

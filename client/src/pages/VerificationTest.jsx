@@ -123,46 +123,42 @@ export default function VerificationTest() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0b0b0f] flex items-center justify-center text-indigo-400">
-        <span className="animate-pulse">
-          Initializing Verification Engine...
+      <div className="theme-dark min-h-screen flex items-center justify-center text-[14px] text-[var(--text-secondary)]" style={{ background: 'var(--bg-canvas)' }}>
+        <span className="animate-pulse-subtle">
+          Initializing verification engine...
         </span>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0b0b0f] flex flex-col items-center py-12 px-6 relative overflow-hidden font-sans selection:bg-indigo-500/30">
+    <div className="theme-dark min-h-screen flex flex-col items-center py-12 px-6 font-[var(--font-sans)]" style={{ background: 'var(--bg-canvas)' }}>
       <Toaster theme="dark" position="top-center" richColors />
-
-      <div className="absolute top-[-10%] left-[-5%] w-[500px] h-[500px] bg-[#312e81] rounded-full mix-blend-screen filter blur-[150px] opacity-20 pointer-events-none fixed"></div>
-      <div className="absolute bottom-[-10%] right-[-5%] w-[600px] h-[600px] bg-[#1a1029] rounded-full mix-blend-screen filter blur-[150px] opacity-25 pointer-events-none fixed"></div>
 
       <div className="relative z-10 w-full max-w-5xl flex flex-col gap-8">
         <div className="text-center w-full">
-          <h1 className="text-3xl font-semibold text-white tracking-tight">
-            Verification Test
+          <h1 className="text-[24px] font-medium text-[var(--text-primary)] tracking-[-0.01em]">
+            Verification test
           </h1>
-          <p className="text-sm text-slate-400 mt-2">
-            Complete the MCQ theory and Compiler test to authenticate your
-            baseline score.
+          <p className="text-[14px] text-[var(--text-secondary)] mt-2">
+            Complete the MCQ theory and compiler test to authenticate your baseline score.
           </p>
         </div>
 
-        <div className="w-full bg-white/[0.02] border border-white/10 backdrop-blur-xl rounded-2xl p-6 sm:p-8 shadow-2xl flex flex-col gap-6">
+        <div className="w-full rounded-[var(--radius-lg)] border p-6 sm:p-8 flex flex-col gap-6" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}>
           <Tabs defaultValue="theory" className="w-full">
-            <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 bg-white/5 border border-white/10 p-1 mb-8">
+            <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 p-1 mb-8">
               <TabsTrigger
                 value="theory"
-                className="text-slate-300 data-[state=active]:bg-indigo-500/20 data-[state=active]:text-white transition-all rounded-lg"
+                className="data-[state=active]:bg-[var(--bg-surface)] data-[state=active]:text-[var(--text-primary)] rounded-[var(--radius-md)]"
               >
                 MCQ Theory ({mcqAnswers.length}/5)
               </TabsTrigger>
               <TabsTrigger
                 value="execution"
-                className="text-slate-300 data-[state=active]:bg-indigo-500/20 data-[state=active]:text-white transition-all rounded-lg"
+                className="data-[state=active]:bg-[var(--bg-surface)] data-[state=active]:text-[var(--text-primary)] rounded-[var(--radius-md)]"
               >
-                Compiler Challenge
+                Compiler challenge
               </TabsTrigger>
             </TabsList>
 
@@ -175,15 +171,15 @@ export default function VerificationTest() {
                   <div className="w-full flex items-center gap-4">
                     <Progress
                       value={(mcqAnswers.length / 5) * 100}
-                      className="h-2 bg-white/5"
+                      className="h-2"
                     />
                   </div>
 
-                  <div className="bg-white/5 border border-white/10 rounded-xl p-6 shadow-inner">
-                    <span className="text-indigo-400 text-xs font-bold uppercase tracking-wider mb-2 block">
+                  <div className="rounded-[var(--radius-lg)] p-6" style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-subtle)' }}>
+                    <span className="text-[var(--accent)] text-[12px] font-medium tracking-[0.02em] mb-2 block">
                       Question {currentMcqIndex + 1} of 5
                     </span>
-                    <h2 className="text-xl text-white font-medium leading-relaxed">
+                    <h2 className="text-[18px] text-[var(--text-primary)] font-medium leading-relaxed">
                       {mcqQuestions[currentMcqIndex].question}
                     </h2>
                   </div>
@@ -192,25 +188,18 @@ export default function VerificationTest() {
                     {mcqQuestions[currentMcqIndex].options.map(
                       (option, idx) => {
                         const selected = isOptionSelected(idx);
-                        // Fixed Template Literals for easy copy pasting!
-                        const baseClass =
-                          "text-left p-5 rounded-xl border transition-all duration-300 ";
-                        const activeClass = selected
-                          ? "bg-indigo-500/20 border-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.2)]"
-                          : "bg-white/[0.03] border-white/5 hover:bg-white/10 hover:border-white/20";
-                        const textClass = selected
-                          ? "text-indigo-100"
-                          : "text-slate-300";
 
                         return (
                           <button
                             key={idx}
                             onClick={() => handleOptionSelect(idx)}
-                            className={baseClass + activeClass}
+                            className="text-left p-4 rounded-[var(--radius-lg)] border transition-all duration-200"
+                            style={{
+                              background: selected ? 'var(--accent-bg)' : 'var(--bg-surface)',
+                              borderColor: selected ? 'var(--accent)' : 'var(--border-subtle)',
+                            }}
                           >
-                            <span
-                              className={"text-sm font-medium " + textClass}
-                            >
+                            <span className={`text-[14px] font-medium ${selected ? "text-[var(--text-primary)]" : "text-[var(--text-secondary)]"}`}>
                               {option}
                             </span>
                           </button>
@@ -219,13 +208,13 @@ export default function VerificationTest() {
                     )}
                   </div>
 
-                  <div className="flex justify-between mt-6 pt-6 border-t border-white/5">
+                  <div className="flex justify-between mt-4 pt-4 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
                     <button
                       onClick={() =>
                         setCurrentMcqIndex((curr) => Math.max(0, curr - 1))
                       }
                       disabled={currentMcqIndex === 0}
-                      className="text-slate-400 hover:text-white disabled:opacity-30 disabled:hover:text-slate-400 text-sm font-medium transition-colors cursor-pointer"
+                      className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-30 text-[14px] font-medium transition-colors"
                     >
                       ← Previous
                     </button>
@@ -234,7 +223,7 @@ export default function VerificationTest() {
                         setCurrentMcqIndex((curr) => Math.min(4, curr + 1))
                       }
                       disabled={currentMcqIndex === 4}
-                      className="text-slate-400 hover:text-white disabled:opacity-30 disabled:hover:text-slate-400 text-sm font-medium transition-colors cursor-pointer"
+                      className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-30 text-[14px] font-medium transition-colors"
                     >
                       Next →
                     </button>
@@ -248,23 +237,23 @@ export default function VerificationTest() {
               className="flex flex-col gap-6 mt-0 focus-visible:outline-none"
             >
               {codeQuestion && (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[600px]">
-                  <div className="col-span-1 bg-white/5 border border-white/10 rounded-xl p-6 overflow-y-auto custom-scrollbar">
-                    <span className="text-indigo-400 text-xs font-bold uppercase tracking-wider mb-2 block">
-                      Code Execution
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[600px]">
+                  <div className="col-span-1 rounded-[var(--radius-lg)] border p-6 overflow-y-auto custom-scrollbar" style={{ background: 'var(--bg-raised)', borderColor: 'var(--border-subtle)' }}>
+                    <span className="text-[var(--accent)] text-[12px] font-medium tracking-[0.02em] mb-2 block">
+                      Code execution
                     </span>
-                    <h2 className="text-xl text-white font-medium mb-4">
-                      Problem Statement
+                    <h2 className="text-[18px] text-[var(--text-primary)] font-medium mb-4">
+                      Problem statement
                     </h2>
-                    <p className="text-slate-300 text-sm whitespace-pre-wrap leading-relaxed">
+                    <p className="text-[var(--text-secondary)] text-[14px] whitespace-pre-wrap leading-relaxed">
                       {codeQuestion.question}
                     </p>
 
-                    <div className="mt-8 pt-6 border-t border-white/5">
-                      <h3 className="text-xs font-medium text-slate-400 mb-2">
+                    <div className="mt-8 pt-4 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
+                      <h3 className="text-[12px] font-medium text-[var(--text-secondary)] mb-2">
                         Requirements:
                       </h3>
-                      <ul className="list-disc list-inside text-slate-300 text-sm space-y-2">
+                      <ul className="list-disc list-inside text-[var(--text-secondary)] text-[14px] space-y-2">
                         <li>Function must execute efficiently</li>
                         <li>Do not change the function signature</li>
                       </ul>
@@ -272,18 +261,18 @@ export default function VerificationTest() {
 
                     {/* Test cases */}
                     {codeQuestion.testCases && codeQuestion.testCases.length > 0 && (
-                      <div className="mt-8 pt-6 border-t border-white/5">
-                        <h3 className="text-xs font-medium text-indigo-300 mb-4 uppercase tracking-wider">Example Test Cases:</h3>
+                      <div className="mt-8 pt-4 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
+                        <h3 className="text-[12px] font-medium text-[var(--accent)] mb-4 tracking-[0.02em]">Example test cases:</h3>
                         <div className="flex flex-col gap-3">
                           {codeQuestion.testCases.map((tc, idx) => (
-                            <div key={idx} className="bg-black/30 border border-white/5 p-4 rounded-xl font-mono text-xs flex flex-col gap-2">
+                            <div key={idx} className="rounded-[var(--radius-md)] p-3 font-[var(--font-mono)] text-[12px] flex flex-col gap-2" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
                               <div className="flex items-start">
-                                <span className="text-slate-500 w-24 shrink-0 select-none">Input:</span>
-                                <span className="text-blue-200">{tc.input}</span>
+                                <span className="text-[var(--text-tertiary)] w-20 shrink-0">Input:</span>
+                                <span className="text-[var(--text-primary)]">{tc.input}</span>
                               </div>
-                              <div className="flex items-start mt-1 pt-2 border-t border-white/5">
-                                <span className="text-slate-500 w-24 shrink-0 select-none">Expected:</span>
-                                <span className="text-emerald-300 font-bold">{tc.output}</span>
+                              <div className="flex items-start mt-1 pt-2 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
+                                <span className="text-[var(--text-tertiary)] w-20 shrink-0">Expected:</span>
+                                <span className="text-[var(--success)] font-medium">{tc.output}</span>
                               </div>
                             </div>
                           ))}
@@ -292,9 +281,9 @@ export default function VerificationTest() {
                     )}
                   </div>
 
-                  <div className="col-span-1 lg:col-span-2 flex flex-col border border-white/10 rounded-xl overflow-hidden bg-[#1e1e1e]">
-                    <div className="h-10 bg-[#252526] border-b border-black/50 flex items-center px-4 justify-between">
-                      <span className="text-xs text-slate-400 font-mono">
+                  <div className="col-span-1 lg:col-span-2 flex flex-col border rounded-[var(--radius-lg)] overflow-hidden bg-[#1e1e1e]" style={{ borderColor: 'var(--border-subtle)' }}>
+                    <div className="h-10 bg-[#252526] border-b border-[#1a1a1a] flex items-center px-4 justify-between">
+                      <span className="text-[12px] text-[var(--text-tertiary)] font-[var(--font-mono)]">
                         index.js
                       </span>
                     </div>
@@ -319,32 +308,21 @@ export default function VerificationTest() {
                 </div>
               )}
 
-              <div className="pt-6 mt-6 border-t border-white/5 flex justify-end">
+              <div className="pt-4 mt-4 border-t flex justify-end" style={{ borderColor: 'var(--border-subtle)' }}>
                 <button
                   onClick={handleSubmitTest}
                   disabled={submitting}
-                  className="bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-600/50 disabled:cursor-not-allowed text-white font-medium px-8 py-3.5 rounded-xl transition-all text-sm shadow-[0_0_20px_rgba(99,102,241,0.3)] hover:shadow-[0_0_25px_rgba(99,102,241,0.5)] cursor-pointer"
+                  className="bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium px-6 h-9 rounded-[var(--radius-md)] transition-colors text-[14px]"
                 >
                   {submitting
-                    ? "Analyzing Test Securely..."
-                    : "Submit Complete Verification"}
+                    ? "Analyzing test securely..."
+                    : "Submit complete verification"}
                 </button>
               </div>
             </TabsContent>
           </Tabs>
         </div>
       </div>
-
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); border-radius: 8px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 8px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
-      `,
-        }}
-      />
     </div>
   );
 }

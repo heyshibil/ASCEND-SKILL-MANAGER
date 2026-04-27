@@ -33,7 +33,7 @@ export default function AddSkillsModal({ isOpen, onClose }) {
     setLoading(true);
     const success = await addSkills(validSkills);
     setLoading(false);
-    
+
     if (success) {
       setSkillsList([{ name: "", confidence: 50 }]);
       onClose();
@@ -41,27 +41,33 @@ export default function AddSkillsModal({ isOpen, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.4)' }}>
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="bg-[#0b0b0f] border border-white/10 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl"
+        className="w-full max-w-[640px] rounded-[var(--radius-xl)] overflow-hidden flex flex-col"
+        style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', boxShadow: 'var(--shadow-lg)' }}
       >
-        <div className="p-6 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
-          <h2 className="text-xl font-semibold text-white">Add New Skills</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-white">
-            <X className="w-5 h-5" />
+        {/* Header */}
+        <div className="px-6 py-4 border-b flex justify-between items-center" style={{ borderColor: 'var(--border-subtle)' }}>
+          <div>
+            <h2 className="text-[18px] font-medium text-[var(--text-primary)]">Add new skills</h2>
+            <p className="text-[13px] text-[var(--text-secondary)] mt-0.5">Add skills and set your confidence level</p>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-raised)] transition-colors">
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="p-6 flex flex-col gap-4 max-h-[60vh] overflow-y-auto">
+        {/* Content */}
+        <div className="px-6 py-4 flex flex-col gap-3 max-h-[60vh] overflow-y-auto">
           {skillsList.map((skill, i) => (
-            <div key={i} className="flex flex-col gap-3 p-4 bg-white/[0.02] border border-white/5 rounded-xl relative group">
+            <div key={i} className="flex flex-col gap-3 p-4 rounded-[var(--radius-lg)] relative group" style={{ background: 'var(--bg-raised)' }}>
               <div className="flex justify-between items-center">
-                <label className="text-xs text-slate-400 font-medium uppercase tracking-wider">Skill Name</label>
+                <label className="text-[12px] font-medium text-[var(--text-secondary)]">Skill name</label>
                 {skillsList.length > 1 && (
-                  <button onClick={() => handleRemoveRow(i)} className="text-slate-500 hover:text-red-400 transition-colors">
+                  <button onClick={() => handleRemoveRow(i)} className="text-[var(--text-tertiary)] hover:text-[var(--danger)] transition-colors">
                     <Trash2 className="w-4 h-4" />
                   </button>
                 )}
@@ -71,12 +77,13 @@ export default function AddSkillsModal({ isOpen, onClose }) {
                 placeholder="e.g. React, Node.js"
                 value={skill.name}
                 onChange={(e) => handleChange(i, "name", e.target.value)}
-                className="bg-black/20 border border-white/10 text-white rounded-lg px-4 py-2 focus:outline-none focus:border-indigo-500 transition-colors"
+                className="h-9 border rounded-[var(--radius-md)] px-3 text-[14px] outline-none transition-all focus:border-[var(--accent)] focus:ring-2 focus:ring-[rgba(37,99,235,0.15)]"
+                style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-base)', color: 'var(--text-primary)' }}
               />
-              <div className="mt-2 flex flex-col gap-2">
-                <div className="flex justify-between text-xs text-slate-400">
-                  <span>Confidence Level</span>
-                  <span className="text-indigo-400 font-bold">{skill.confidence}%</span>
+              <div className="mt-1 flex flex-col gap-2">
+                <div className="flex justify-between text-[12px]">
+                  <span className="text-[var(--text-secondary)]">Confidence level</span>
+                  <span className="text-[var(--accent)] font-medium">{skill.confidence}%</span>
                 </div>
                 <input
                   type="range"
@@ -84,7 +91,7 @@ export default function AddSkillsModal({ isOpen, onClose }) {
                   max="100"
                   value={skill.confidence}
                   onChange={(e) => handleChange(i, "confidence", Number(e.target.value))}
-                  className="w-full accent-indigo-500"
+                  className="w-full accent-[#2563EB]"
                 />
               </div>
             </div>
@@ -92,22 +99,24 @@ export default function AddSkillsModal({ isOpen, onClose }) {
 
           <button
             onClick={handleAddRow}
-            className="flex items-center justify-center gap-2 py-3 border border-dashed border-white/20 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 hover:border-white/30 transition-all"
+            className="flex items-center justify-center gap-2 h-10 border border-dashed rounded-[var(--radius-lg)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-raised)] transition-all text-[14px]"
+            style={{ borderColor: 'var(--border-base)' }}
           >
-            <Plus className="w-4 h-4" /> Add Another Skill
+            <Plus className="w-4 h-4" /> Add another skill
           </button>
         </div>
 
-        <div className="p-6 border-t border-white/5 flex justify-end gap-3 bg-white/[0.02]">
-          <button onClick={onClose} className="px-5 py-2 rounded-lg text-slate-300 hover:bg-white/5 transition-colors text-sm font-medium">
+        {/* Footer */}
+        <div className="px-6 py-4 border-t flex justify-end gap-3" style={{ borderColor: 'var(--border-subtle)' }}>
+          <button onClick={onClose} className="px-4 h-9 rounded-[var(--radius-md)] text-[var(--text-secondary)] hover:bg-[var(--bg-raised)] transition-colors text-[14px] font-medium">
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className="px-6 py-2 rounded-lg bg-indigo-500 text-white text-sm font-medium hover:bg-indigo-400 transition-colors shadow-[0_0_15px_rgba(99,102,241,0.3)] disabled:opacity-50"
+            className="px-4 h-9 rounded-[var(--radius-md)] bg-[#2563EB] text-white text-[14px] font-medium hover:bg-[#1D4ED8] transition-colors disabled:opacity-50"
           >
-            {loading ? "Adding..." : "Save Skills"}
+            {loading ? "Adding..." : "Save skills"}
           </button>
         </div>
       </motion.div>

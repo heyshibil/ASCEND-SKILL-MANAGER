@@ -48,101 +48,84 @@ export default function DashboardLayout() {
     navigate("/");
   };
 
+  const navItemClass = ({ isActive }) =>
+    `flex items-center gap-2 px-2 h-8 rounded-[var(--radius-md)] transition-colors text-[14px] ${
+      isActive
+        ? "bg-[var(--bg-raised)] text-[var(--text-primary)] font-medium"
+        : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-raised)]"
+    }`;
+
   return (
-    <div className="flex h-screen bg-[#0b0b0f] text-slate-300 font-sans overflow-hidden">
+    <div className="theme-dark flex h-screen font-[var(--font-sans)] overflow-hidden" style={{ background: 'var(--bg-canvas)', color: 'var(--text-secondary)' }}>
       {/* --- Left Sidebar --- */}
-      <aside className="w-64 flex flex-col border-r border-white/5 bg-black/20">
-        {/* Logo Section */}
-        <div className="h-16 flex items-center px-6 border-b border-white/5">
-          <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center mr-3 border border-indigo-500/30">
-            <svg
-              className="w-5 h-5 text-indigo-400"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
+      <aside className="w-[220px] flex flex-col" style={{ background: 'var(--bg-canvas)' }}>
+        {/* Logo */}
+        <div className="h-14 flex items-center px-4 border-b" style={{ borderColor: 'var(--border-subtle)' }}>
+          <div className="w-7 h-7 rounded-[var(--radius-md)] bg-[#2563EB] flex items-center justify-center mr-2">
+            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
               <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
             </svg>
           </div>
-          <span className="font-bold text-white text-lg tracking-wide">
+          <span className="font-medium text-[var(--text-primary)] text-[15px] tracking-[-0.01em]">
             Ascend
           </span>
         </div>
 
-        {/* Navigation Links */}
-        <nav className="flex-1 px-4 py-6 flex flex-col gap-1.5">
-          <p className="px-3 text-[10px] font-bold tracking-widest text-slate-600 uppercase mb-2">
+        {/* Navigation */}
+        <nav className="flex-1 px-3 py-4 flex flex-col gap-0.5">
+          <p className="px-2 text-[11px] font-medium tracking-wide text-[var(--text-tertiary)] mb-2 mt-1">
             Navigation
           </p>
 
-          <NavLink
-            to="/dashboard"
-            end
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm font-medium ${isActive ? "bg-indigo-500/10 text-indigo-300 border border-indigo-500/20" : "text-slate-400 hover:text-white hover:bg-white/5"}`
-            }
-          >
+          <NavLink to="/dashboard" end className={navItemClass}>
             <LayoutDashboard className="w-4 h-4" />
             Dashboard
           </NavLink>
 
-          <NavLink
-            to="/dashboard/skill-control"
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm font-medium ${isActive ? "bg-indigo-500/10 text-indigo-300 border border-indigo-500/20" : "text-slate-400 hover:text-white hover:bg-white/5"}`
-            }
-          >
+          <NavLink to="/dashboard/skill-control" className={navItemClass}>
             <Sliders className="w-4 h-4" />
             Skill Control
           </NavLink>
 
-          <NavLink
-            to="/dashboard/market-intel"
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm font-medium ${isActive ? "bg-indigo-500/10 text-indigo-300 border border-indigo-500/20" : "text-slate-400 hover:text-white hover:bg-white/5"}`
-            }
-          >
+          <NavLink to="/dashboard/market-intel" className={navItemClass}>
             <TrendingUp className="w-4 h-4" />
             Market Intel
           </NavLink>
 
-          <NavLink
-            to="/dashboard/settings"
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm font-medium ${isActive ? "bg-indigo-500/10 text-indigo-300 border border-indigo-500/20" : "text-slate-400 hover:text-white hover:bg-white/5"}`
-            }
-          >
+          <NavLink to="/dashboard/settings" className={navItemClass}>
             <Settings className="w-4 h-4" />
             Settings
           </NavLink>
         </nav>
 
-        {/* Quick Stats Panel */}
-        <div className="p-4 mb-4 mx-4 bg-white/[0.02] border border-white/5 rounded-xl flex flex-col gap-3">
-          <p className="text-[10px] font-bold tracking-widest text-slate-600 uppercase">
-            Quick Stats
+        {/* Quick Stats */}
+        <div className="p-3 mb-3 mx-3 rounded-[var(--radius-lg)] border flex flex-col gap-2" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}>
+          <p className="text-[11px] font-medium tracking-wide text-[var(--text-tertiary)]">
+            Quick stats
           </p>
-          <div className="flex justify-between items-center text-sm">
-            <span className="text-slate-400">Skill Debts</span>
-            <span className="text-red-400 font-semibold font-mono">
+          <div className="flex justify-between items-center text-[13px]">
+            <span className="text-[var(--text-secondary)]">Skill debts</span>
+            <span className="text-[var(--danger)] font-medium font-[var(--font-mono)]">
               {data.skillDebts.critical}
             </span>
           </div>
-          <div className="flex justify-between items-center text-sm">
-            <span className="text-slate-400">Draining Skills</span>
-            <span className="text-amber-400 font-semibold font-mono">
+          <div className="flex justify-between items-center text-[13px]">
+            <span className="text-[var(--text-secondary)]">Draining</span>
+            <span className="text-[var(--warning)] font-medium font-[var(--font-mono)]">
               {data.skillDebts.drainingSkills}
             </span>
           </div>
         </div>
 
         {/* Logout */}
-        <div className="px-4 mt-auto mb-6 w-full">
+        <div className="px-3 mt-auto mb-4 w-full">
           <button
             onClick={() => setIsLogoutModalOpen(true)}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-red-500/10 bg-red-500/[0.02] text-slate-400 hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/20 transition-all group cursor-pointer"
+            className="w-full flex items-center gap-2 px-3 h-9 rounded-[var(--radius-md)] border text-[var(--text-secondary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)] transition-colors text-[13px] font-medium"
+            style={{ borderColor: 'var(--border-subtle)' }}
           >
-            <LogOut className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
-            <span className="text-sm font-medium">Log out</span>
+            <LogOut className="w-4 h-4" />
+            Log out
           </button>
         </div>
       </aside>
@@ -150,48 +133,53 @@ export default function DashboardLayout() {
       {/* --- Main Content Area --- */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Navbar */}
-        <header className="h-16 flex items-center justify-between px-8 border-b border-white/5 bg-black/10">
+        <header className="h-14 flex items-center justify-between px-6 border-b sticky top-0 z-10" style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-canvas)' }}>
           <div className="flex items-center gap-4">
-            {/* <h1 className="text-lg font-semibold text-white">Dashboard <span className="text-slate-600 mx-2">—</span> <span className="text-slate-400 font-normal text-sm tracking-wide">Career readiness overview</span></h1> */}
+            {/* Placeholder for breadcrumb/title */}
           </div>
 
-          <div className="flex items-center gap-4">
-            {/* Search Input */}
+          <div className="flex items-center gap-3">
+            {/* Search */}
             <div className="relative group hidden md:block">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-400 transition-colors" />
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] group-focus-within:text-[var(--accent)] transition-colors" />
               <input
                 type="text"
                 placeholder="Search skills..."
-                className="bg-white/5 border border-white/10 text-white rounded-lg pl-9 pr-12 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500/50 w-64 transition-all"
+                className="border rounded-[var(--radius-md)] pl-9 pr-12 h-9 text-[13px] w-64 outline-none transition-all focus:border-[var(--accent)] focus:ring-2 focus:ring-[rgba(37,99,235,0.15)]"
+                style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-base)', color: 'var(--text-primary)' }}
               />
-              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 border border-white/10 rounded px-1.5 py-0.5 bg-black/40">
-                <span className="text-[10px] text-slate-500 font-mono">⌘K</span>
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5 border rounded px-1.5 py-0.5" style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-raised)' }}>
+                <span className="text-[10px] text-[var(--text-tertiary)] font-[var(--font-mono)]">⌘K</span>
               </div>
             </div>
 
-            <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 text-slate-300 text-sm hover:bg-white/10 transition-colors cursor-pointer">
+            {/* Sync */}
+            <button className="flex items-center gap-2 px-3 h-9 rounded-[var(--radius-md)] border text-[var(--text-secondary)] text-[13px] font-medium hover:bg-[var(--bg-raised)] transition-colors" style={{ borderColor: 'var(--border-base)' }}>
               <RotateCw className="w-3.5 h-3.5" />
               Sync
             </button>
 
-            <button className="relative p-2 text-slate-400 hover:text-white transition-colors cursor-pointer rounded-full hover:bg-white/5">
+            {/* Bell */}
+            <button className="relative w-8 h-8 flex items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-raised)] transition-colors">
               <Bell className="w-4 h-4" />
-              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-[var(--danger)] rounded-full"></span>
             </button>
 
-            <div className="flex items-center gap-2 pl-4 border-l border-white/10 ml-2">
+            {/* User */}
+            <div className="flex items-center gap-2 pl-3 border-l ml-1" style={{ borderColor: 'var(--border-subtle)' }}>
               {user?.avatarUrl ? (
                 <img
                   src={user.avatarUrl}
                   alt={username}
-                  className="w-7 h-7 rounded-full border border-white/10 shadow-lg cursor-pointer object-cover"
+                  className="w-7 h-7 rounded-full border object-cover"
+                  style={{ borderColor: 'var(--border-subtle)' }}
                 />
               ) : (
-                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-fuchsia-500 to-indigo-600 flex items-center justify-center text-[10px] font-bold text-white border border-white/10 shadow-lg cursor-pointer">
+                <div className="w-7 h-7 rounded-full bg-[var(--accent)] flex items-center justify-center text-[10px] font-medium text-white">
                   {displayInitial}
                 </div>
               )}
-              <span className="text-sm font-medium text-slate-200 hidden xl:block">
+              <span className="text-[13px] font-medium text-[var(--text-primary)] hidden xl:block">
                 {username}
               </span>
             </div>
@@ -199,10 +187,10 @@ export default function DashboardLayout() {
         </header>
 
         {/* Dynamic Route Outlet */}
-        <main className="flex-1 overflow-y-auto p-8 relative">
-          {/* Ambient Top Glow */}
-          <div className="absolute top-0 left-1/4 w-1/2 h-32 bg-indigo-500/10 blur-[100px] pointer-events-none"></div>
-          <Outlet />
+        <main className="flex-1 overflow-y-auto p-8">
+          <div className="max-w-[1200px] mx-auto">
+            <Outlet />
+          </div>
         </main>
       </div>
       <LogoutModal
