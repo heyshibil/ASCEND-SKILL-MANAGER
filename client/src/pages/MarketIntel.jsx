@@ -18,7 +18,7 @@ const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
       <div className="rounded-[var(--radius-md)] p-3 text-[13px]" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', boxShadow: 'var(--shadow-md)' }}>
-        <p className="text-[var(--text-primary)] font-medium mb-2">{new Date(label).toLocaleDateString()}</p>
+        <p className="text-[var(--text-primary)] font-medium mb-2">{label}</p>
         {payload.map((entry, index) => (
           <div key={index} className="flex items-center gap-2 text-[12px]">
             <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
@@ -37,6 +37,7 @@ export default function MarketIntel() {
   const [activeTab, setActiveTab] = useState('demand'); // 'demand' or 'roles'
   const [selectedSkillId, setSelectedSkillId] = useState(null);
   const [showAllSkills, setShowAllSkills] = useState(false);
+  const [timeInterval, setTimeInterval] = useState('daily'); // 'daily', 'weekly', 'monthly'
 
   // 1. Sort skills to find the Top 5
   const topSkills = useMemo(() => {
@@ -48,25 +49,64 @@ export default function MarketIntel() {
       .slice(0, 5);
   }, [skills, activeTab]);
 
-  // 2. Format history data for Recharts
+  // 2. Format history data for Recharts based on timeInterval
   const chartData = useMemo(() => {
-    if (!topSkills.length || !topSkills[0].history) return [];
+    if (!topSkills.length) return [];
 
-    const dates = topSkills[0].history.map(h => h.date);
+    const periodMap = new Map();
 
-    return dates.map((date, index) => {
-      const dataPoint = { date };
+    topSkills.forEach(skill => {
+      if (!skill.history) return;
+
+      skill.history.forEach(h => {
+        const d = new Date(h.date);
+        let periodKey = '';
+        let dateLabel = '';
+        let timestamp = 0;
+
+        if (timeInterval === 'daily') {
+          periodKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+          dateLabel = d.toLocaleDateString('default', { month: 'short', day: 'numeric' });
+          timestamp = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+        } else if (timeInterval === 'weekly') {
+          const startOfWeek = new Date(d);
+          startOfWeek.setDate(d.getDate() - d.getDay());
+          periodKey = `${startOfWeek.getFullYear()}-${String(startOfWeek.getMonth() + 1).padStart(2, '0')}-${String(startOfWeek.getDate()).padStart(2, '0')}`;
+          dateLabel = `Week of ${startOfWeek.toLocaleDateString('default', { month: 'short', day: 'numeric' })}`;
+          timestamp = new Date(startOfWeek.getFullYear(), startOfWeek.getMonth(), startOfWeek.getDate()).getTime();
+        } else if (timeInterval === 'monthly') {
+          periodKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+          dateLabel = d.toLocaleDateString('default', { month: 'short', year: 'numeric' });
+          timestamp = new Date(d.getFullYear(), d.getMonth(), 1).getTime();
+        }
+
+        if (!periodMap.has(periodKey)) {
+          periodMap.set(periodKey, { periodKey, dateLabel, timestamp, date: h.date });
+        }
+
+        const entry = periodMap.get(periodKey);
+        entry[skill.skillName] = activeTab === 'demand' ? h.demandPercentage : h.openRoles;
+      });
+    });
+
+    let sortedData = Array.from(periodMap.values()).sort((a, b) => a.timestamp - b.timestamp);
+
+    // Carry forward missing values
+    const lastKnown = {};
+    sortedData = sortedData.map(point => {
+      const newPoint = { ...point };
       topSkills.forEach(skill => {
-        const historyPoint = skill.history[index];
-        if (historyPoint) {
-          dataPoint[skill.skillName] = activeTab === 'demand'
-            ? historyPoint.demandPercentage
-            : historyPoint.openRoles;
+        if (newPoint[skill.skillName] !== undefined) {
+          lastKnown[skill.skillName] = newPoint[skill.skillName];
+        } else if (lastKnown[skill.skillName] !== undefined) {
+          newPoint[skill.skillName] = lastKnown[skill.skillName];
         }
       });
-      return dataPoint;
+      return newPoint;
     });
-  }, [topSkills, activeTab]);
+
+    return sortedData;
+  }, [topSkills, activeTab, timeInterval]);
 
   // Chart Colors — vibrant palette matching dashboard icons
   const colors = ['#2563EB', '#FBBF24', '#34D399', '#FB923C', '#F472B6'];
@@ -162,9 +202,29 @@ export default function MarketIntel() {
 
         {/* Right Column: Chart */}
         <div className="lg:col-span-7 p-6 rounded-[var(--radius-lg)] border h-[600px] flex flex-col" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}>
-          <h3 className="text-[12px] font-medium text-[var(--text-tertiary)] tracking-[0.02em] mb-6">
-            Top 5 skills — {activeTab === 'demand' ? 'Demand %' : 'Open positions'}
-          </h3>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+            <h3 className="text-[12px] font-medium text-[var(--text-tertiary)] tracking-[0.02em]">
+              Top 5 skills — {activeTab === 'demand' ? 'Demand %' : 'Open positions'}
+            </h3>
+            
+            {/* Time Interval Selector */}
+            <div className="flex p-0.5 rounded-[var(--radius-md)] border" style={{ background: 'var(--bg-canvas)', borderColor: 'var(--border-subtle)' }}>
+              {['daily', 'weekly', 'monthly'].map((interval) => (
+                <button
+                  key={interval}
+                  onClick={() => setTimeInterval(interval)}
+                  className={`px-3 py-1 text-[12px] font-medium rounded-[calc(var(--radius-md)-2px)] transition-all capitalize ${
+                    timeInterval === interval 
+                      ? 'text-[var(--text-primary)] shadow-[var(--shadow-sm)]' 
+                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                  }`}
+                  style={timeInterval === interval ? { background: 'var(--bg-surface)' } : {}}
+                >
+                  {interval}
+                </button>
+              ))}
+            </div>
+          </div>
 
           <div className="flex-1 min-h-0">
             {chartData.length > 0 ? (
@@ -172,11 +232,10 @@ export default function MarketIntel() {
                 <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" opacity={0.8} vertical={false} />
                   <XAxis
-                    dataKey="date"
+                    dataKey="dateLabel"
                     tick={{ fill: 'var(--text-tertiary)', fontSize: 12 }}
                     tickLine={false}
                     axisLine={false}
-                    tickFormatter={(date) => new Date(date).toLocaleDateString('default', { month: 'short', day: 'numeric' })}
                   />
                   <YAxis
                     tick={{ fill: 'var(--text-tertiary)', fontSize: 12 }}
