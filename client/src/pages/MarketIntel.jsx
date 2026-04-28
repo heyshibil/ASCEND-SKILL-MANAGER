@@ -68,8 +68,8 @@ export default function MarketIntel() {
     });
   }, [topSkills, activeTab]);
 
-  // Chart Colors — accent + greyscale per spec
-  const colors = ['#2563EB', '#525250', '#A8A7A1', '#6B6A65', '#3D3D3A'];
+  // Chart Colors — vibrant palette matching dashboard icons
+  const colors = ['#2563EB', '#FBBF24', '#34D399', '#FB923C', '#F472B6'];
 
   return (
     <div className="max-w-7xl mx-auto flex flex-col gap-8 h-full">
@@ -121,27 +121,25 @@ export default function MarketIntel() {
                 <div
                   key={skill._id}
                   onClick={() => setSelectedSkillId(skill._id === selectedSkillId ? null : skill._id)}
-                  className="relative p-4 rounded-[var(--radius-lg)] border transition-all duration-200 cursor-pointer"
+                  className="relative p-4 rounded-[var(--radius-lg)] border transition-all duration-200 cursor-pointer flex justify-between items-center"
                   style={{
                     background: selectedSkillId === skill._id ? 'var(--accent-bg)' : 'var(--bg-surface)',
                     borderColor: selectedSkillId === skill._id ? 'var(--accent)' : 'var(--border-subtle)',
                   }}
                 >
-                  <div className="flex justify-between items-center mb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[12px] font-medium font-[var(--font-mono)] text-[var(--text-tertiary)] w-5">{index + 1}</span>
-                      <span className="font-medium text-[var(--text-primary)] text-[14px]">{skill.skillName}</span>
-                    </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[16px] font-medium font-[var(--font-mono)] text-[var(--text-tertiary)] w-6">{index + 1}</span>
+                    <span className="font-medium text-[var(--text-primary)] text-[15px]">{skill.skillName}</span>
                   </div>
 
-                  <div className="flex justify-between items-end">
-                    <div>
+                  <div className="flex items-center gap-6 text-right">
+                    <div className="flex flex-col items-end">
                       <p className="text-[11px] text-[var(--text-tertiary)] tracking-[0.02em]">Demand</p>
-                      <p className="text-[16px] font-[var(--font-mono)] font-medium text-[var(--text-primary)]">{skill.demandPercentage}%</p>
+                      <p className="text-[16px] font-[var(--font-mono)] font-medium text-[#34D399]">{skill.demandPercentage}%</p>
                     </div>
-                    <div className="text-right">
+                    <div className="flex flex-col items-end">
                       <p className="text-[11px] text-[var(--text-tertiary)] tracking-[0.02em]">Open roles</p>
-                      <p className="text-[16px] font-[var(--font-mono)] font-medium text-[var(--text-secondary)]">{skill.openRoles.toLocaleString()}</p>
+                      <p className="text-[16px] font-[var(--font-mono)] font-medium text-[#FB923C]">{skill.openRoles.toLocaleString()}</p>
                     </div>
                   </div>
                 </div>
