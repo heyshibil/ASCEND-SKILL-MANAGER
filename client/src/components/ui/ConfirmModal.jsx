@@ -13,50 +13,51 @@ export default function ConfirmModal({
 }) {
   if (!isOpen) return null;
 
+  const iconBg = type === "danger" ? "var(--danger-bg)" : "var(--warning-bg)";
+  const iconColor = type === "danger" ? "var(--danger)" : "var(--warning)";
+  const btnBg = type === "danger" ? "var(--danger)" : "var(--warning)";
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative transform transition-all scale-100 opacity-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.4)' }}>
+      <div className="rounded-[var(--radius-xl)] p-6 w-full max-w-[480px] relative" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', boxShadow: 'var(--shadow-lg)' }}>
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors"
+          className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-raised)] transition-colors"
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4" />
         </button>
 
         <div className="flex flex-col items-center text-center mt-2 mb-6">
           <div
-            className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 border ${
-              type === "danger"
-                ? "bg-red-50 border-red-100"
-                : "bg-amber-50 border-amber-100"
-            }`}
+            className="w-12 h-12 rounded-full flex items-center justify-center mb-4"
+            style={{ background: iconBg }}
           >
             {type === "danger" ? (
-              <Trash2 className="w-6 h-6 text-red-600" />
+              <Trash2 className="w-5 h-5" style={{ color: iconColor }} />
             ) : (
-              <AlertTriangle className="w-6 h-6 text-amber-600" />
+              <AlertTriangle className="w-5 h-5" style={{ color: iconColor }} />
             )}
           </div>
-          <h2 className="text-lg font-bold text-slate-900 mb-2">{title}</h2>
-          <p className="text-sm text-slate-500 px-2 leading-relaxed">
+          <h2 className="text-[18px] font-medium text-[var(--text-primary)] mb-2">{title}</h2>
+          <p className="text-[13px] text-[var(--text-secondary)] px-2 leading-relaxed">
             {message}
           </p>
         </div>
 
-        <div className="flex gap-3 mt-4">
+        <div className="flex gap-3 justify-end mt-4">
           <button
             onClick={onClose}
-            className="flex-1 py-2.5 rounded-xl text-sm font-medium text-slate-600 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors"
+            className="px-4 h-9 rounded-[var(--radius-md)] text-[14px] font-medium transition-colors border"
+            style={{ color: 'var(--text-primary)', borderColor: 'var(--border-base)', background: 'transparent' }}
+            onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-raised)'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
           >
             {cancelText}
           </button>
           <button
             onClick={onConfirm}
-            className={`flex-1 py-2.5 rounded-xl text-sm font-medium text-white transition-colors shadow-sm ${
-              type === "danger"
-                ? "bg-red-600 hover:bg-red-700 shadow-red-500/20"
-                : "bg-amber-500 hover:bg-amber-600 shadow-amber-500/20"
-            }`}
+            className="px-4 h-9 rounded-[var(--radius-md)] text-[14px] font-medium text-white hover:opacity-90 transition-opacity"
+            style={{ background: btnBg }}
           >
             {confirmText}
           </button>

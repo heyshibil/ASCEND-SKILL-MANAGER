@@ -20,6 +20,9 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
 };
 
+// Helper: zero-pad a number to 2 digits
+const pad = (n) => String(n).padStart(2, '0');
+
 export default function DashboardHome() {
   const { data, error, loading } = useDashboardData();
   const score = data?.score || 0;
@@ -39,158 +42,144 @@ export default function DashboardHome() {
       variants={containerVariants}
       initial="hidden"
       animate="show"
-      className="max-w-7xl mx-auto flex flex-col gap-6"
+      className="max-w-7xl mx-auto flex flex-col gap-8"
     >
       {/* 1. Header Metrics Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-        {/* Card 1 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        {/* Card 1 — Active Skills */}
         <motion.div
           variants={itemVariants}
-          className="bg-white/[0.02] border border-white/5 p-5 rounded-2xl flex flex-col justify-between h-32 hover:bg-white/[0.04] transition-colors"
+          className="p-6 rounded-[var(--radius-lg)] border flex flex-col justify-between h-[120px] transition-colors hover:bg-[var(--bg-raised)]"
+          style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}
         >
           <div className="flex justify-between items-start">
-            <span className="text-slate-400 text-sm font-medium">
-              Active Skills
+            <span className="text-[12px] font-medium text-[var(--text-tertiary)] tracking-[0.02em]">
+              Active skills
             </span>
-            <div className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-400">
-              <Activity className="w-4 h-4" />
-            </div>
+            <Activity className="w-4 h-4 text-[#2563EB]" />
           </div>
           <div>
-            <h3 className="text-3xl font-bold text-white tracking-tight">
-              {loading ? "--" : data?.activeSkills || 0}
+            <h3 className="text-[28px] font-medium text-[var(--text-primary)] tracking-tight">
+              {loading ? "--" : pad(data?.activeSkills || 0)}
             </h3>
-            {/* <span className="text-xs text-slate-500 font-medium">
-              +2 this month
-            </span> */}
           </div>
         </motion.div>
 
-        {/* Card 2 */}
+        {/* Card 2 — Decaying Skills */}
         <motion.div
           variants={itemVariants}
-          className="bg-white/[0.02] border border-white/5 p-5 rounded-2xl flex flex-col justify-between h-32 hover:bg-white/[0.04] transition-colors"
+          className="p-6 rounded-[var(--radius-lg)] border flex flex-col justify-between h-[120px] transition-colors hover:bg-[var(--bg-raised)]"
+          style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}
         >
           <div className="flex justify-between items-start">
-            <span className="text-slate-400 text-sm font-medium">
-              Decaying Skills
+            <span className="text-[12px] font-medium text-[var(--text-tertiary)] tracking-[0.02em]">
+              Decaying skills
             </span>
-            <div className="p-1.5 rounded-lg bg-red-400/10 text-red-400">
-              <Zap className="w-4 h-4" />
-            </div>
+            <Zap className="w-4 h-4 text-[#FBBF24]" />
           </div>
           <div>
-            <h3 className="text-3xl font-bold text-white tracking-tight">
-              {loading ? "--" : data?.skillDebts?.total || 0}
+            <h3 className="text-[28px] font-medium text-[var(--text-primary)] tracking-tight">
+              {loading ? "--" : pad(data?.skillDebts?.total || 0)}
             </h3>
-            {/* <span className="text-xs text-slate-500 font-medium">
-              {data?.skillDebts.critical} Critcial debts
-            </span> */}
           </div>
         </motion.div>
 
-        {/* Card 3 */}
+        {/* Card 3 — Tasks Completed */}
         <motion.div
           variants={itemVariants}
-          className="bg-white/[0.02] border border-white/5 p-5 rounded-2xl flex flex-col justify-between h-32 hover:bg-white/[0.04] transition-colors"
+          className="p-6 rounded-[var(--radius-lg)] border flex flex-col justify-between h-[120px] transition-colors hover:bg-[var(--bg-raised)]"
+          style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}
         >
           <div className="flex justify-between items-start">
-            <span className="text-slate-400 text-sm font-medium">
-              Tasks Completed
+            <span className="text-[12px] font-medium text-[var(--text-tertiary)] tracking-[0.02em]">
+              Tasks completed
             </span>
-            <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400">
-              <CheckCircle2 className="w-4 h-4" />
-            </div>
+            <CheckCircle2 className="w-4 h-4 text-[#34D399]" />
           </div>
           <div>
-            <h3 className="text-3xl font-bold text-white tracking-tight">23</h3>
-            {/* <span className="text-xs text-slate-500 font-medium">
-              this week
-            </span> */}
+            <h3 className="text-[28px] font-medium text-[var(--text-primary)] tracking-tight">{pad(23)}</h3>
           </div>
         </motion.div>
 
-        {/* Card 4 */}
+        {/* Card 4 — Hot Market Skills */}
         <motion.div
           variants={itemVariants}
-          className="bg-white/[0.02] border border-white/5 p-5 rounded-2xl flex flex-col justify-between h-32 hover:bg-white/[0.04] transition-colors"
+          className="p-6 rounded-[var(--radius-lg)] border flex flex-col justify-between h-[120px] transition-colors hover:bg-[var(--bg-raised)]"
+          style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}
         >
           <div className="flex justify-between items-start">
-            <span className="text-slate-400 text-sm font-medium">
-              Hot Market Skills
+            <span className="text-[12px] font-medium text-[var(--text-tertiary)] tracking-[0.02em]">
+              Hot market skills
             </span>
-            <div className="p-1.5 rounded-lg bg-orange-500/10 text-orange-400">
-              <Flame className="w-4 h-4" />
-            </div>
+            <Flame className="w-4 h-4 text-[#FB923C]" />
           </div>
           <div>
-            <h3 className="text-3xl font-bold text-white tracking-tight">3</h3>
-            {/* <span className="text-xs text-slate-500 font-medium">
-              Trending in stack
-            </span> */}
+            <h3 className="text-[28px] font-medium text-[var(--text-primary)] tracking-tight">{pad(3)}</h3>
           </div>
         </motion.div>
       </div>
 
       {/* 2. Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Career Liquidity Panel */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Career Liquidity Panel — no card bg/border */}
         <motion.div
           variants={itemVariants}
-          className="bg-black/20 border border-white/5 rounded-2xl p-6 flex flex-col relative overflow-hidden"
+          className="p-6 flex flex-col"
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-white/[0.01] to-transparent pointer-events-none"></div>
-
-          <div className="flex justify-between items-start mb-8 relative z-10">
+          <div className="flex justify-between items-start mb-8">
             <div>
-              <p className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">
-                Career Liquidity Score
+              <p className="text-[12px] font-medium tracking-[0.02em] text-[var(--text-tertiary)]">
+                Career liquidity score
               </p>
-              <h2 className="text-sm font-medium text-slate-400 mt-1">
+              <h2 className="text-[13px] text-[var(--text-secondary)] mt-1">
                 Overall career readiness & market alignment index
               </h2>
             </div>
-            <div className="px-3 py-1 rounded-full bg-amber-500/10 text-amber-500 text-xs font-semibold border border-amber-500/20">
+            <div className="px-2 py-0.5 rounded-[var(--radius-sm)] text-[12px] font-medium" style={{ background: 'var(--warning-bg)', color: 'var(--warning)' }}>
               Good
             </div>
           </div>
 
-          <div className="flex-1 flex items-center justify-center relative mb-4">
-            <div
-              className="relative w-64 h-64 flex items-center justify-center rounded-full"
-              style={{ boxShadow: `0 0 80px ${scoreShadow}` }}
-            >
-              {/* Circular Animation Frame */}
+          <div className="flex-1 flex items-center justify-center relative mb-4 mt-4">
+            <div className="relative w-72 h-72 flex items-center justify-center rounded-full">
+              {/* SVG Gauge with gradient */}
               <svg
                 className="absolute inset-0 w-full h-full transform -rotate-225"
                 viewBox="0 0 200 200"
               >
-                {/* Background Track (Partial) */}
+                <defs>
+                  <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#3B82F6" />
+                    <stop offset="50%" stopColor="#2563EB" />
+                    <stop offset="100%" stopColor="#1D4ED8" />
+                  </linearGradient>
+                </defs>
+
+                {/* Background Track */}
                 <circle
                   cx="100"
                   cy="100"
                   r="90"
                   fill="none"
-                  stroke="rgba(255,255,255,0.05)"
-                  strokeWidth="12"
+                  stroke="var(--border-subtle)"
+                  strokeWidth="10"
                   strokeDasharray={`${circumference * 0.75} ${circumference}`}
                   strokeLinecap="round"
                 />
 
-                {/* Animated Foreground */}
+                {/* Animated Foreground with gradient */}
                 <motion.circle
                   cx="100"
                   cy="100"
                   r="90"
                   fill="none"
-                  stroke={scoreColor}
-                  strokeWidth="12"
+                  stroke="url(#gaugeGradient)"
+                  strokeWidth="10"
                   strokeDasharray={`${circumference} ${circumference}`}
                   initial={{ strokeDashoffset: circumference }}
                   animate={{ strokeDashoffset: dashOffset }}
                   transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }}
                   strokeLinecap="round"
-                  className="drop-shadow-lg"
                 />
               </svg>
 
@@ -199,12 +188,11 @@ export default function DashboardHome() {
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.4, delay: 0.5 }}
-                  className="text-6xl font-bold tracking-tighter"
-                  style={{ color: scoreColor }}
+                  className="text-[60px] font-medium tracking-tighter text-[var(--text-primary)]"
                 >
                   {loading ? "--" : score}
                 </motion.span>
-                <span className="text-slate-500 text-xs tracking-widest font-medium mt-1">
+                <span className="text-[15px] text-[var(--text-tertiary)] tracking-wide font-medium mt-1">
                   /100
                 </span>
               </div>
@@ -215,45 +203,37 @@ export default function DashboardHome() {
         {/* Top Skills Panel */}
         <motion.div
           variants={itemVariants}
-          className="bg-black/20 border border-white/5 rounded-2xl p-6 flex flex-col justify-between"
+          className="rounded-[var(--radius-lg)] border p-6 flex flex-col justify-between"
+          style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}
         >
           <div>
             <div className="flex justify-between items-start mb-6">
               <div>
-                <h3 className="text-white font-medium">Top Skills</h3>
-                <p className="text-xs text-slate-500 mt-1">
+                <h3 className="text-[15px] font-medium text-[var(--text-primary)]">Top skills</h3>
+                <p className="text-[12px] text-[var(--text-tertiary)] mt-1">
                   Visual battery charge
                 </p>
               </div>
-              <Star className="w-5 h-5 text-amber-500/70" />
             </div>
 
-            <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-4">
               {(data?.topSkills || []).map((skill, i) => {
-                const skillHue = Math.floor(((skill.score || 0) / 100) * 120);
-                const skillColor = `hsl(${skillHue}, 80%, 50%)`;
                 return (
                   <div key={i} className="flex flex-col gap-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span
-                          className="text-sm p-1.5 rounded-lg bg-white/5 shadow"
-                          // style={{ color: skillColor }}
-                        >
+                        <span className="text-[14px] p-1.5 rounded-[var(--radius-sm)]" style={{ background: 'var(--bg-raised)' }}>
                           {getIconForSkill(skill.name)}
                         </span>
-                        <span className="text-sm font-medium text-slate-200">
+                        <span className="text-[14px] font-medium text-[var(--text-primary)]">
                           {skill.name}
                         </span>
                       </div>
-                      <span
-                        className="text-xs font-bold"
-                        style={{ color: skillColor }}
-                      >
+                      <span className="text-[12px] font-medium text-[var(--text-secondary)] font-[var(--font-mono)]">
                         {skill.score}%
                       </span>
                     </div>
-                    <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
+                    <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--bg-raised)' }}>
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${skill.score}%` }}
@@ -262,8 +242,7 @@ export default function DashboardHome() {
                           delay: i * 0.1,
                           ease: "easeOut",
                         }}
-                        className="h-full rounded-full"
-                        style={{ backgroundColor: skillColor }}
+                        className="h-full rounded-full bg-gray-400/90"
                       />
                     </div>
                   </div>
@@ -272,7 +251,7 @@ export default function DashboardHome() {
             </div>
           </div>
 
-          <button className="w-full mt-8 py-3 rounded-xl border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-sm font-semibold hover:bg-indigo-500/20 transition-colors cursor-pointer">
+          <button className="w-full mt-8 h-9 rounded-[var(--radius-md)] border text-[var(--text-secondary)] text-[14px] font-medium hover:bg-[var(--bg-raised)] transition-colors" style={{ borderColor: 'var(--border-base)' }}>
             Boost skills
           </button>
         </motion.div>
@@ -280,17 +259,17 @@ export default function DashboardHome() {
         {/* Hot Market Skills Panel */}
         <motion.div
           variants={itemVariants}
-          className="bg-black/20 border border-white/5 rounded-2xl p-6 flex flex-col justify-between"
+          className="rounded-[var(--radius-lg)] border p-6 flex flex-col justify-between"
+          style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}
         >
           <div>
             <div className="flex justify-between items-start mb-6">
               <div>
-                <h3 className="text-white font-medium">Hot Market Skills</h3>
-                <p className="text-xs text-slate-500 mt-1">
+                <h3 className="text-[15px] font-medium text-[var(--text-primary)]">Hot market skills</h3>
+                <p className="text-[12px] text-[var(--text-tertiary)] mt-1">
                   Trending in the industry
                 </p>
               </div>
-              <Flame className="w-5 h-5 text-orange-500/70" />
             </div>
 
             <div className="flex flex-col gap-3">
@@ -303,21 +282,22 @@ export default function DashboardHome() {
                     exit={{ opacity: 0, scale: 0.8 }}
                     transition={{ type: "spring", stiffness: 180, damping: 28 }}
                     key={skill._id}
-                    className="p-4 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-between hover:bg-white/[0.04] transition-colors cursor-default"
+                    className="p-3 rounded-[var(--radius-md)] border flex items-center justify-between transition-colors hover:bg-[var(--bg-raised)] cursor-default"
+                    style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}
                   >
-                    <div className="flex flex-col gap-1">
-                      <span className="font-medium text-slate-200 text-sm">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="font-medium text-[var(--text-primary)] text-[14px]">
                         {skill.skillName}
                       </span>
-                      <span className="text-[10px] text-slate-500">
-                        {skill.openRoles} open roles
-                      </span>
+                      {/* <span className="text-[12px] text-[#FB923C] font-[var(--font-mono)]">
+                        {skill.openRoles} Openroles
+                      </span> */}
                     </div>
-                    <div className="flex flex-col items-end gap-1">
-                      <span className="text-emerald-400 font-bold text-sm">
-                        {skill.demandPercentage}
+                    <div className="flex flex-col items-end gap-0.5">
+                      <span className="text-[#34D399] font-medium text-[14px] font-[var(--font-mono)]">
+                        {skill.demandPercentage}%
                       </span>
-                      <span className="text-[10px] text-slate-500 uppercase tracking-wide">
+                      <span className="text-[11px] text-[var(--text-tertiary)] tracking-wide">
                         Demand
                       </span>
                     </div>
@@ -327,7 +307,7 @@ export default function DashboardHome() {
             </div>
           </div>
 
-          <button className="w-full mt-8 py-3 rounded-xl border border-white/10 bg-white/5 text-slate-300 text-sm font-semibold hover:bg-white/10 hover:text-white transition-colors cursor-pointer">
+          <button className="w-full mt-8 h-9 rounded-[var(--radius-md)] border text-[var(--text-secondary)] text-[14px] font-medium hover:bg-[var(--bg-raised)] transition-colors" style={{ borderColor: 'var(--border-base)' }}>
             More skills
           </button>
         </motion.div>

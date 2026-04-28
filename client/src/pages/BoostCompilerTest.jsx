@@ -17,7 +17,7 @@ export default function BoostCompilerTest() {
 
   useEffect(() => {
     if (!skillName || !level) return navigate("/dashboard/skill-control");
-    
+
     const fetchTest = async () => {
       try {
         setLoading(true);
@@ -58,37 +58,41 @@ export default function BoostCompilerTest() {
   };
 
   if (loading) {
-    return <div className="h-full flex items-center justify-center text-indigo-400">Loading Compiler...</div>;
+    return (
+      <div className="h-full flex items-center justify-center text-[var(--text-secondary)] text-[14px] animate-pulse-subtle">
+        Loading compiler...
+      </div>
+    );
   }
 
   return (
     <div className="max-w-6xl mx-auto flex flex-col gap-6 h-[calc(100vh-8rem)]">
-      <Toaster theme="dark" />
       <div>
-        <h1 className="text-2xl font-semibold text-white">{level.toUpperCase()} Compiler Boost - {skillName}</h1>
-        <p className="text-sm text-slate-400 mt-1">Pass all test cases to secure the score hike.</p>
+        <h1 className="text-[24px] font-medium text-[var(--text-primary)] tracking-[-0.01em]">{level.charAt(0).toUpperCase() + level.slice(1)} compiler boost — {skillName}</h1>
+        <p className="text-[14px] text-[var(--text-secondary)] mt-1">Pass all test cases to secure the score hike.</p>
       </div>
 
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 overflow-hidden">
-        <div className="col-span-1 bg-white/[0.02] border border-white/10 rounded-2xl p-6 overflow-y-auto">
-          <h2 className="text-xl text-white font-medium mb-4">Problem Statement</h2>
-          <p className="text-slate-300 text-sm whitespace-pre-wrap leading-relaxed">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-4 overflow-hidden">
+        {/* Problem Statement */}
+        <div className="col-span-1 rounded-[var(--radius-lg)] border p-6 overflow-y-auto custom-scrollbar" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}>
+          <h2 className="text-[18px] text-[var(--text-primary)] font-medium mb-4">Problem statement</h2>
+          <p className="text-[var(--text-secondary)] text-[14px] whitespace-pre-wrap leading-relaxed">
             {codeQuestion?.question}
           </p>
 
           {codeQuestion?.testCases && (
-            <div className="mt-8 pt-6 border-t border-white/5">
-              <h3 className="text-xs font-medium text-indigo-300 mb-4 uppercase tracking-wider">Expected Execution:</h3>
+            <div className="mt-8 pt-6 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
+              <h3 className="text-[12px] font-medium text-[var(--accent)] mb-4 tracking-[0.02em]">Expected execution:</h3>
               <div className="flex flex-col gap-3">
                 {codeQuestion.testCases.map((tc, idx) => (
-                  <div key={idx} className="bg-black/30 border border-white/5 p-4 rounded-xl font-mono text-xs flex flex-col gap-2">
+                  <div key={idx} className="rounded-[var(--radius-md)] p-3 font-[var(--font-mono)] text-[12px] flex flex-col gap-2" style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-subtle)' }}>
                     <div className="flex items-start">
-                      <span className="text-slate-500 w-20 shrink-0">Input:</span>
-                      <span className="text-blue-200">{tc.input}</span>
+                      <span className="text-[var(--text-tertiary)] w-20 shrink-0">Input:</span>
+                      <span className="text-[var(--text-primary)]">{tc.input}</span>
                     </div>
-                    <div className="flex items-start border-t border-white/5 pt-2">
-                      <span className="text-slate-500 w-20 shrink-0">Expected:</span>
-                      <span className="text-emerald-300 font-bold">{tc.output}</span>
+                    <div className="flex items-start border-t pt-2" style={{ borderColor: 'var(--border-subtle)' }}>
+                      <span className="text-[var(--text-tertiary)] w-20 shrink-0">Expected:</span>
+                      <span className="text-[var(--success)] font-medium">{tc.output}</span>
                     </div>
                   </div>
                 ))}
@@ -97,15 +101,16 @@ export default function BoostCompilerTest() {
           )}
         </div>
 
-        <div className="col-span-1 lg:col-span-2 flex flex-col border border-white/10 rounded-2xl overflow-hidden bg-[#1e1e1e]">
-          <div className="h-12 bg-[#252526] border-b border-black/50 flex items-center justify-between px-4">
-            <span className="text-xs text-slate-400 font-mono">index.js</span>
+        {/* Monaco Editor */}
+        <div className="col-span-1 lg:col-span-2 flex flex-col border rounded-[var(--radius-lg)] overflow-hidden bg-[#1e1e1e]" style={{ borderColor: 'var(--border-subtle)' }}>
+          <div className="h-10 bg-[#252526] border-b border-[#1a1a1a] flex items-center justify-between px-4">
+            <span className="text-[12px] text-[var(--text-tertiary)] font-[var(--font-mono)]">index.js</span>
             <button
               onClick={handleSubmit}
               disabled={submitting}
-              className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium px-4 py-1.5 rounded-lg transition-colors"
+              className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-[13px] font-medium px-4 h-7 rounded-[var(--radius-md)] transition-colors"
             >
-              {submitting ? "Executing..." : "Run & Submit"}
+              {submitting ? "Executing..." : "Run & submit"}
             </button>
           </div>
           <div className="flex-1">
@@ -115,7 +120,12 @@ export default function BoostCompilerTest() {
               defaultLanguage="javascript"
               value={codeAnswer}
               onChange={(v) => setCodeAnswer(v)}
-              options={{ minimap: { enabled: false }, fontSize: 14, padding: { top: 16 } }}
+              options={{
+                minimap: { enabled: false },
+                fontSize: 14,
+                padding: { top: 16 },
+                fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+              }}
             />
           </div>
         </div>

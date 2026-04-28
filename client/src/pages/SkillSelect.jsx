@@ -1,335 +1,350 @@
-import React, { useState, useRef, useEffect } from "react";
-import * as skillService from "../services/skillService";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import useAuthStore from "../store/useAuthStore";
+import { verificationService } from "../services/verificationService";
+import { toast, Toaster } from "sonner";
+import { ChevronDown, Plus, X, Search, Loader2 } from "lucide-react";
+import { initSkills } from "../services/skillService";
+
+const SKILL_OPTIONS = [
+  "JavaScript",
+  "TypeScript",
+  "React",
+  "Node.js",
+  "Express",
+  "MongoDB",
+  "Python",
+  "GraphQL",
+  "Docker",
+  "Kubernetes",
+  "AWS",
+  "Redux",
+  "Next.js",
+  "Vue.js",
+  "Angular",
+  "Rust",
+  "Go",
+  "Java",
+  "C++",
+  "PostgreSQL",
+  "Redis",
+  "Firebase",
+  "TailwindCSS",
+  "SASS",
+  "Git",
+  "CI/CD",
+  "Jest",
+  "Cypress",
+];
 
 export default function SkillSelect() {
-  const [selectedSkills, setSelectedSkills] = useState([]);
-  const [inputValue, setInputValue] = useState("");
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const dropdownRef = useRef(null);
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const user = useAuthStore((state) => state.user);
+  const checkAuth = useAuthStore((state) => state.checkAuth);
 
-  // Pre-populated suggestions
-  const defaultSuggestions = [
-    "React",
-    "Node.js",
-    "Express",
-    "MongoDB",
-    "JavaScript",
-    "TypeScript",
-    "HTML",
-    "CSS",
-    "tailwindCSS",
-  ];
+  const [selectedSkill, setSelectedSkill] = useState("");
+  const [confidence, setConfidence] = useState(50);
+  const [submittedSkills, setSubmittedSkills] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  // -- Load predicted skills - github --
-  useEffect(() => {
-    const predictedParam = searchParams.get("predicted");
-
-    // Hydrate if predictions exists and the user hasn't added anything yet
-    if (predictedParam && selectedSkills.length === 0) {
-      const predictedArray = predictedParam.split(",");
-
-      const hydratedSkills = predictedArray.map((skillName) => ({
-        name: skillName,
-        confidence: 50,
-      }));
-
-      setSelectedSkills(hydratedSkills);
-    }
-  }, [searchParams, selectedSkills.length]);
-
-  // Filter out already selected skills
-  const availableSuggestions = defaultSuggestions.filter(
-    (skill) =>
-      !selectedSkills.some((s) => s.name.toLowerCase() === skill.toLowerCase()),
+  const filteredOptions = SKILL_OPTIONS.filter(
+    (s) =>
+      s.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      !submittedSkills.find((sub) => sub.name === s),
   );
 
-  const filteredSuggestions = availableSuggestions.filter((skill) =>
-    skill.toLowerCase().includes(inputValue.toLowerCase()),
-  );
-
-  // Handle outside click for dropdown
+  // PROTECTED - Redirect to dashboard if already onboarded
   useEffect(() => {
-    function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false);
-      }
+    if (user?.onboardingStatus === "completed") {
+      navigate("/dashboard");
     }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [user, navigate]);
 
-  const handleAddSkill = (skillName) => {
-    const trimmed = skillName.trim();
-    if (!trimmed) return;
+  const handleAddSkill = () => {
+    if (!selectedSkill) return;
 
-    // Prevent duplicates
-    if (
-      !selectedSkills.some(
-        (s) => s.name.toLowerCase() === trimmed.toLowerCase(),
-      )
-    ) {
-      setSelectedSkills([...selectedSkills, { name: trimmed, confidence: 50 }]);
+    if (submittedSkills.length >= 5) {
+      return toast.error("Maximum of 5 skills allowed.");
     }
-    setInputValue("");
-    setIsDropdownOpen(false);
-  };
 
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleAddSkill(inputValue);
+    if (submittedSkills.find((s) => s.name === selectedSkill)) {
+      return toast.error("Skill already added.");
     }
+
+    setSubmittedSkills([
+      ...submittedSkills,
+      { name: selectedSkill, confidence },
+    ]);
+    setSelectedSkill("");
+    setConfidence(50);
+    setSearchTerm("");
   };
 
-  const handleRemoveSkill = (skillName) => {
-    setSelectedSkills(selectedSkills.filter((s) => s.name !== skillName));
+  const handleRemoveSkill = (index) => {
+    const newList = [...submittedSkills];
+    newList.splice(index, 1);
+    setSubmittedSkills(newList);
   };
 
-  const handleConfidenceChange = (skillName, value) => {
-    setSelectedSkills(
-      selectedSkills.map((s) =>
-        s.name === skillName ? { ...s, confidence: parseInt(value) } : s,
-      ),
-    );
-  };
+  const handleConfirmAndTest = async () => {
+    if (submittedSkills.length < 3) {
+      return toast.error("Please add at least 3 skills.");
+    }
 
-  const handleConfirm = async () => {
     setLoading(true);
-
     try {
-      await skillService.initSkills(selectedSkills);
-      navigate("/test?skill=JavaScript");
-    } catch (error) {
-      console.error("Failed to save skills:", error);
-      alert("Failed to save skills. Please try again.");
+      const firstSkill = submittedSkills[0];
+      await initSkills(submittedSkills);
+
+      const level =
+        firstSkill.confidence > 70
+          ? "advanced"
+          : firstSkill.confidence > 40
+            ? "intermediate"
+            : "beginner";
+
+      await verificationService.startTest(firstSkill.name, level)
+
+      await checkAuth();
+      navigate(`/test?skill=${encodeURIComponent(firstSkill.name)}`);
+    } catch (err) {
+      toast.error(
+        err.response?.data?.message || "Failed to start verification.",
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  // Helper to calculate the slider's gradient (20 to 80)
-  const getSliderBackground = (confidence) => {
-    const percentage = ((confidence - 20) / (80 - 20)) * 100;
-    // Shifts smoothly from indigo-500 to violet-400
-    return `linear-gradient(to right, #6366f1 0%, #a78bfa ${percentage}%, rgba(255,255,255,0.05) ${percentage}%)`;
-  };
-
   return (
-    <div className="min-h-screen bg-[#0b0b0f] flex flex-col items-center py-20 px-6 relative overflow-hidden font-sans selection:bg-indigo-500/30">
-      {/* Background Ambient Gradients */}
-      <div className="absolute top-[-10%] left-[-5%] w-[500px] h-[500px] bg-[#312e81] rounded-full mix-blend-screen filter blur-[150px] opacity-20 pointer-events-none fixed"></div>
-      <div className="absolute bottom-[-10%] right-[-5%] w-[600px] h-[600px] bg-[#1a1029] rounded-full mix-blend-screen filter blur-[150px] opacity-25 pointer-events-none fixed"></div>
+    <div
+      className="theme-dark min-h-screen flex flex-col items-center justify-center px-6 py-16 font-[var(--font-sans)]"
+      style={{ background: "var(--bg-canvas)" }}
+    >
 
-      <div className="relative z-10 w-full max-w-2xl flex flex-col items-center">
-        {/* Header Section */}
-        <div className="text-center mb-8 w-full">
-          <h1 className="text-3xl font-semibold text-white tracking-tight mb-2">
-            Configure Your Skills
+      <div className="w-full max-w-lg flex flex-col gap-8 relative z-10">
+        {/* Header */}
+        <div className="text-center">
+          <h1 className="text-[24px] font-medium text-[var(--text-primary)] tracking-[-0.01em]">
+            Skill discovery
           </h1>
-          <p className="text-sm text-slate-400 tracking-tight">
-            Select your technologies and set your current confidence level.
+          <p className="text-[14px] text-[var(--text-secondary)] mt-2 max-w-md mx-auto">
+            Select your primary tech skills for verification. The first skill
+            will be tested immediately.
           </p>
         </div>
 
-        {/* Main Card */}
-        <div className="w-full bg-white/[0.02] border border-white/10 backdrop-blur-xl rounded-2xl p-6 sm:p-8 shadow-2xl flex flex-col gap-8">
-          {/* Input / Dropdown Section */}
-          <div className="relative z-20" ref={dropdownRef}>
-            <div className="flex flex-col gap-2">
-              <label className="text-xs font-medium text-slate-400 ml-1">
-                Add a skill
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={inputValue}
-                  onChange={(e) => {
-                    setInputValue(e.target.value);
-                    setIsDropdownOpen(true);
-                  }}
-                  onKeyDown={handleKeyDown}
-                  onFocus={() => setIsDropdownOpen(true)}
-                  placeholder="e.g. GraphQL, Docker..."
-                  className="w-full bg-white/5 border border-white/10 text-white px-4 py-3.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-sm placeholder:text-slate-600"
-                />
-                <button
-                  onClick={() => handleAddSkill(inputValue)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white p-1.5 rounded-lg transition-colors cursor-pointer"
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 4v16m8-8H4"
-                    />
-                  </svg>
-                </button>
-              </div>
+        {/* Selection Card */}
+        <div
+          className="rounded-[var(--radius-lg)] border p-6 flex flex-col gap-6"
+          style={{
+            background: "var(--bg-surface)",
+            borderColor: "var(--border-subtle)",
+          }}
+        >
+          {/* Dropdown */}
+          <div className="flex flex-col gap-1.5 relative">
+            <label className="text-[12px] font-medium text-[var(--text-secondary)]">
+              Select skill
+            </label>
+            {dropdownOpen && (
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setDropdownOpen(false)}
+              />
+            )}
+            <div
+              className="relative z-50 flex items-center justify-between w-full border h-9 rounded-[var(--radius-md)] px-3 cursor-pointer text-[14px]"
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              style={{
+                background: "var(--bg-surface)",
+                borderColor: dropdownOpen
+                  ? "var(--accent)"
+                  : "var(--border-base)",
+                color: selectedSkill
+                  ? "var(--text-primary)"
+                  : "var(--text-tertiary)",
+                boxShadow: dropdownOpen
+                  ? "0 0 0 2px rgba(37,99,235,0.15)"
+                  : "none",
+              }}
+            >
+              <span>{selectedSkill || "Choose a skill..."}</span>
+              <ChevronDown
+                className={`w-4 h-4 text-[var(--text-tertiary)] transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`}
+              />
             </div>
 
-            {/* Dropdown Menu */}
-            {isDropdownOpen &&
-              (inputValue || filteredSuggestions.length > 0) && (
-                <div className="absolute top-full left-0 w-full mt-2 bg-[#12121a] border border-white/10 rounded-xl shadow-2xl overflow-hidden max-h-48 overflow-y-auto z-50 py-1">
-                  {filteredSuggestions.length > 0 ? (
-                    filteredSuggestions.map((skill) => (
-                      <button
+            {dropdownOpen && (
+              <div
+                className="absolute top-[calc(100%+4px)] left-0 w-full z-50 rounded-[var(--radius-lg)] overflow-hidden"
+                style={{
+                  background: "var(--bg-surface)",
+                  border: "1px solid var(--border-subtle)",
+                  boxShadow: "var(--shadow-md)",
+                }}
+              >
+                <div
+                  className="p-2 border-b"
+                  style={{ borderColor: "var(--border-subtle)" }}
+                >
+                  <div className="flex items-center gap-2 px-2">
+                    <Search className="w-4 h-4 text-[var(--text-tertiary)]" />
+                    <input
+                      type="text"
+                      placeholder="Search skills..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full bg-transparent text-[14px] outline-none text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)]"
+                      autoFocus
+                    />
+                  </div>
+                </div>
+                <div className="max-h-56 overflow-y-auto">
+                  {filteredOptions.length > 0 ? (
+                    filteredOptions.map((skill) => (
+                      <div
                         key={skill}
-                        onClick={() => handleAddSkill(skill)}
-                        className="w-full text-left px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors cursor-pointer"
+                        onClick={() => {
+                          setSelectedSkill(skill);
+                          setDropdownOpen(false);
+                          setSearchTerm("");
+                        }}
+                        className="px-3 py-2 text-[14px] cursor-pointer transition-colors text-[var(--text-secondary)] hover:bg-[var(--bg-raised)] hover:text-[var(--text-primary)]"
                       >
                         {skill}
-                      </button>
+                      </div>
                     ))
                   ) : (
-                    <div className="px-4 py-3 text-sm text-slate-500">
-                      Press Enter to add "{inputValue}"
+                    <div className="p-3 text-[13px] text-[var(--text-tertiary)] text-center">
+                      No skills found
                     </div>
                   )}
                 </div>
-              )}
-          </div>
-
-          {/* Selected Skills List */}
-          <div className="flex flex-col gap-3">
-            <h3 className="text-xs font-medium text-slate-400 ml-1 border-b border-white/5 pb-2">
-              Selected Skills ({selectedSkills.length})
-            </h3>
-
-            {selectedSkills.length === 0 ? (
-              <div className="py-8 text-center text-sm text-slate-500 border border-dashed border-white/10 rounded-xl bg-white/[0.01]">
-                No skills added yet. Search or type above.
-              </div>
-            ) : (
-              <div className="flex flex-col gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                {selectedSkills.map((skill) => (
-                  <div
-                    key={skill.name}
-                    className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.05] transition-colors group"
-                  >
-                    {/* Skill Name & Remove */}
-                    <div className="flex items-center justify-between sm:w-1/3">
-                      <span className="text-sm font-medium text-slate-200">
-                        {skill.name}
-                      </span>
-                      <button
-                        onClick={() => handleRemoveSkill(skill.name)}
-                        className="text-slate-500 hover:text-red-400 transition-colors sm:hidden"
-                      >
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-
-                    {/* Slider Section */}
-                    <div className="flex items-center gap-4 flex-1">
-                      <span className="text-xs text-slate-500 w-8">20%</span>
-
-                      <div className="relative flex-1 flex items-center h-5">
-                        <input
-                          type="range"
-                          min="20"
-                          max="80"
-                          value={skill.confidence}
-                          onChange={(e) =>
-                            handleConfidenceChange(skill.name, e.target.value)
-                          }
-                          className="absolute w-full h-1.5 appearance-none rounded-full cursor-pointer z-10 bg-transparent [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-[0_0_10px_rgba(167,139,250,0.6)] [&::-webkit-slider-thumb]:transition-transform hover:[&::-webkit-slider-thumb]:scale-110"
-                        />
-                        {/* Custom Track Background */}
-                        <div
-                          className="absolute w-full h-1.5 rounded-full pointer-events-none"
-                          style={{
-                            background: getSliderBackground(skill.confidence),
-                          }}
-                        ></div>
-                      </div>
-
-                      <div className="flex items-center gap-3 w-16 justify-end">
-                        <span className="text-xs font-medium text-indigo-300 w-8 text-right">
-                          {skill.confidence}%
-                        </span>
-                        <button
-                          onClick={() => handleRemoveSkill(skill.name)}
-                          className="text-slate-500 hover:text-red-400 transition-colors hidden sm:block opacity-0 group-hover:opacity-100 cursor-pointer"
-                        >
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M6 18L18 6M6 6l12 12"
-                            />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
               </div>
             )}
           </div>
 
-          {/* Action Footer */}
-          <div className="pt-4 border-t border-white/5">
+          {/* Slider */}
+          <div className="flex flex-col gap-2">
+            <div className="flex justify-between text-[12px]">
+              <span className="text-[var(--text-secondary)] font-medium">
+                Confidence level
+              </span>
+              <span className="text-[var(--accent)] font-medium">
+                {confidence}%
+              </span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={confidence}
+              onChange={(e) => setConfidence(Number(e.target.value))}
+              className="w-full accent-[#2563EB]"
+            />
+          </div>
+
+          {/* Add Button */}
+          <button
+            onClick={handleAddSkill}
+            disabled={!selectedSkill}
+            className="flex items-center justify-center gap-2 w-full h-9 border rounded-[var(--radius-md)] text-[14px] font-medium transition-colors disabled:opacity-30"
+            style={{
+              borderColor: "var(--border-base)",
+              color: "var(--text-secondary)",
+            }}
+            onMouseEnter={(e) => {
+              if (selectedSkill)
+                e.currentTarget.style.background = "var(--bg-raised)";
+            }}
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.background = "transparent")
+            }
+          >
+            <Plus className="w-4 h-4" />
+            Add skill
+          </button>
+        </div>
+
+        {/* Selected Skills List */}
+        {submittedSkills.length > 0 && (
+          <div
+            className="rounded-[var(--radius-lg)] border p-6 flex flex-col gap-4"
+            style={{
+              background: "var(--bg-surface)",
+              borderColor: "var(--border-subtle)",
+            }}
+          >
+            <div className="flex justify-between items-center">
+              <h2 className="text-[15px] font-medium text-[var(--text-primary)]">
+                Selected skills
+              </h2>
+              <span className="text-[12px] font-medium text-[var(--text-tertiary)]">
+                {submittedSkills.length}/5
+              </span>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              {submittedSkills.map((skill, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between h-10 px-3 rounded-[var(--radius-md)] border"
+                  style={{
+                    background: "var(--bg-raised)",
+                    borderColor: "var(--border-subtle)",
+                  }}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-[14px] font-medium text-[var(--text-primary)]">
+                      {skill.name}
+                    </span>
+                    {index === 0 && (
+                      <span
+                        className="px-1.5 py-0.5 rounded text-[10px] font-medium"
+                        style={{
+                          background: "var(--accent-bg)",
+                          color: "var(--accent)",
+                        }}
+                      >
+                        Test first
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[12px] text-[var(--text-tertiary)] font-[var(--font-mono)]">
+                      {skill.confidence}%
+                    </span>
+                    <button
+                      onClick={() => handleRemoveSkill(index)}
+                      className="text-[var(--text-tertiary)] hover:text-[var(--danger)] transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
             <button
-              onClick={handleConfirm}
-              disabled={selectedSkills.length === 0}
-              className="w-full bg-white text-black hover:bg-slate-200 disabled:bg-white/20 disabled:text-white/40 disabled:cursor-not-allowed font-medium px-4 py-3.5 rounded-xl transition-all text-sm shadow-[0_0_15px_rgba(255,255,255,0.1)] hover:shadow-[0_0_20px_rgba(255,255,255,0.2)] cursor-pointer"
+              onClick={handleConfirmAndTest}
+              disabled={loading || submittedSkills.length < 3}
+              className="mt-2 w-full h-10 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-medium rounded-[var(--radius-md)] text-[14px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              Confirm Skills
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Initializing...
+                </>
+              ) : (
+                `Confirm & start verification (${submittedSkills.length}/3 min)`
+              )}
             </button>
           </div>
-        </div>
+        )}
       </div>
-
-      {/* Optional: Add custom scrollbar styling to your global CSS */}
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: rgba(255, 255, 255, 0.02);
-          border-radius: 8px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 8px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(255, 255, 255, 0.2);
-        }
-      `,
-        }}
-      />
     </div>
   );
 }
