@@ -20,6 +20,9 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
 };
 
+// Helper: zero-pad a number to 2 digits
+const pad = (n) => String(n).padStart(2, '0');
+
 export default function DashboardHome() {
   const { data, error, loading } = useDashboardData();
   const score = data?.score || 0;
@@ -43,7 +46,7 @@ export default function DashboardHome() {
     >
       {/* 1. Header Metrics Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-        {/* Card 1 */}
+        {/* Card 1 — Active Skills */}
         <motion.div
           variants={itemVariants}
           className="p-6 rounded-[var(--radius-lg)] border flex flex-col justify-between h-[120px] transition-colors hover:bg-[var(--bg-raised)]"
@@ -53,16 +56,16 @@ export default function DashboardHome() {
             <span className="text-[12px] font-medium text-[var(--text-tertiary)] tracking-[0.02em]">
               Active skills
             </span>
-            <Activity className="w-4 h-4 text-[var(--text-tertiary)]" />
+            <Activity className="w-4 h-4 text-[#2563EB]" />
           </div>
           <div>
             <h3 className="text-[28px] font-medium text-[var(--text-primary)] tracking-tight">
-              {loading ? "--" : data?.activeSkills || 0}
+              {loading ? "--" : pad(data?.activeSkills || 0)}
             </h3>
           </div>
         </motion.div>
 
-        {/* Card 2 */}
+        {/* Card 2 — Decaying Skills */}
         <motion.div
           variants={itemVariants}
           className="p-6 rounded-[var(--radius-lg)] border flex flex-col justify-between h-[120px] transition-colors hover:bg-[var(--bg-raised)]"
@@ -72,16 +75,16 @@ export default function DashboardHome() {
             <span className="text-[12px] font-medium text-[var(--text-tertiary)] tracking-[0.02em]">
               Decaying skills
             </span>
-            <Zap className="w-4 h-4 text-[var(--text-tertiary)]" />
+            <Zap className="w-4 h-4 text-[#FBBF24]" />
           </div>
           <div>
             <h3 className="text-[28px] font-medium text-[var(--text-primary)] tracking-tight">
-              {loading ? "--" : data?.skillDebts?.total || 0}
+              {loading ? "--" : pad(data?.skillDebts?.total || 0)}
             </h3>
           </div>
         </motion.div>
 
-        {/* Card 3 */}
+        {/* Card 3 — Tasks Completed */}
         <motion.div
           variants={itemVariants}
           className="p-6 rounded-[var(--radius-lg)] border flex flex-col justify-between h-[120px] transition-colors hover:bg-[var(--bg-raised)]"
@@ -91,14 +94,14 @@ export default function DashboardHome() {
             <span className="text-[12px] font-medium text-[var(--text-tertiary)] tracking-[0.02em]">
               Tasks completed
             </span>
-            <CheckCircle2 className="w-4 h-4 text-[var(--text-tertiary)]" />
+            <CheckCircle2 className="w-4 h-4 text-[#34D399]" />
           </div>
           <div>
-            <h3 className="text-[28px] font-medium text-[var(--text-primary)] tracking-tight">23</h3>
+            <h3 className="text-[28px] font-medium text-[var(--text-primary)] tracking-tight">{pad(23)}</h3>
           </div>
         </motion.div>
 
-        {/* Card 4 */}
+        {/* Card 4 — Hot Market Skills */}
         <motion.div
           variants={itemVariants}
           className="p-6 rounded-[var(--radius-lg)] border flex flex-col justify-between h-[120px] transition-colors hover:bg-[var(--bg-raised)]"
@@ -108,21 +111,20 @@ export default function DashboardHome() {
             <span className="text-[12px] font-medium text-[var(--text-tertiary)] tracking-[0.02em]">
               Hot market skills
             </span>
-            <Flame className="w-4 h-4 text-[var(--text-tertiary)]" />
+            <Flame className="w-4 h-4 text-[#FB923C]" />
           </div>
           <div>
-            <h3 className="text-[28px] font-medium text-[var(--text-primary)] tracking-tight">3</h3>
+            <h3 className="text-[28px] font-medium text-[var(--text-primary)] tracking-tight">{pad(3)}</h3>
           </div>
         </motion.div>
       </div>
 
       {/* 2. Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Career Liquidity Panel */}
+        {/* Career Liquidity Panel — no card bg/border */}
         <motion.div
           variants={itemVariants}
-          className="rounded-[var(--radius-lg)] border p-6 flex flex-col"
-          style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}
+          className="p-6 flex flex-col"
         >
           <div className="flex justify-between items-start mb-8">
             <div>
@@ -138,13 +140,21 @@ export default function DashboardHome() {
             </div>
           </div>
 
-          <div className="flex-1 flex items-center justify-center relative mb-4">
-            <div className="relative w-56 h-56 flex items-center justify-center rounded-full">
-              {/* Circular Animation Frame */}
+          <div className="flex-1 flex items-center justify-center relative mb-4 mt-4">
+            <div className="relative w-72 h-72 flex items-center justify-center rounded-full">
+              {/* SVG Gauge with gradient */}
               <svg
                 className="absolute inset-0 w-full h-full transform -rotate-225"
                 viewBox="0 0 200 200"
               >
+                <defs>
+                  <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#3B82F6" />
+                    <stop offset="50%" stopColor="#2563EB" />
+                    <stop offset="100%" stopColor="#1D4ED8" />
+                  </linearGradient>
+                </defs>
+
                 {/* Background Track */}
                 <circle
                   cx="100"
@@ -157,13 +167,13 @@ export default function DashboardHome() {
                   strokeLinecap="round"
                 />
 
-                {/* Animated Foreground */}
+                {/* Animated Foreground with gradient */}
                 <motion.circle
                   cx="100"
                   cy="100"
                   r="90"
                   fill="none"
-                  stroke="#2563EB"
+                  stroke="url(#gaugeGradient)"
                   strokeWidth="10"
                   strokeDasharray={`${circumference} ${circumference}`}
                   initial={{ strokeDashoffset: circumference }}
@@ -178,11 +188,11 @@ export default function DashboardHome() {
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.4, delay: 0.5 }}
-                  className="text-[48px] font-medium tracking-tighter text-[var(--text-primary)]"
+                  className="text-[60px] font-medium tracking-tighter text-[var(--text-primary)]"
                 >
                   {loading ? "--" : score}
                 </motion.span>
-                <span className="text-[12px] text-[var(--text-tertiary)] tracking-wide font-medium mt-1">
+                <span className="text-[15px] text-[var(--text-tertiary)] tracking-wide font-medium mt-1">
                   /100
                 </span>
               </div>
@@ -232,7 +242,7 @@ export default function DashboardHome() {
                           delay: i * 0.1,
                           ease: "easeOut",
                         }}
-                        className="h-full rounded-full bg-[#2563EB]"
+                        className="h-full rounded-full bg-gray-400/90"
                       />
                     </div>
                   </div>
@@ -279,13 +289,13 @@ export default function DashboardHome() {
                       <span className="font-medium text-[var(--text-primary)] text-[14px]">
                         {skill.skillName}
                       </span>
-                      <span className="text-[12px] text-[var(--text-tertiary)]">
-                        {skill.openRoles} open roles
-                      </span>
+                      {/* <span className="text-[12px] text-[#FB923C] font-[var(--font-mono)]">
+                        {skill.openRoles} Openroles
+                      </span> */}
                     </div>
                     <div className="flex flex-col items-end gap-0.5">
-                      <span className="text-[var(--text-primary)] font-medium text-[14px] font-[var(--font-mono)]">
-                        {skill.demandPercentage}
+                      <span className="text-[#34D399] font-medium text-[14px] font-[var(--font-mono)]">
+                        {skill.demandPercentage}%
                       </span>
                       <span className="text-[11px] text-[var(--text-tertiary)] tracking-wide">
                         Demand

@@ -37,6 +37,10 @@
   --danger:        #DC2626;
   --danger-bg:     #FEF2F2;
 
+  /* Data — semantic colors for metrics */
+  --color-demand:  #34D399;
+  --color-roles:   #FB923C;
+
   /* Typography */
   --font-sans: 'Inter', 'SF Pro Text', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
@@ -55,14 +59,14 @@
 
 /* --- Dark Mode Tokens (User Side) --- */
 .theme-dark {
-  --bg-canvas:     #111110;
-  --bg-surface:    #1A1A18;
-  --bg-raised:     #222220;
-  --bg-overlay:    #2C2C29;
+  --bg-canvas:     #0C0C0B;
+  --bg-surface:    #141413;
+  --bg-raised:     #1A1A18;
+  --bg-overlay:    #222220;
 
-  --border-subtle: #2E2E2B;
-  --border-base:   #3D3D3A;
-  --border-strong: #525250;
+  --border-subtle: #252523;
+  --border-base:   #333330;
+  --border-strong: #4A4A47;
 
   --text-primary:  #F2F1EE;
   --text-secondary:#A8A7A1;

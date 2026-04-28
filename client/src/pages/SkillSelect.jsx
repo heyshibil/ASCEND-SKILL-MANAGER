@@ -4,6 +4,7 @@ import useAuthStore from "../store/useAuthStore";
 import { verificationService } from "../services/verificationService";
 import { toast, Toaster } from "sonner";
 import { ChevronDown, Plus, X, Search, Loader2 } from "lucide-react";
+import { initSkills } from "../services/skillService";
 
 const SKILL_OPTIONS = [
   "JavaScript",
@@ -95,10 +96,17 @@ export default function SkillSelect() {
     setLoading(true);
     try {
       const firstSkill = submittedSkills[0];
-      await verificationService.saveSkillsAndStartTest(
-        submittedSkills,
-        firstSkill.name,
-      );
+      await initSkills(submittedSkills);
+
+      const level =
+        firstSkill.confidence > 70
+          ? "advanced"
+          : firstSkill.confidence > 40
+            ? "intermediate"
+            : "beginner";
+
+      await verificationService.startTest(firstSkill.name, level)
+
       await checkAuth();
       navigate(`/test?skill=${encodeURIComponent(firstSkill.name)}`);
     } catch (err) {
@@ -111,7 +119,10 @@ export default function SkillSelect() {
   };
 
   return (
-    <div className="theme-dark min-h-screen flex flex-col items-center justify-center px-6 py-16 font-[var(--font-sans)]" style={{ background: 'var(--bg-canvas)' }}>
+    <div
+      className="theme-dark min-h-screen flex flex-col items-center justify-center px-6 py-16 font-[var(--font-sans)]"
+      style={{ background: "var(--bg-canvas)" }}
+    >
       <Toaster theme="dark" position="top-center" richColors />
 
       <div className="w-full max-w-lg flex flex-col gap-8 relative z-10">
@@ -121,37 +132,65 @@ export default function SkillSelect() {
             Skill discovery
           </h1>
           <p className="text-[14px] text-[var(--text-secondary)] mt-2 max-w-md mx-auto">
-            Select your primary tech skills for verification. The first skill will be tested immediately.
+            Select your primary tech skills for verification. The first skill
+            will be tested immediately.
           </p>
         </div>
 
         {/* Selection Card */}
-        <div className="rounded-[var(--radius-lg)] border p-6 flex flex-col gap-6" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}>
+        <div
+          className="rounded-[var(--radius-lg)] border p-6 flex flex-col gap-6"
+          style={{
+            background: "var(--bg-surface)",
+            borderColor: "var(--border-subtle)",
+          }}
+        >
           {/* Dropdown */}
           <div className="flex flex-col gap-1.5 relative">
             <label className="text-[12px] font-medium text-[var(--text-secondary)]">
               Select skill
             </label>
             {dropdownOpen && (
-              <div className="fixed inset-0 z-40" onClick={() => setDropdownOpen(false)} />
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setDropdownOpen(false)}
+              />
             )}
             <div
               className="relative z-50 flex items-center justify-between w-full border h-9 rounded-[var(--radius-md)] px-3 cursor-pointer text-[14px]"
               onClick={() => setDropdownOpen(!dropdownOpen)}
               style={{
-                background: 'var(--bg-surface)',
-                borderColor: dropdownOpen ? 'var(--accent)' : 'var(--border-base)',
-                color: selectedSkill ? 'var(--text-primary)' : 'var(--text-tertiary)',
-                boxShadow: dropdownOpen ? '0 0 0 2px rgba(37,99,235,0.15)' : 'none',
+                background: "var(--bg-surface)",
+                borderColor: dropdownOpen
+                  ? "var(--accent)"
+                  : "var(--border-base)",
+                color: selectedSkill
+                  ? "var(--text-primary)"
+                  : "var(--text-tertiary)",
+                boxShadow: dropdownOpen
+                  ? "0 0 0 2px rgba(37,99,235,0.15)"
+                  : "none",
               }}
             >
               <span>{selectedSkill || "Choose a skill..."}</span>
-              <ChevronDown className={`w-4 h-4 text-[var(--text-tertiary)] transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`} />
+              <ChevronDown
+                className={`w-4 h-4 text-[var(--text-tertiary)] transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`}
+              />
             </div>
 
             {dropdownOpen && (
-              <div className="absolute top-[calc(100%+4px)] left-0 w-full z-50 rounded-[var(--radius-lg)] overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', boxShadow: 'var(--shadow-md)' }}>
-                <div className="p-2 border-b" style={{ borderColor: 'var(--border-subtle)' }}>
+              <div
+                className="absolute top-[calc(100%+4px)] left-0 w-full z-50 rounded-[var(--radius-lg)] overflow-hidden"
+                style={{
+                  background: "var(--bg-surface)",
+                  border: "1px solid var(--border-subtle)",
+                  boxShadow: "var(--shadow-md)",
+                }}
+              >
+                <div
+                  className="p-2 border-b"
+                  style={{ borderColor: "var(--border-subtle)" }}
+                >
                   <div className="flex items-center gap-2 px-2">
                     <Search className="w-4 h-4 text-[var(--text-tertiary)]" />
                     <input
@@ -180,7 +219,9 @@ export default function SkillSelect() {
                       </div>
                     ))
                   ) : (
-                    <div className="p-3 text-[13px] text-[var(--text-tertiary)] text-center">No skills found</div>
+                    <div className="p-3 text-[13px] text-[var(--text-tertiary)] text-center">
+                      No skills found
+                    </div>
                   )}
                 </div>
               </div>
@@ -190,8 +231,12 @@ export default function SkillSelect() {
           {/* Slider */}
           <div className="flex flex-col gap-2">
             <div className="flex justify-between text-[12px]">
-              <span className="text-[var(--text-secondary)] font-medium">Confidence level</span>
-              <span className="text-[var(--accent)] font-medium">{confidence}%</span>
+              <span className="text-[var(--text-secondary)] font-medium">
+                Confidence level
+              </span>
+              <span className="text-[var(--accent)] font-medium">
+                {confidence}%
+              </span>
             </div>
             <input
               type="range"
@@ -208,9 +253,17 @@ export default function SkillSelect() {
             onClick={handleAddSkill}
             disabled={!selectedSkill}
             className="flex items-center justify-center gap-2 w-full h-9 border rounded-[var(--radius-md)] text-[14px] font-medium transition-colors disabled:opacity-30"
-            style={{ borderColor: 'var(--border-base)', color: 'var(--text-secondary)' }}
-            onMouseEnter={(e) => { if (selectedSkill) e.currentTarget.style.background = 'var(--bg-raised)'; }}
-            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+            style={{
+              borderColor: "var(--border-base)",
+              color: "var(--text-secondary)",
+            }}
+            onMouseEnter={(e) => {
+              if (selectedSkill)
+                e.currentTarget.style.background = "var(--bg-raised)";
+            }}
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.background = "transparent")
+            }
           >
             <Plus className="w-4 h-4" />
             Add skill
@@ -219,10 +272,20 @@ export default function SkillSelect() {
 
         {/* Selected Skills List */}
         {submittedSkills.length > 0 && (
-          <div className="rounded-[var(--radius-lg)] border p-6 flex flex-col gap-4" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}>
+          <div
+            className="rounded-[var(--radius-lg)] border p-6 flex flex-col gap-4"
+            style={{
+              background: "var(--bg-surface)",
+              borderColor: "var(--border-subtle)",
+            }}
+          >
             <div className="flex justify-between items-center">
-              <h2 className="text-[15px] font-medium text-[var(--text-primary)]">Selected skills</h2>
-              <span className="text-[12px] font-medium text-[var(--text-tertiary)]">{submittedSkills.length}/5</span>
+              <h2 className="text-[15px] font-medium text-[var(--text-primary)]">
+                Selected skills
+              </h2>
+              <span className="text-[12px] font-medium text-[var(--text-tertiary)]">
+                {submittedSkills.length}/5
+              </span>
             </div>
 
             <div className="flex flex-col gap-2">
@@ -230,12 +293,25 @@ export default function SkillSelect() {
                 <div
                   key={index}
                   className="flex items-center justify-between h-10 px-3 rounded-[var(--radius-md)] border"
-                  style={{ background: 'var(--bg-raised)', borderColor: 'var(--border-subtle)' }}
+                  style={{
+                    background: "var(--bg-raised)",
+                    borderColor: "var(--border-subtle)",
+                  }}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-[14px] font-medium text-[var(--text-primary)]">{skill.name}</span>
+                    <span className="text-[14px] font-medium text-[var(--text-primary)]">
+                      {skill.name}
+                    </span>
                     {index === 0 && (
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium" style={{ background: 'var(--accent-bg)', color: 'var(--accent)' }}>Test first</span>
+                      <span
+                        className="px-1.5 py-0.5 rounded text-[10px] font-medium"
+                        style={{
+                          background: "var(--accent-bg)",
+                          color: "var(--accent)",
+                        }}
+                      >
+                        Test first
+                      </span>
                     )}
                   </div>
                   <div className="flex items-center gap-3">
