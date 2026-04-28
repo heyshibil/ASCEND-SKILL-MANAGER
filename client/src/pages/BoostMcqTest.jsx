@@ -63,7 +63,7 @@ export default function BoostMcqTest() {
       setSubmitting(true);
       toast.loading("Analyzing answers...", { id: "mcq-grading" });
       const { result } = await verificationService.submitMcqBoost(skillName, mcqAnswers);
-      
+
       toast.success(
         `Boost complete! You got ${result.correctCount}/5 correct. (+${result.hikeApplied}% hike)`,
         { id: "mcq-grading" }
@@ -76,25 +76,28 @@ export default function BoostMcqTest() {
   };
 
   if (loading) {
-    return <div className="h-full flex items-center justify-center text-indigo-400">Loading Quick Boost...</div>;
+    return (
+      <div className="h-full flex items-center justify-center text-[var(--text-secondary)] text-[14px] animate-pulse-subtle">
+        Loading quick boost...
+      </div>
+    );
   }
 
   return (
     <div className="max-w-3xl mx-auto flex flex-col gap-8">
-      <Toaster theme="dark" />
       <div className="text-center">
-        <h1 className="text-2xl font-semibold text-white">MCQ Boost for {skillName}</h1>
-        <p className="text-sm text-slate-400 mt-1">+1% hike for each correct answer</p>
+        <h1 className="text-[24px] font-medium text-[var(--text-primary)] tracking-[-0.01em]">MCQ boost for {skillName}</h1>
+        <p className="text-[14px] text-[var(--text-secondary)] mt-1">+1% hike for each correct answer</p>
       </div>
 
-      <div className="bg-white/[0.02] border border-white/10 rounded-2xl p-8 shadow-2xl">
-        <Progress value={(mcqAnswers.length / mcqQuestions.length) * 100} className="h-2 bg-white/5 mb-6" />
-        
-        <div className="bg-white/5 border border-white/10 rounded-xl p-6 mb-6">
-          <span className="text-indigo-400 text-xs font-bold uppercase block mb-2">
+      <div className="rounded-[var(--radius-lg)] border p-8" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}>
+        <Progress value={(mcqAnswers.length / mcqQuestions.length) * 100} className="h-2 mb-6" />
+
+        <div className="rounded-[var(--radius-lg)] p-6 mb-6" style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-subtle)' }}>
+          <span className="text-[var(--accent)] text-[12px] font-medium tracking-[0.02em] block mb-2">
             Question {currentMcqIndex + 1} of {mcqQuestions.length}
           </span>
-          <h2 className="text-xl text-white font-medium">{mcqQuestions[currentMcqIndex]?.question}</h2>
+          <h2 className="text-[18px] text-[var(--text-primary)] font-medium">{mcqQuestions[currentMcqIndex]?.question}</h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -104,39 +107,39 @@ export default function BoostMcqTest() {
               <button
                 key={idx}
                 onClick={() => handleOptionSelect(idx)}
-                className={`text-left p-5 rounded-xl border transition-all duration-300 ${
-                  selected 
-                    ? "bg-indigo-500/20 border-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.2)]" 
-                    : "bg-white/[0.03] border-white/5 hover:bg-white/10"
-                }`}
+                className="text-left p-4 rounded-[var(--radius-lg)] border transition-all duration-200"
+                style={{
+                  background: selected ? 'var(--accent-bg)' : 'var(--bg-surface)',
+                  borderColor: selected ? 'var(--accent)' : 'var(--border-subtle)',
+                }}
               >
-                <span className={`text-sm font-medium ${selected ? "text-indigo-100" : "text-slate-300"}`}>{option}</span>
+                <span className={`text-[14px] font-medium ${selected ? "text-[var(--text-primary)]" : "text-[var(--text-secondary)]"}`}>{option}</span>
               </button>
             );
           })}
         </div>
 
-        <div className="flex justify-between mt-8 pt-6 border-t border-white/5">
+        <div className="flex justify-between mt-8 pt-6 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
           <button
             onClick={() => setCurrentMcqIndex((c) => Math.max(0, c - 1))}
             disabled={currentMcqIndex === 0}
-            className="text-slate-400 disabled:opacity-30 text-sm font-medium"
+            className="text-[var(--text-secondary)] disabled:opacity-30 text-[14px] font-medium"
           >
             ← Previous
           </button>
-          
+
           {currentMcqIndex === mcqQuestions.length - 1 ? (
             <button
               onClick={handleSubmit}
               disabled={submitting}
-              className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-lg text-sm font-medium"
+              className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white px-6 h-9 rounded-[var(--radius-md)] text-[14px] font-medium transition-colors"
             >
-              Submit Boost
+              Submit boost
             </button>
           ) : (
             <button
               onClick={() => setCurrentMcqIndex((c) => Math.min(mcqQuestions.length - 1, c + 1))}
-              className="text-slate-400 text-sm font-medium"
+              className="text-[var(--text-secondary)] text-[14px] font-medium"
             >
               Next →
             </button>

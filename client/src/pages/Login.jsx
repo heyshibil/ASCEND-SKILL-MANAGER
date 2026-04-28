@@ -86,71 +86,65 @@ export default function Login() {
     }
   };
 
+  const inputClass = "w-full h-9 border rounded-[var(--radius-md)] px-3 text-[14px] outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[rgba(37,99,235,0.15)]";
+
   return (
-    <div className="min-h-screen bg-[#0b0b0f] flex flex-col items-center justify-center relative overflow-hidden font-sans selection:bg-indigo-500/30">
-      {/* --- Background Ambient Gradients --- */}
-      <div className="absolute top-[-15%] left-[-10%] w-125 h-125 bg-[#312e81] rounded-full mix-blend-screen filter blur-[150px] opacity-25 pointer-events-none"></div>
-      <div className="absolute bottom-[-15%] right-[-10%] w-150 h-150 bg-[#1a1029] rounded-full mix-blend-screen filter blur-[150px] opacity-30 pointer-events-none"></div>
-      <div className="absolute top-[40%] left-[60%] w-75 h-75 bg-[#0f172a] rounded-full mix-blend-screen filter blur-[120px] opacity-30 pointer-events-none"></div>
-
-      {/* --- Main Content Wrapper --- */}
-      <div className="relative z-10 w-full max-w-112.5 px-6 flex flex-col items-center py-12">
-        {/* Header Section */}
-        <div className="text-center mb-8 w-full flex flex-col items-center">
-          <h1 className="text-4xl font-semibold text-white tracking-tight mb-2">
-            Welcome to Ascend
-          </h1>
-          <h2 className="text-md text-slate-400 mb-2 font-medium tracking-tight">
-            {isLogin ? "Sign in to your account" : "Create a new account"}
-          </h2>
-        </div>
-
-        {/* Status Messages (Error / Success) */}
-        {error && (
-          <div className="w-full mb-4 p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-xl text-center">
-            {error}
+    <div className="theme-dark min-h-screen flex font-[var(--font-sans)]" style={{ background: 'var(--bg-canvas)' }}>
+      {/* --- Left: Form Panel --- */}
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-12" style={{ background: 'var(--bg-canvas)' }}>
+        <div className="w-full max-w-[360px] flex flex-col">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-[24px] font-medium text-[var(--text-primary)] tracking-[-0.01em]">
+              Welcome to Ascend
+            </h1>
+            <p className="text-[14px] text-[var(--text-secondary)] mt-1">
+              {isLogin ? "Sign in to your account" : "Create a new account"}
+            </p>
           </div>
-        )}
-        {success && (
-          <div className="w-full mb-4 p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm rounded-xl text-center">
-            {success}
-          </div>
-        )}
 
-        {/* Login/Register Card */}
-        <div className="w-full bg-white/2 border border-white/10 backdrop-blur-xl rounded-2xl p-8 shadow-2xl hover:shadow-[0_8px_30px_rgb(49,46,129,0.15)] transition-all duration-500 flex flex-col group/card">
+          {/* Status Messages */}
+          {error && (
+            <div className="mb-4 px-3 py-2.5 rounded-[var(--radius-md)] text-[13px] text-[var(--danger)]" style={{ background: 'var(--danger-bg)' }}>
+              {error}
+            </div>
+          )}
+          {success && (
+            <div className="mb-4 px-3 py-2.5 rounded-[var(--radius-md)] text-[13px] text-[var(--success)]" style={{ background: 'var(--success-bg)' }}>
+              {success}
+            </div>
+          )}
+
+          {/* GitHub Auth */}
           <button
             onClick={handleGithubLogin}
             type="button"
-            className="group relative flex items-center justify-center w-full gap-3 bg-white/4 hover:bg-white/8 border border-white/10 text-white px-4 py-3.5 rounded-xl transition-all duration-300 overflow-hidden shadow-lg cursor-pointer"
+            className="flex items-center justify-center w-full gap-2 h-9 border rounded-[var(--radius-md)] text-[var(--text-primary)] text-[14px] font-medium transition-colors hover:bg-[var(--bg-raised)]"
+            style={{ borderColor: 'var(--border-base)', background: 'transparent' }}
           >
-            <div className="absolute inset-0 w-full h-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-r from-transparent via-white/5 to-transparent shadow-[inset_0_0_20px_rgba(255,255,255,0.05)]"></div>
-            <svg
-              className="w-5 h-5 fill-current relative z-10 group-hover:scale-105 transition-transform duration-300"
-              viewBox="0 0 24 24"
-            >
+            <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
               <path
                 fillRule="evenodd"
                 clipRule="evenodd"
                 d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
               />
             </svg>
-            <span className="font-medium text-sm tracking-wide relative z-10">
-              Continue with GitHub
-            </span>
+            Continue with GitHub
           </button>
 
+          {/* Divider */}
           <div className="flex items-center my-6">
-            <div className="flex-1 border-t border-white/5"></div>
-            <span className="px-3 text-xs text-slate-500 font-medium">OR</span>
-            <div className="flex-1 border-t border-white/5"></div>
+            <div className="flex-1 border-t" style={{ borderColor: 'var(--border-subtle)' }}></div>
+            <span className="px-3 text-[12px] text-[var(--text-tertiary)]">or</span>
+            <div className="flex-1 border-t" style={{ borderColor: 'var(--border-subtle)' }}></div>
           </div>
 
+          {/* Form */}
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             {!isLogin && (
               <>
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-medium text-slate-400 ml-1">
+                  <label className="text-[12px] font-medium text-[var(--text-secondary)]">
                     Username
                   </label>
                   <input
@@ -160,13 +154,14 @@ export default function Login() {
                     onChange={handleInputChange}
                     placeholder="e.g. dev_johndoe"
                     required
-                    className="w-full bg-white/5 border border-white/10 text-white px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-sm placeholder:text-slate-600"
+                    className={inputClass}
+                    style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-base)', color: 'var(--text-primary)' }}
                   />
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-medium text-slate-400 ml-1">
-                    Career Goal
+                  <label className="text-[12px] font-medium text-[var(--text-secondary)]">
+                    Career goal
                   </label>
                   <input
                     type="text"
@@ -175,14 +170,15 @@ export default function Login() {
                     onChange={handleInputChange}
                     placeholder="e.g. Frontend Engineer, DevOps"
                     required
-                    className="w-full bg-white/5 border border-white/10 text-white px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-sm placeholder:text-slate-600"
+                    className={inputClass}
+                    style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-base)', color: 'var(--text-primary)' }}
                   />
                 </div>
               </>
             )}
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-slate-400 ml-1">
+              <label className="text-[12px] font-medium text-[var(--text-secondary)]">
                 Email address
               </label>
               <input
@@ -192,12 +188,13 @@ export default function Login() {
                 onChange={handleInputChange}
                 placeholder="you@example.com"
                 required
-                className="w-full bg-white/5 border border-white/10 text-white px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-sm placeholder:text-slate-600"
+                className={inputClass}
+                style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-base)', color: 'var(--text-primary)' }}
               />
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-slate-400 ml-1">
+              <label className="text-[12px] font-medium text-[var(--text-secondary)]">
                 Password
               </label>
               <input
@@ -208,28 +205,29 @@ export default function Login() {
                 placeholder="••••••••"
                 required
                 minLength="8"
-                className="w-full bg-white/5 border border-white/10 text-white px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-sm placeholder:text-slate-600"
+                className={inputClass}
+                style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-base)', color: 'var(--text-primary)' }}
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className={`mt-2 w-full font-medium px-4 py-3.5 rounded-xl transition-all text-sm shadow-[0_0_15px_rgba(255,255,255,0.1)] cursor-pointer
-                ${
-                  loading
-                    ? "bg-slate-300 text-slate-500 cursor-not-allowed"
-                    : "bg-white text-black hover:bg-slate-200 hover:shadow-[0_0_20px_rgba(255,255,255,0.2)]"
-                }`}
+              className={`mt-2 w-full h-9 font-medium rounded-[var(--radius-md)] transition-all text-[14px] ${
+                loading
+                  ? "bg-[var(--text-disabled)] text-[var(--bg-canvas)] cursor-not-allowed"
+                  : "bg-[#2563EB] text-white hover:bg-[#1D4ED8]"
+              }`}
             >
               {loading
                 ? "Please wait..."
                 : isLogin
-                  ? "Sign In"
-                  : "Create Account"}
+                  ? "Sign in"
+                  : "Create account"}
             </button>
           </form>
 
+          {/* Toggle */}
           <div className="mt-6 text-center">
             <button
               onClick={() => {
@@ -237,21 +235,43 @@ export default function Login() {
                 setError("");
                 setSuccess("");
               }}
-              className="text-sm text-slate-400 hover:text-white transition-colors cursor-pointer"
+              className="text-[14px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
             >
               {isLogin ? (
                 <>
                   Don't have an account?{" "}
-                  <span className="text-indigo-400">Sign up</span>
+                  <span className="text-[#2563EB]">Sign up</span>
                 </>
               ) : (
                 <>
                   Already have an account?{" "}
-                  <span className="text-indigo-400">Sign in</span>
+                  <span className="text-[#2563EB]">Sign in</span>
                 </>
               )}
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* --- Right: Brand Panel --- */}
+      <div className="hidden lg:flex flex-1 items-center justify-center relative" style={{ background: 'var(--bg-surface)' }}>
+        {/* Subtle geometric pattern */}
+        <div className="absolute inset-0 opacity-[0.03]" style={{
+          backgroundImage: `radial-gradient(circle at 1px 1px, var(--text-primary) 1px, transparent 0)`,
+          backgroundSize: '24px 24px',
+        }} />
+        <div className="relative z-10 flex flex-col items-center text-center px-12">
+          <div className="w-12 h-12 rounded-[var(--radius-lg)] bg-[#2563EB] flex items-center justify-center mb-6">
+            <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+            </svg>
+          </div>
+          <h2 className="text-[32px] font-medium text-[var(--text-primary)] tracking-[-0.02em] mb-3">
+            Ascend
+          </h2>
+          <p className="text-[14px] text-[var(--text-tertiary)] max-w-[280px] leading-relaxed">
+            Career skill verification, market intelligence, and growth tracking for developers.
+          </p>
         </div>
       </div>
     </div>

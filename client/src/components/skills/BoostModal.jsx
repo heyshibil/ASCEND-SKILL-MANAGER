@@ -23,100 +23,80 @@ export default function BoostModal({ isOpen, onClose, skill, isDebt }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.4)' }}>
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="bg-[#0b0b0f] border border-white/10 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl"
+        className="w-full max-w-[640px] rounded-[var(--radius-xl)] overflow-hidden flex flex-col"
+        style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', boxShadow: 'var(--shadow-lg)' }}
       >
-        <div className="p-6 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
+        {/* Header */}
+        <div className="px-6 py-4 border-b flex justify-between items-center" style={{ borderColor: 'var(--border-subtle)' }}>
           <div>
-            <h2 className="text-xl font-semibold text-white">
+            <h2 className="text-[18px] font-medium text-[var(--text-primary)]">
               Boost {skill.name}
             </h2>
-            <p className="text-xs text-slate-400 mt-1">
-              Current Score:{" "}
-              <span className="text-indigo-400 font-bold">
-                {skill.currentScore}%
-              </span>
+            <p className="text-[13px] text-[var(--text-secondary)] mt-0.5">
+              Current score: <span className="text-[var(--accent)] font-medium">{skill.currentScore}%</span>
             </p>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-white">
-            <X className="w-5 h-5" />
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-raised)] transition-colors">
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="p-6 flex flex-col gap-6">
+        {/* Content */}
+        <div className="px-6 py-4 flex flex-col gap-6">
           {!isDebt && (
             <div className="flex flex-col gap-3">
-              <h3 className="text-sm font-medium text-slate-300 flex items-center gap-2">
-                <CheckSquare className="w-4 h-4 text-emerald-400" /> Theory
-                Route
+              <h3 className="text-[13px] font-medium text-[var(--text-secondary)] flex items-center gap-2">
+                <CheckSquare className="w-4 h-4 text-[var(--success)]" /> Theory route
               </h3>
               <button
                 onClick={handleMcqBoost}
-                className="w-full text-left p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-emerald-500/10 hover:border-emerald-500/30 transition-all flex justify-between items-center group"
+                className="w-full text-left p-4 rounded-[var(--radius-lg)] border transition-colors flex justify-between items-center group hover:bg-[var(--bg-raised)]"
+                style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}
               >
                 <div>
-                  <h4 className="text-white font-medium">Quick MCQ (+5%)</h4>
-                  <p className="text-xs text-slate-400 mt-1">
+                  <h4 className="text-[14px] font-medium text-[var(--text-primary)]">Quick MCQ (+5%)</h4>
+                  <p className="text-[12px] text-[var(--text-tertiary)] mt-1">
                     Take a quick 5 question quiz.
                   </p>
                 </div>
-                <Zap className="w-5 h-5 text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <Zap className="w-4 h-4 text-[var(--success)] opacity-0 group-hover:opacity-100 transition-opacity" />
               </button>
             </div>
           )}
 
           <div className="flex flex-col gap-3">
-            <h3 className="text-sm font-medium text-slate-300 flex items-center gap-2">
-              <Code className="w-4 h-4 text-indigo-400" /> Compiler Challenge
+            <h3 className="text-[13px] font-medium text-[var(--text-secondary)] flex items-center gap-2">
+              <Code className="w-4 h-4 text-[var(--accent)]" /> Compiler challenge
               {isDebt && (
-                <span className="ml-2 px-2 py-0.5 rounded text-[10px] bg-red-500/20 text-red-400 font-bold uppercase tracking-wider">
-                  Required for Debts
+                <span className="ml-2 px-2 py-0.5 rounded-[var(--radius-sm)] text-[11px] font-medium" style={{ background: 'var(--danger-bg)', color: 'var(--danger)' }}>
+                  Required for debts
                 </span>
               )}
             </h3>
 
-            <div className="grid grid-cols-1 gap-3">
-              <button
-                onClick={() => handleCompilerTest("beginner")}
-                className="w-full text-left p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-indigo-500/10 hover:border-indigo-500/30 transition-all flex justify-between items-center"
-              >
-                <div>
-                  <h4 className="text-white font-medium">Beginner (+10%)</h4>
-                  <p className="text-xs text-slate-400 mt-1">
-                    Basic syntax and problem solving.
-                  </p>
-                </div>
-              </button>
-              <button
-                onClick={() => handleCompilerTest("intermediate")}
-                className="w-full text-left p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-indigo-500/10 hover:border-indigo-500/30 transition-all flex justify-between items-center"
-              >
-                <div>
-                  <h4 className="text-white font-medium text-indigo-100">
-                    Intermediate (+25%)
-                  </h4>
-                  <p className="text-xs text-slate-400 mt-1">
-                    Algorithms and data structures.
-                  </p>
-                </div>
-              </button>
-              <button
-                onClick={() => handleCompilerTest("advanced")}
-                className="w-full text-left p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-fuchsia-500/10 hover:border-fuchsia-500/30 transition-all flex justify-between items-center"
-              >
-                <div>
-                  <h4 className="text-white font-medium text-fuchsia-100">
-                    Advanced (+50%)
-                  </h4>
-                  <p className="text-xs text-slate-400 mt-1">
-                    Complex logic and optimization.
-                  </p>
-                </div>
-              </button>
+            <div className="flex flex-col gap-3">
+              {[
+                { level: "beginner", label: "Beginner (+10%)", desc: "Basic syntax and problem solving." },
+                { level: "intermediate", label: "Intermediate (+25%)", desc: "Algorithms and data structures." },
+                { level: "advanced", label: "Advanced (+50%)", desc: "Complex logic and optimization." },
+              ].map((item) => (
+                <button
+                  key={item.level}
+                  onClick={() => handleCompilerTest(item.level)}
+                  className="w-full text-left p-4 rounded-[var(--radius-lg)] border transition-colors flex justify-between items-center hover:bg-[var(--bg-raised)]"
+                  style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}
+                >
+                  <div>
+                    <h4 className="text-[14px] font-medium text-[var(--text-primary)]">{item.label}</h4>
+                    <p className="text-[12px] text-[var(--text-tertiary)] mt-1">{item.desc}</p>
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
         </div>
