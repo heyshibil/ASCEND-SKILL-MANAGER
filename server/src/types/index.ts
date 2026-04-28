@@ -37,6 +37,8 @@ export interface IUser extends IBaseEntity {
     | "pending_discovery"
     | "pending_test"
     | "completed";
+  status: "active" | "blocked";
+  lastSeen: Date;
 
   // Score
   liquidityScore: {
