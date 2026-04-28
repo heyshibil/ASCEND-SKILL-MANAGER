@@ -123,7 +123,6 @@ export default function SkillSelect() {
       className="theme-dark min-h-screen flex flex-col items-center justify-center px-6 py-16 font-[var(--font-sans)]"
       style={{ background: "var(--bg-canvas)" }}
     >
-      <Toaster theme="dark" position="top-center" richColors />
 
       <div className="w-full max-w-lg flex flex-col gap-8 relative z-10">
         {/* Header */}

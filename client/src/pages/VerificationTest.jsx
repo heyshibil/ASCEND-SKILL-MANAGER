@@ -133,7 +133,6 @@ export default function VerificationTest() {
 
   return (
     <div className="theme-dark min-h-screen flex flex-col items-center py-12 px-6 font-[var(--font-sans)]" style={{ background: 'var(--bg-canvas)' }}>
-      <Toaster theme="dark" position="top-center" richColors />
 
       <div className="relative z-10 w-full max-w-5xl flex flex-col gap-8">
         <div className="text-center w-full">

@@ -85,7 +85,6 @@ export default function BoostMcqTest() {
 
   return (
     <div className="max-w-3xl mx-auto flex flex-col gap-8">
-      <Toaster theme="dark" />
       <div className="text-center">
         <h1 className="text-[24px] font-medium text-[var(--text-primary)] tracking-[-0.01em]">MCQ boost for {skillName}</h1>
         <p className="text-[14px] text-[var(--text-secondary)] mt-1">+1% hike for each correct answer</p>
