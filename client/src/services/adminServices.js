@@ -39,4 +39,15 @@ export const adminService = {
       withCredentials: true,
     });
   },
+
+  // Users Management
+  getAllUsers: async (params = {}) => {
+    const { data } = await API.get("/users/admin/all", { params });
+    return data;
+  },
+
+  updateUserStatus: async (userId, status) => {
+    const { data } = await API.patch(`/users/admin/status/${userId}`, { status });
+    return data;
+  },
 };

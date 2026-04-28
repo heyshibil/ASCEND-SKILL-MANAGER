@@ -12,6 +12,7 @@ import AdminLayout from "./layouts/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import QuestionsManager from "./pages/admin/QuestionsManager";
 import AdminMarket from "./pages/admin/AdminMarket";
+import UsersManagement from "./pages/admin/UsersManagement";
 import SkillControl from "./pages/SkillControl";
 import BoostMcqTest from "./pages/BoostMcqTest";
 import BoostCompilerTest from "./pages/BoostCompilerTest";
@@ -62,6 +63,7 @@ export const router = createBrowserRouter([
               { index: true, element: <AdminDashboard /> },
               { path: "questions", element: <QuestionsManager /> },
               { path: "market", element: <AdminMarket /> },
+              { path: "users", element: <UsersManagement /> },
             ],
           },
         ],
