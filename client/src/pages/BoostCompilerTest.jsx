@@ -67,7 +67,6 @@ export default function BoostCompilerTest() {
 
   return (
     <div className="max-w-6xl mx-auto flex flex-col gap-6 h-[calc(100vh-8rem)]">
-      <Toaster theme="dark" />
       <div>
         <h1 className="text-[24px] font-medium text-[var(--text-primary)] tracking-[-0.01em]">{level.charAt(0).toUpperCase() + level.slice(1)} compiler boost — {skillName}</h1>
         <p className="text-[14px] text-[var(--text-secondary)] mt-1">Pass all test cases to secure the score hike.</p>
