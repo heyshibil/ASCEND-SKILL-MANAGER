@@ -1,14 +1,29 @@
-import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import { X, Plus, Trash2 } from "lucide-react";
 import { useSkillStore } from "../../store/useSkillStore";
+import { useSkillCatalogStore } from "../../store/useSkillCatalogStore";
+import { CustomSelect } from "../ui/CustomSelect";
 
 export default function AddSkillsModal({ isOpen, onClose }) {
   const addSkills = useSkillStore((state) => state.addSkills);
+  const healthy = useSkillStore((state) => state.healthy);
+  const draining = useSkillStore((state) => state.draining);
+  const debts = useSkillStore((state) => state.debts);
+  const catalogSkills = useSkillCatalogStore((state) => state.skills);
+  const fetchCatalog = useSkillCatalogStore((state) => state.fetchCatalog);
   const [skillsList, setSkillsList] = useState([{ name: "", confidence: 50 }]);
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    if (isOpen) fetchCatalog();
+  }, [fetchCatalog, isOpen]);
+
   if (!isOpen) return null;
+
+  const existingSkillNames = new Set(
+    [...healthy, ...draining, ...debts].map((skill) => skill.name),
+  );
 
   const handleAddRow = () => {
     setSkillsList([...skillsList, { name: "", confidence: 50 }]);
@@ -27,7 +42,7 @@ export default function AddSkillsModal({ isOpen, onClose }) {
   };
 
   const handleSubmit = async () => {
-    const validSkills = skillsList.filter((s) => s.name.trim() !== "");
+    const validSkills = skillsList.filter((s) => s.name);
     if (validSkills.length === 0) return;
 
     setLoading(true);
@@ -53,7 +68,7 @@ export default function AddSkillsModal({ isOpen, onClose }) {
         <div className="px-6 py-4 border-b flex justify-between items-center" style={{ borderColor: 'var(--border-subtle)' }}>
           <div>
             <h2 className="text-[18px] font-medium text-[var(--text-primary)]">Add new skills</h2>
-            <p className="text-[13px] text-[var(--text-secondary)] mt-0.5">Add skills and set your confidence level</p>
+            <p className="text-[13px] text-[var(--text-secondary)] mt-0.5">Choose from admin-approved presets and set your confidence level</p>
           </div>
           <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-raised)] transition-colors">
             <X className="w-4 h-4" />
@@ -64,22 +79,35 @@ export default function AddSkillsModal({ isOpen, onClose }) {
         <div className="px-6 py-4 flex flex-col gap-3 max-h-[60vh] overflow-y-auto">
           {skillsList.map((skill, i) => (
             <div key={i} className="flex flex-col gap-3 p-4 rounded-[var(--radius-lg)] relative group" style={{ background: 'var(--bg-raised)' }}>
-              <div className="flex justify-between items-center">
-                <label className="text-[12px] font-medium text-[var(--text-secondary)]">Skill name</label>
+              <div className="flex justify-between items-start gap-3">
+                <div className="flex-1">
+                  <CustomSelect
+                    label="Skill preset"
+                    value={skill.name}
+                    onChange={(value) => handleChange(i, "name", value)}
+                    options={catalogSkills
+                      .filter((preset) => {
+                        const selectedElsewhere = skillsList.some(
+                          (row, rowIndex) =>
+                            rowIndex !== i && row.name === preset.name,
+                        );
+                        return (
+                          !existingSkillNames.has(preset.name) &&
+                          !selectedElsewhere
+                        );
+                      })
+                      .map((preset) => ({
+                        value: preset.name,
+                        label: `${preset.name} - ${preset.category}`,
+                      }))}
+                  />
+                </div>
                 {skillsList.length > 1 && (
-                  <button onClick={() => handleRemoveRow(i)} className="text-[var(--text-tertiary)] hover:text-[var(--danger)] transition-colors">
+                  <button onClick={() => handleRemoveRow(i)} className="mt-6 text-[var(--text-tertiary)] hover:text-[var(--danger)] transition-colors">
                     <Trash2 className="w-4 h-4" />
                   </button>
                 )}
               </div>
-              <input
-                type="text"
-                placeholder="e.g. React, Node.js"
-                value={skill.name}
-                onChange={(e) => handleChange(i, "name", e.target.value)}
-                className="h-9 border rounded-[var(--radius-md)] px-3 text-[14px] outline-none transition-all focus:border-[var(--accent)] focus:ring-2 focus:ring-[rgba(37,99,235,0.15)]"
-                style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-base)', color: 'var(--text-primary)' }}
-              />
               <div className="mt-1 flex flex-col gap-2">
                 <div className="flex justify-between text-[12px]">
                   <span className="text-[var(--text-secondary)]">Confidence level</span>
