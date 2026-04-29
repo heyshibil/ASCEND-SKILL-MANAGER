@@ -1,8 +1,6 @@
 import { Worker, Job } from "bullmq";
 import axios from "axios";
 import { redisConnection } from "../config/redis.js";
-import { Skill } from "../models/Skill.js";
-import { calculateCurrentScore } from "../utils/decayCalculator.js";
 
 // Skills Preset
 const PRESET_MAPPING: Record<string, string> = {
@@ -18,7 +16,7 @@ const PRESET_MAPPING: Record<string, string> = {
 const scanWorker = new Worker(
   "GITHUB_SCAN",
   async (job: Job) => {
-    const { userId, accessToken, username } = job.data;
+    const { accessToken, username } = job.data;
     console.log(`[WORKER] 🔍 Analyzing repositories for: ${username}`);
 
     try {

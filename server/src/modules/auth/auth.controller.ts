@@ -118,7 +118,8 @@ export const verifyEmail = async (
     const { token } = req.params;
 
     if (typeof token !== "string") {
-      return res.status(400).json({ message: "Invalid or missing token" });
+      res.status(400).json({ message: "Invalid or missing token" });
+      return;
     }
 
     const result = await authService.verifyUserEmail(token);

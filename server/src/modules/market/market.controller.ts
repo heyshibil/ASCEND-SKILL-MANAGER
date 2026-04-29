@@ -69,9 +69,8 @@ export const updateTrendingSkill = async (req: Request, res: Response) => {
     );
 
     if (!updatedSkill) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Skill not found" });
+      res.status(404).json({ success: false, message: "Skill not found" });
+      return;
     }
 
     // Update broadcast
@@ -95,9 +94,8 @@ export const deleteTrendingSkill = async (req: Request, res: Response) => {
     const deleted = await marketService.deleteTrendingSkill(skillId);
 
     if (!deleted) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Skill not found" });
+      res.status(404).json({ success: false, message: "Skill not found" });
+      return;
     }
 
     // Broadcast the ID to be removed
