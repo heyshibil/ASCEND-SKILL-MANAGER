@@ -183,6 +183,7 @@ export default function QuestionsManager() {
                 { value: "Node.js", label: "Node.js" },
                 { value: "React", label: "React" },
                 { value: "MongoDB", label: "MongoDB" },
+                { value: "PostgreSQL", label: "PostgreSQL" },
               ]}
             />
           </div>

@@ -30,6 +30,15 @@ const userSchema = new Schema<IUser & Document>(
       enum: ["pending_scan", "pending_discovery", "pending_test", "completed"],
       default: "pending_discovery",
     },
+    status: {
+      type: String,
+      enum: ["active", "blocked"],
+      default: "active",
+    },
+    lastSeen: {
+      type: Date,
+      default: Date.now,
+    },
 
     // Scores
     liquidityScore: {

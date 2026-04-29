@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { AppError } from "./error.middleware.js";
+import { User } from "../models/User.js";
 
 // Extend Express Request to include user info
 declare global {
@@ -11,7 +12,7 @@ declare global {
   }
 }
 
-export const authenticate = (
+export const authenticate = async (
   req: Request,
   _res: Response,
   next: NextFunction,
@@ -27,9 +28,18 @@ export const authenticate = (
       userId: string;
     };
 
+    const user = await User.findById(decoded.userId).select("status").lean();
+
+    if (!user) throw new AppError("User no longer exists", 401);
+
+    if (user.status === "blocked") {
+      throw new AppError("Account suspended. Please contact support.", 403);
+    }
+
     req.userId = decoded.userId;
     next();
   } catch (error) {
+    if (error instanceof AppError) throw error;
     throw new AppError("Invalid or expired token", 401);
   }
 };
