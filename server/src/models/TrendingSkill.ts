@@ -1,4 +1,4 @@
-import mongoose, { Schema, model, type Document } from "mongoose";
+import mongoose, { Schema, type Document } from "mongoose";
 import type { ITrendingSkill } from "../types/index.js";
 
 const trendingSkillHistorySchema = new Schema({

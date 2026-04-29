@@ -2,45 +2,18 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "../store/useAuthStore";
 import { verificationService } from "../services/verificationService";
-import { toast, Toaster } from "sonner";
+import { toast } from "sonner";
 import { ChevronDown, Plus, X, Search, Loader2 } from "lucide-react";
 import { initSkills } from "../services/skillService";
-
-const SKILL_OPTIONS = [
-  "JavaScript",
-  "TypeScript",
-  "React",
-  "Node.js",
-  "Express",
-  "MongoDB",
-  "Python",
-  "GraphQL",
-  "Docker",
-  "Kubernetes",
-  "AWS",
-  "Redux",
-  "Next.js",
-  "Vue.js",
-  "Angular",
-  "Rust",
-  "Go",
-  "Java",
-  "C++",
-  "PostgreSQL",
-  "Redis",
-  "Firebase",
-  "TailwindCSS",
-  "SASS",
-  "Git",
-  "CI/CD",
-  "Jest",
-  "Cypress",
-];
+import { useSkillCatalogStore } from "../store/useSkillCatalogStore";
 
 export default function SkillSelect() {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const checkAuth = useAuthStore((state) => state.checkAuth);
+  const catalogSkills = useSkillCatalogStore((state) => state.skills);
+  const catalogLoading = useSkillCatalogStore((state) => state.isLoading);
+  const fetchCatalog = useSkillCatalogStore((state) => state.fetchCatalog);
 
   const [selectedSkill, setSelectedSkill] = useState("");
   const [confidence, setConfidence] = useState(50);
@@ -49,11 +22,15 @@ export default function SkillSelect() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const filteredOptions = SKILL_OPTIONS.filter(
-    (s) =>
-      s.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      !submittedSkills.find((sub) => sub.name === s),
+  const filteredOptions = catalogSkills.filter(
+    (skill) =>
+      skill.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      !submittedSkills.find((sub) => sub.name === skill.name),
   );
+
+  useEffect(() => {
+    fetchCatalog();
+  }, [fetchCatalog]);
 
   // PROTECTED - Redirect to dashboard if already onboarded
   useEffect(() => {
@@ -206,17 +183,26 @@ export default function SkillSelect() {
                   {filteredOptions.length > 0 ? (
                     filteredOptions.map((skill) => (
                       <div
-                        key={skill}
+                        key={skill._id}
                         onClick={() => {
-                          setSelectedSkill(skill);
+                          setSelectedSkill(skill.name);
                           setDropdownOpen(false);
                           setSearchTerm("");
                         }}
                         className="px-3 py-2 text-[14px] cursor-pointer transition-colors text-[var(--text-secondary)] hover:bg-[var(--bg-raised)] hover:text-[var(--text-primary)]"
                       >
-                        {skill}
+                        <div className="flex items-center justify-between gap-3">
+                          <span>{skill.name}</span>
+                          <span className="text-[11px] text-[var(--text-tertiary)]">
+                            {skill.category}
+                          </span>
+                        </div>
                       </div>
                     ))
+                  ) : catalogLoading ? (
+                    <div className="p-3 text-[13px] text-[var(--text-tertiary)] text-center">
+                      Loading presets...
+                    </div>
                   ) : (
                     <div className="p-3 text-[13px] text-[var(--text-tertiary)] text-center">
                       No skills found

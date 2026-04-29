@@ -10,7 +10,12 @@ export const getActiveMarketSkills = async () => {
   return trendingSkills;
 };
 
-export const createTrendingSkill = async (data: ITrendingSkill) => {
+export const createTrendingSkill = async (
+  data: Pick<
+    ITrendingSkill,
+    "skillName" | "demandPercentage" | "parentLanguage" | "openRoles"
+  >,
+) => {
   return await TrendingSkill.create(data);
 };
 

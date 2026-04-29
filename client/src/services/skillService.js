@@ -5,6 +5,11 @@ export const initSkills = async (selectedSkills) => {
   return data;
 };
 
+export const getSkillCatalog = async () => {
+  const { data } = await API.get("/skills/catalog");
+  return data;
+};
+
 export const addSkills = async (skills) => {
   const { data } = await API.post("/skills/add", { skills });
   return data;
