@@ -42,6 +42,10 @@ export const handleGithubAuth = async (code: string) => {
   let user = await User.findOne({ githubId: profile.id.toString() });
   let isNewUser = false;
 
+   if (user && user.status === "blocked") {
+    throw new AppError("Your account is suspended. Please contact support.", 403);
+  }
+
   if (!user) {
     isNewUser = true;
 
@@ -121,6 +125,13 @@ export const loginUser = async (input: LoginInput) => {
 
   if (!user || user.authProvider !== "manual" || !user.password) {
     throw new AppError("Invalid email or password", 401);
+  }
+
+  if (user.status === "blocked") {
+    throw new AppError(
+      "Your account is suspended. Please contact support.",
+      403,
+    );
   }
 
   // Prevent login for not verified users

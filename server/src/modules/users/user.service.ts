@@ -72,3 +72,53 @@ export const getDashboardData = async (userId: string) => {
     topSkills,
   };
 };
+
+export const fetchAllUsers = async (
+  search: string | undefined,
+  page: number,
+  limit: number,
+) => {
+  const query: any = {};
+
+  if (search) {
+    query.$or = [
+      { username: { $regex: search, $options: "i" } },
+      { email: { $regex: search, $options: "i" } },
+    ];
+  }
+
+  const users = await User.find(query)
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .skip((page - 1) * limit)
+    .lean();
+
+  const total = await User.countDocuments(query);
+
+  return {
+    users,
+    pagination: {
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+    },
+  };
+};
+
+export const modifyUserStatus = async (userId: string, status: string) => {
+  if (!["active", "blocked"].includes(status)) {
+    throw new AppError("Invalid status", 400);
+  }
+
+  const user = await User.findByIdAndUpdate(
+    userId,
+    { status },
+    { new: true, runValidators: true },
+  );
+
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
+
+  return user;
+};

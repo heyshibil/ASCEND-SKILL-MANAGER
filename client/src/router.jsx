@@ -7,11 +7,13 @@ import VerifyEmail from "./pages/VerifyEmail";
 import SkillSelect from "./pages/SkillSelect";
 import VerificationTest from "./pages/VerificationTest";
 import ScoreReport from "./pages/ScoreReport";
+import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import AdminLayout from "./layouts/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import QuestionsManager from "./pages/admin/QuestionsManager";
 import AdminMarket from "./pages/admin/AdminMarket";
+import UsersManagement from "./pages/admin/UsersManagement";
 import SkillControl from "./pages/SkillControl";
 import BoostMcqTest from "./pages/BoostMcqTest";
 import BoostCompilerTest from "./pages/BoostCompilerTest";
@@ -28,26 +30,31 @@ export const router = createBrowserRouter([
         element: <VerifyEmail />,
       },
       {
-        path: "discovery",
-        element: <SkillSelect />,
-      },
-      {
-        path: "test",
-        element: <VerificationTest />,
-      },
-      {
-        path: "report",
-        element: <ScoreReport />,
-      },
-      {
-        path: "dashboard",
-        element: <DashboardLayout />,
+        element: <ProtectedRoute />,
         children: [
-          { index: true, element: <DashboardHome /> },
-          { path: "skill-control", element: <SkillControl /> },
-          { path: "boost/mcq", element: <BoostMcqTest /> },
-          { path: "boost/compiler", element: <BoostCompilerTest /> },
-          { path: "market-intel", element: <MarketIntel /> },
+          {
+            path: "discovery",
+            element: <SkillSelect />,
+          },
+          {
+            path: "test",
+            element: <VerificationTest />,
+          },
+          {
+            path: "report",
+            element: <ScoreReport />,
+          },
+          {
+            path: "dashboard",
+            element: <DashboardLayout />,
+            children: [
+              { index: true, element: <DashboardHome /> },
+              { path: "skill-control", element: <SkillControl /> },
+              { path: "boost/mcq", element: <BoostMcqTest /> },
+              { path: "boost/compiler", element: <BoostCompilerTest /> },
+              { path: "market-intel", element: <MarketIntel /> },
+            ],
+          },
         ],
       },
 
@@ -62,6 +69,7 @@ export const router = createBrowserRouter([
               { index: true, element: <AdminDashboard /> },
               { path: "questions", element: <QuestionsManager /> },
               { path: "market", element: <AdminMarket /> },
+              { path: "users", element: <UsersManagement /> },
             ],
           },
         ],
