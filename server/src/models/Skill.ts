@@ -25,7 +25,7 @@ const skillSchema = new Schema<ISkill & Document>(
     },
     stabilityConstant: { type: Number, required: true },
     masteryMultiplier: { type: Number, default: 1.0 },
-    dependsOn: [{ type: Schema.Types.ObjectId, ref: "Skill" }],
+    dependsOn: [{ type: Schema.Types.ObjectId, ref: "SkillDefinition" }],
   },
   { timestamps: true },
 );
