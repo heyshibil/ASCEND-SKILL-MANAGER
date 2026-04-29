@@ -63,8 +63,8 @@ const composeTestScript = (userCode: string, testCases: TestCase[]): string => {
 export const executeCodeTest = async (
   userCode: string,
   testCases: TestCase[],
-  validationScript: string,
-  language: string,
+  _validationScript: string,
+  _language: string,
 ): Promise<CompilerResult> => {
   if (!testCases || testCases.length === 0) {
     console.warn("WARNING: Code question executed with ZERO test cases!");

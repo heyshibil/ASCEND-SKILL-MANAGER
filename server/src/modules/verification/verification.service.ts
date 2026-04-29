@@ -213,7 +213,7 @@ export const gradeVerificationTest = async (
   // Grade code (50)
   const dbCodeQ = await Question.findOne({ questionId: codeQuestionId });
 
-  const { compilerScore, passedCases } = await executeCodeTest(
+  const { compilerScore } = await executeCodeTest(
     codeAnswer,
     dbCodeQ!.testCases!,
     dbCodeQ!.validationScript!,
@@ -446,7 +446,7 @@ export const gradeCompilerBoost = async (
     throw new AppError("Question not found", 404);
   }
 
-  const { compilerScore, passedCases, totalCases } = await executeCodeTest(
+  const { passedCases, totalCases } = await executeCodeTest(
     codeAnswer,
     dbCodeQ.testCases!,
     dbCodeQ.validationScript!,
