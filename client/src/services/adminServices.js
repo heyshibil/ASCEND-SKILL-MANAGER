@@ -50,4 +50,25 @@ export const adminService = {
     const { data } = await API.patch(`/users/admin/status/${userId}`, { status });
     return data;
   },
+
+  // Skill Presets
+  getSkillPresets: async (params = {}) => {
+    const { data } = await API.get("/skills/admin/catalog", { params });
+    return data;
+  },
+
+  createSkillPreset: async (payload) => {
+    const { data } = await API.post("/skills/admin/catalog", payload);
+    return data;
+  },
+
+  updateSkillPreset: async (skillId, payload) => {
+    const { data } = await API.patch(`/skills/admin/catalog/${skillId}`, payload);
+    return data;
+  },
+
+  deleteSkillPreset: async (skillId) => {
+    const { data } = await API.delete(`/skills/admin/catalog/${skillId}`);
+    return data;
+  },
 };
