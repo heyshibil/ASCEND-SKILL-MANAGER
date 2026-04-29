@@ -65,6 +65,16 @@ export interface ISkill extends IBaseEntity {
   dependsOn?: Types.ObjectId[]; // Dependency graph
 }
 
+// Admin-managed skill preset
+export interface ISkillDefinition extends IBaseEntity {
+  name: string;
+  normalizedName: string;
+  category: "Foundational" | "Framework" | "Tooling" | "Language";
+  stabilityConstant: number;
+  dependsOn?: Types.ObjectId[];
+  isActive: boolean;
+}
+
 // Question
 export interface ITestCase {
   input: string;
