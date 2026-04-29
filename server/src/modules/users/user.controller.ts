@@ -50,5 +50,7 @@ export const updateUserStatus = async (
     const user = await userService.modifyUserStatus(userId as string, status);
 
     res.status(200).json({ success: true, user });
-  } catch (error) {}
+  } catch (error) {
+    next(error)
+  }
 };

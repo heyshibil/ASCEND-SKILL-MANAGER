@@ -27,6 +27,11 @@ export default function Login() {
       setSuccess("Email verified successfully! You can now sign in.");
       setIsLogin(true);
     }
+
+    const urlError = searchParams.get("error");
+    if (urlError) {
+      setError(urlError);
+    }
   }, [searchParams]);
 
   const handleGithubLogin = () => {

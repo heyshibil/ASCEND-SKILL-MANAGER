@@ -51,7 +51,8 @@ export default function UsersManagement() {
   };
 
   const toggleUserStatus = async (userId, currentStatus) => {
-    const newStatus = currentStatus === 'active' ? 'blocked' : 'active';
+    const status = currentStatus || 'active';
+    const newStatus = status === 'active' ? 'blocked' : 'active';
     try {
       await adminService.updateUserStatus(userId, newStatus);
       toast.success(`User ${newStatus === 'active' ? 'unblocked' : 'blocked'} successfully`);
