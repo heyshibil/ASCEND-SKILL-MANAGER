@@ -6,12 +6,43 @@ import {
   determineSkillStatus,
 } from "../../utils/skillConstants.js";
 import { refreshLiquidityScore } from "../users/user.service.js";
-import { getSkillDefaults } from "../../utils/skillMap.js";
+import { SkillDefinition } from "../../models/SkillDefinition.js";
+import {
+  ensureDefaultSkillDefinitions,
+  normalizeSkillName,
+} from "./skill-catalog.service.js";
 
 interface SkillInput {
   name: string;
   confidence: number;
 }
+
+const getCatalogSkillsForInput = async (skills: SkillInput[]) => {
+  await ensureDefaultSkillDefinitions();
+
+  const normalizedNames = [
+    ...new Set(skills.map((skill) => normalizeSkillName(skill.name))),
+  ];
+
+  const catalogSkills = await SkillDefinition.find({
+    normalizedName: { $in: normalizedNames },
+    isActive: true,
+  }).lean();
+
+  const catalogByName = new Map(
+    catalogSkills.map((skill) => [skill.normalizedName, skill]),
+  );
+
+  const missing = normalizedNames.filter((name) => !catalogByName.has(name));
+  if (missing.length > 0) {
+    throw new AppError(
+      "One or more selected skills are not available in the preset catalog.",
+      400,
+    );
+  }
+
+  return catalogByName;
+};
 
 export const initUserSkills = async (
   userId: string,
@@ -23,19 +54,21 @@ export const initUserSkills = async (
 
   // Wipe existing skills just in case the user clicked 'back' to re-do the form
   await Skill.deleteMany({ userId });
+  const catalogByName = await getCatalogSkillsForInput(selectedSkills);
 
   // Map frontend data to schema
   const skillsToInsert = selectedSkills.map((skill) => {
-    const defaults = getSkillDefaults(skill.name);
+    const preset = catalogByName.get(normalizeSkillName(skill.name))!;
     return {
       userId,
-      name: skill.name,
-      category: defaults.category,
+      name: preset.name,
+      category: preset.category,
       baselineScore: skill.confidence,
       currentScore: skill.confidence,
       verificationMethod: "manual",
-      stabilityConstant: defaults.stabilityConstant,
+      stabilityConstant: preset.stabilityConstant,
       masteryMultiplier: 1.0,
+      dependsOn: preset.dependsOn ?? [],
     };
   });
 
@@ -58,21 +91,24 @@ export const addSkills = async (userId: string, newSkills: SkillInput[]) => {
   const existingSkillNames = new Set(
     existingSkills.map((s) => s.name.toLowerCase()),
   );
+  const catalogByName = await getCatalogSkillsForInput(newSkills);
 
   const skillsToInsert = [];
 
   for (const skill of newSkills) {
-    if (!existingSkillNames.has(skill.name.toLowerCase())) {
-      const defaults = getSkillDefaults(skill.name);
+    const preset = catalogByName.get(normalizeSkillName(skill.name))!;
+
+    if (!existingSkillNames.has(preset.name.toLowerCase())) {
       skillsToInsert.push({
         userId,
-        name: skill.name,
-        category: defaults?.category || "Foundational",
+        name: preset.name,
+        category: preset.category,
         baselineScore: skill.confidence,
         currentScore: skill.confidence,
         verificationMethod: "manual",
-        stabilityConstant: defaults?.stabilityConstant || 0.5,
+        stabilityConstant: preset.stabilityConstant,
         masteryMultiplier: 1.0,
+        dependsOn: preset.dependsOn ?? [],
       });
     }
   }

@@ -1,6 +1,105 @@
 import type { Request, Response, NextFunction } from "express";
 import * as skillService from "./skill.service.js";
+import * as skillCatalogService from "./skill-catalog.service.js";
 import { AppError } from "../../middlewares/error.middleware.js";
+import {
+  skillDefinitionCreateSchema,
+  skillDefinitionUpdateSchema,
+} from "./skill.validation.js";
+
+export const getSkillCatalog = async (
+  _req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const skills = await skillCatalogService.getActiveSkillDefinitions();
+
+    res.status(200).json({
+      success: true,
+      skills,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAdminSkillCatalog = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const skills = await skillCatalogService.getAdminSkillDefinitions(
+      req.query.search as string | undefined,
+    );
+
+    res.status(200).json({
+      success: true,
+      skills,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const createSkillPreset = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const payload = skillDefinitionCreateSchema.parse(req.body);
+    const skill = await skillCatalogService.createSkillDefinition(payload);
+
+    res.status(201).json({
+      success: true,
+      message: "Skill preset created successfully",
+      skill,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateSkillPreset = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const payload = skillDefinitionUpdateSchema.parse(req.body);
+    const skill = await skillCatalogService.updateSkillDefinition(
+      req.params.skillId as string,
+      payload,
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Skill preset updated successfully",
+      skill,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteSkillPreset = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    await skillCatalogService.deleteSkillDefinition(req.params.skillId as string);
+
+    res.status(200).json({
+      success: true,
+      message: "Skill preset deleted successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 export const initializeSkills = async (
   req: Request,
