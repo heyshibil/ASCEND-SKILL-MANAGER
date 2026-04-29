@@ -7,6 +7,7 @@ import VerifyEmail from "./pages/VerifyEmail";
 import SkillSelect from "./pages/SkillSelect";
 import VerificationTest from "./pages/VerificationTest";
 import ScoreReport from "./pages/ScoreReport";
+import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import AdminLayout from "./layouts/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -29,26 +30,31 @@ export const router = createBrowserRouter([
         element: <VerifyEmail />,
       },
       {
-        path: "discovery",
-        element: <SkillSelect />,
-      },
-      {
-        path: "test",
-        element: <VerificationTest />,
-      },
-      {
-        path: "report",
-        element: <ScoreReport />,
-      },
-      {
-        path: "dashboard",
-        element: <DashboardLayout />,
+        element: <ProtectedRoute />,
         children: [
-          { index: true, element: <DashboardHome /> },
-          { path: "skill-control", element: <SkillControl /> },
-          { path: "boost/mcq", element: <BoostMcqTest /> },
-          { path: "boost/compiler", element: <BoostCompilerTest /> },
-          { path: "market-intel", element: <MarketIntel /> },
+          {
+            path: "discovery",
+            element: <SkillSelect />,
+          },
+          {
+            path: "test",
+            element: <VerificationTest />,
+          },
+          {
+            path: "report",
+            element: <ScoreReport />,
+          },
+          {
+            path: "dashboard",
+            element: <DashboardLayout />,
+            children: [
+              { index: true, element: <DashboardHome /> },
+              { path: "skill-control", element: <SkillControl /> },
+              { path: "boost/mcq", element: <BoostMcqTest /> },
+              { path: "boost/compiler", element: <BoostCompilerTest /> },
+              { path: "market-intel", element: <MarketIntel /> },
+            ],
+          },
         ],
       },
 

@@ -110,7 +110,11 @@ export const modifyUserStatus = async (userId: string, status: string) => {
     throw new AppError("Invalid status", 400);
   }
 
-  const user = await User.findByIdAndUpdate(userId, { status }, { new: true });
+  const user = await User.findByIdAndUpdate(
+    userId,
+    { status },
+    { new: true, runValidators: true },
+  );
 
   if (!user) {
     throw new AppError("User not found", 404);
