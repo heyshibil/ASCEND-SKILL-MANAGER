@@ -18,3 +18,26 @@ export const getDashboardOffset = (
 
   return circumference - (score / 100) * (circumference * 0.75);
 };
+
+// Career score
+export const getScoreLabel = (score) => {
+  if (score <= 20)
+    return { label: "Critical", bg: "var(--error-bg)", color: "var(--error)" };
+  if (score <= 40)
+    return { label: "At Risk", bg: "var(--error-bg)", color: "#FB923C" };
+  if (score <= 60)
+    return { label: "Fair", bg: "var(--warning-bg)", color: "var(--warning)" };
+  if (score <= 75)
+    return { label: "Good", bg: "var(--warning-bg)", color: "var(--warning)" };
+  if (score <= 90)
+    return {
+      label: "Strong",
+      bg: "var(--success-bg)",
+      color: "var(--success)",
+    };
+  return {
+    label: "Excellent",
+    bg: "var(--success-bg)",
+    color: "var(--success)",
+  };
+};
