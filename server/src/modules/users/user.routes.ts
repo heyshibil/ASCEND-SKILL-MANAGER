@@ -7,6 +7,21 @@ import { updateLastSeen } from "../../middlewares/user.middleware.js";
 const router = Router();
 
 router.get("/dashboard", authenticate, updateLastSeen, userController.getDashboardStats);
+router.patch("/profile", authenticate, updateLastSeen, userController.updateProfile);
+router.post(
+  "/email-change/request",
+  authenticate,
+  updateLastSeen,
+  userController.requestEmailChange,
+);
+router.get("/email-change/verify/:token", userController.verifyEmailChange);
+router.post(
+  "/password-change/request",
+  authenticate,
+  updateLastSeen,
+  userController.requestPasswordChange,
+);
+router.get("/password-change/verify/:token", userController.verifyPasswordChange);
 
 // --- ADMIN ROUTES ---
 router.get("/admin/all", authenticate, isAdmin, userController.getAllUsers);
