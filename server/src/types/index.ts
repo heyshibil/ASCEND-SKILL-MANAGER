@@ -26,11 +26,17 @@ export interface IUser extends IBaseEntity {
   isEmailVerified: boolean;
   emailVerificationToken?: string | undefined;
   emailVerificationExpires?: Date | undefined;
+  pendingEmail?: string | undefined;
+  emailChangeToken?: string | undefined;
+  emailChangeExpires?: Date | undefined;
+  pendingPassword?: string | undefined;
+  passwordChangeToken?: string | undefined;
+  passwordChangeExpires?: Date | undefined;
 
   // Profile
   username: string;
   email: string;
-  avatarUrl?: string; //from github
+  avatarUrl?: string | undefined; //from github
   careerGoal: string;
   onboardingStatus:
     | "pending_scan"

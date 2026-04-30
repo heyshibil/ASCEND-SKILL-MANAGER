@@ -71,6 +71,10 @@ const hashToken = (token: string) => {
   return crypto.createHash("sha256").update(token).digest("hex");
 };
 
+const escapeRegex = (value: string): string => {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+};
+
 // -- Manual Register --
 export const registerUser = async (input: RegisterInput) => {
   // Check email exists
@@ -78,6 +82,16 @@ export const registerUser = async (input: RegisterInput) => {
 
   if (existingUser) {
     throw new AppError("An account with this email already exists", 409);
+  }
+
+  const existingUsername = await User.findOne({
+    username: { $regex: `^${escapeRegex(input.username)}$`, $options: "i" },
+  })
+    .select("_id")
+    .lean();
+
+  if (existingUsername) {
+    throw new AppError("This username is already taken", 409);
   }
 
   // Hash password
