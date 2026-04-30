@@ -9,6 +9,7 @@ import {
   TrendingUp,
   Settings,
   LogOut,
+  Swords,
 } from "lucide-react";
 import useDashboardData from "../hooks/useDashboardData";
 import LogoutModal from "../components/LogoutModal";
@@ -84,13 +85,17 @@ export default function DashboardLayout() {
 
           <NavLink to="/dashboard/skill-control" className={navItemClass}>
             <Sliders className="w-4 h-4" />
-            Skill Control
+            Skills
           </NavLink>
 
           <NavLink to="/dashboard/market-intel" className={navItemClass}>
             <TrendingUp className="w-4 h-4" />
-            Market Intel
+            Market
           </NavLink>
+          {/* <NavLink to="/dashboard/challenges" className={navItemClass}>
+            <Swords className="w-4 h-4" />
+            Challenges
+          </NavLink> */}
 
           <NavLink to="/dashboard/settings" className={navItemClass}>
             <Settings className="w-4 h-4" />

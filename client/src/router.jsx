@@ -4,6 +4,8 @@ import Login from "./pages/Login";
 import DashboardLayout from "./layouts/DashboardLayout";
 import DashboardHome from "./pages/DashboardHome";
 import VerifyEmail from "./pages/VerifyEmail";
+import VerifyEmailChange from "./pages/VerifyEmailChange";
+import VerifyPasswordChange from "./pages/VerifyPasswordChange";
 import SkillSelect from "./pages/SkillSelect";
 import VerificationTest from "./pages/VerificationTest";
 import ScoreReport from "./pages/ScoreReport";
@@ -19,6 +21,7 @@ import SkillControl from "./pages/SkillControl";
 import BoostMcqTest from "./pages/BoostMcqTest";
 import BoostCompilerTest from "./pages/BoostCompilerTest";
 import MarketIntel from "./pages/MarketIntel";
+import Settings from "./pages/Settings";
 
 export const router = createBrowserRouter([
   {
@@ -29,6 +32,14 @@ export const router = createBrowserRouter([
       {
         path: "verify-email/:token",
         element: <VerifyEmail />,
+      },
+      {
+        path: "verify-email-change/:token",
+        element: <VerifyEmailChange />,
+      },
+      {
+        path: "verify-password-change/:token",
+        element: <VerifyPasswordChange />,
       },
       {
         element: <ProtectedRoute />,
@@ -54,6 +65,7 @@ export const router = createBrowserRouter([
               { path: "boost/mcq", element: <BoostMcqTest /> },
               { path: "boost/compiler", element: <BoostCompilerTest /> },
               { path: "market-intel", element: <MarketIntel /> },
+              { path: "settings", element: <Settings /> },
             ],
           },
         ],

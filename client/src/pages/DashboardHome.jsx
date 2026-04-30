@@ -242,7 +242,7 @@ export default function DashboardHome() {
                           delay: i * 0.1,
                           ease: "easeOut",
                         }}
-                        className="h-full rounded-full bg-gray-400/90"
+                        className="h-full rounded-full bg-green-400"
                       />
                     </div>
                   </div>
