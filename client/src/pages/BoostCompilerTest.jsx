@@ -120,12 +120,18 @@ export default function BoostCompilerTest() {
               defaultLanguage="javascript"
               value={codeAnswer}
               onChange={(v) => setCodeAnswer(v)}
+              onMount={(editor, monaco) => {
+                document.fonts.ready.then(() => {
+                  monaco.editor.remeasureFonts();
+                });
+              }}
               options={{
                 minimap: { enabled: false },
                 fontSize: 14,
                 padding: { top: 16 },
                 fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
               }}
+              className="text-left"
             />
           </div>
         </div>
