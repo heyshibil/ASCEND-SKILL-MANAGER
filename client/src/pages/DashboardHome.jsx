@@ -2,7 +2,11 @@ import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Activity, Zap, CheckCircle2, Flame, Star } from "lucide-react";
 import useDashboardData from "../hooks/useDashboardData";
-import { getDashboardOffset, getScoreColors } from "../utils/themeUtils";
+import {
+  getDashboardOffset,
+  getScoreColors,
+  getScoreLabel,
+} from "../utils/themeUtils";
 import { getIconForSkill } from "../utils/iconMap";
 import { useMarketStore } from "../store/useMarketStore";
 
@@ -21,16 +25,18 @@ const itemVariants = {
 };
 
 // Helper: zero-pad a number to 2 digits
-const pad = (n) => String(n).padStart(2, '0');
+const pad = (n) => String(n).padStart(2, "0");
 
 export default function DashboardHome() {
   const { data, error, loading } = useDashboardData();
   const score = data?.score || 0;
   const circumference = 2 * Math.PI * 90;
 
+  // Career liquidty scores
+  const { bg, color, label } = getScoreLabel(score);
+
   const { scoreColor, scoreShadow } = getScoreColors(score);
   const dashOffset = getDashboardOffset(score, loading, circumference);
-
 
   const hotSkills = useMarketStore((state) => state.skills);
   const topFiveHotSkills = [...hotSkills]
@@ -50,7 +56,10 @@ export default function DashboardHome() {
         <motion.div
           variants={itemVariants}
           className="p-6 rounded-[var(--radius-lg)] border flex flex-col justify-between h-[120px] transition-colors hover:bg-[var(--bg-raised)]"
-          style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}
+          style={{
+            background: "var(--bg-surface)",
+            borderColor: "var(--border-subtle)",
+          }}
         >
           <div className="flex justify-between items-start">
             <span className="text-[12px] font-medium text-[var(--text-tertiary)] tracking-[0.02em]">
@@ -69,7 +78,10 @@ export default function DashboardHome() {
         <motion.div
           variants={itemVariants}
           className="p-6 rounded-[var(--radius-lg)] border flex flex-col justify-between h-[120px] transition-colors hover:bg-[var(--bg-raised)]"
-          style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}
+          style={{
+            background: "var(--bg-surface)",
+            borderColor: "var(--border-subtle)",
+          }}
         >
           <div className="flex justify-between items-start">
             <span className="text-[12px] font-medium text-[var(--text-tertiary)] tracking-[0.02em]">
@@ -88,7 +100,10 @@ export default function DashboardHome() {
         <motion.div
           variants={itemVariants}
           className="p-6 rounded-[var(--radius-lg)] border flex flex-col justify-between h-[120px] transition-colors hover:bg-[var(--bg-raised)]"
-          style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}
+          style={{
+            background: "var(--bg-surface)",
+            borderColor: "var(--border-subtle)",
+          }}
         >
           <div className="flex justify-between items-start">
             <span className="text-[12px] font-medium text-[var(--text-tertiary)] tracking-[0.02em]">
@@ -97,7 +112,9 @@ export default function DashboardHome() {
             <CheckCircle2 className="w-4 h-4 text-[#34D399]" />
           </div>
           <div>
-            <h3 className="text-[28px] font-medium text-[var(--text-primary)] tracking-tight">{pad(23)}</h3>
+            <h3 className="text-[28px] font-medium text-[var(--text-primary)] tracking-tight">
+              {pad(23)}
+            </h3>
           </div>
         </motion.div>
 
@@ -105,7 +122,10 @@ export default function DashboardHome() {
         <motion.div
           variants={itemVariants}
           className="p-6 rounded-[var(--radius-lg)] border flex flex-col justify-between h-[120px] transition-colors hover:bg-[var(--bg-raised)]"
-          style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}
+          style={{
+            background: "var(--bg-surface)",
+            borderColor: "var(--border-subtle)",
+          }}
         >
           <div className="flex justify-between items-start">
             <span className="text-[12px] font-medium text-[var(--text-tertiary)] tracking-[0.02em]">
@@ -114,7 +134,9 @@ export default function DashboardHome() {
             <Flame className="w-4 h-4 text-[#FB923C]" />
           </div>
           <div>
-            <h3 className="text-[28px] font-medium text-[var(--text-primary)] tracking-tight">{pad(3)}</h3>
+            <h3 className="text-[28px] font-medium text-[var(--text-primary)] tracking-tight">
+              {pad(3)}
+            </h3>
           </div>
         </motion.div>
       </div>
@@ -122,10 +144,7 @@ export default function DashboardHome() {
       {/* 2. Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Career Liquidity Panel — no card bg/border */}
-        <motion.div
-          variants={itemVariants}
-          className="p-6 flex flex-col"
-        >
+        <motion.div variants={itemVariants} className="p-6 flex flex-col">
           <div className="flex justify-between items-start mb-8">
             <div>
               <p className="text-[12px] font-medium tracking-[0.02em] text-[var(--text-tertiary)]">
@@ -135,8 +154,11 @@ export default function DashboardHome() {
                 Overall career readiness & market alignment index
               </h2>
             </div>
-            <div className="px-2 py-0.5 rounded-[var(--radius-sm)] text-[12px] font-medium" style={{ background: 'var(--warning-bg)', color: 'var(--warning)' }}>
-              Good
+            <div
+              className="px-2 py-0.5 rounded-[var(--radius-sm)] text-[12px] font-medium transition-colors"
+              style={{ background: bg, color: color }}
+            >
+              {loading ? "—" : label}
             </div>
           </div>
 
@@ -148,7 +170,13 @@ export default function DashboardHome() {
                 viewBox="0 0 200 200"
               >
                 <defs>
-                  <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <linearGradient
+                    id="gaugeGradient"
+                    x1="0%"
+                    y1="0%"
+                    x2="100%"
+                    y2="100%"
+                  >
                     <stop offset="0%" stopColor="#3B82F6" />
                     <stop offset="50%" stopColor="#2563EB" />
                     <stop offset="100%" stopColor="#1D4ED8" />
@@ -204,12 +232,17 @@ export default function DashboardHome() {
         <motion.div
           variants={itemVariants}
           className="rounded-[var(--radius-lg)] border p-6 flex flex-col justify-between"
-          style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}
+          style={{
+            background: "var(--bg-surface)",
+            borderColor: "var(--border-subtle)",
+          }}
         >
           <div>
             <div className="flex justify-between items-start mb-6">
               <div>
-                <h3 className="text-[15px] font-medium text-[var(--text-primary)]">Top skills</h3>
+                <h3 className="text-[15px] font-medium text-[var(--text-primary)]">
+                  Top skills
+                </h3>
                 <p className="text-[12px] text-[var(--text-tertiary)] mt-1">
                   Visual battery charge
                 </p>
@@ -222,7 +255,10 @@ export default function DashboardHome() {
                   <div key={i} className="flex flex-col gap-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="text-[14px] p-1.5 rounded-[var(--radius-sm)]" style={{ background: 'var(--bg-raised)' }}>
+                        <span
+                          className="text-[14px] p-1.5 rounded-[var(--radius-sm)]"
+                          style={{ background: "var(--bg-raised)" }}
+                        >
                           {getIconForSkill(skill.name)}
                         </span>
                         <span className="text-[14px] font-medium text-[var(--text-primary)]">
@@ -233,7 +269,10 @@ export default function DashboardHome() {
                         {skill.score}%
                       </span>
                     </div>
-                    <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--bg-raised)' }}>
+                    <div
+                      className="w-full h-1.5 rounded-full overflow-hidden"
+                      style={{ background: "var(--bg-raised)" }}
+                    >
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${skill.score}%` }}
@@ -251,7 +290,10 @@ export default function DashboardHome() {
             </div>
           </div>
 
-          <button className="w-full mt-8 h-9 rounded-[var(--radius-md)] border text-[var(--text-secondary)] text-[14px] font-medium hover:bg-[var(--bg-raised)] transition-colors" style={{ borderColor: 'var(--border-base)' }}>
+          <button
+            className="w-full mt-8 h-9 rounded-[var(--radius-md)] border text-[var(--text-secondary)] text-[14px] font-medium hover:bg-[var(--bg-raised)] transition-colors"
+            style={{ borderColor: "var(--border-base)" }}
+          >
             Boost skills
           </button>
         </motion.div>
@@ -260,12 +302,17 @@ export default function DashboardHome() {
         <motion.div
           variants={itemVariants}
           className="rounded-[var(--radius-lg)] border p-6 flex flex-col justify-between"
-          style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}
+          style={{
+            background: "var(--bg-surface)",
+            borderColor: "var(--border-subtle)",
+          }}
         >
           <div>
             <div className="flex justify-between items-start mb-6">
               <div>
-                <h3 className="text-[15px] font-medium text-[var(--text-primary)]">Hot market skills</h3>
+                <h3 className="text-[15px] font-medium text-[var(--text-primary)]">
+                  Hot market skills
+                </h3>
                 <p className="text-[12px] text-[var(--text-tertiary)] mt-1">
                   Trending in the industry
                 </p>
@@ -283,7 +330,10 @@ export default function DashboardHome() {
                     transition={{ type: "spring", stiffness: 180, damping: 28 }}
                     key={skill._id}
                     className="p-3 rounded-[var(--radius-md)] border flex items-center justify-between transition-colors hover:bg-[var(--bg-raised)] cursor-default"
-                    style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}
+                    style={{
+                      background: "var(--bg-surface)",
+                      borderColor: "var(--border-subtle)",
+                    }}
                   >
                     <div className="flex flex-col gap-0.5">
                       <span className="font-medium text-[var(--text-primary)] text-[14px]">
@@ -307,7 +357,10 @@ export default function DashboardHome() {
             </div>
           </div>
 
-          <button className="w-full mt-8 h-9 rounded-[var(--radius-md)] border text-[var(--text-secondary)] text-[14px] font-medium hover:bg-[var(--bg-raised)] transition-colors" style={{ borderColor: 'var(--border-base)' }}>
+          <button
+            className="w-full mt-8 h-9 rounded-[var(--radius-md)] border text-[var(--text-secondary)] text-[14px] font-medium hover:bg-[var(--bg-raised)] transition-colors"
+            style={{ borderColor: "var(--border-base)" }}
+          >
             More skills
           </button>
         </motion.div>
