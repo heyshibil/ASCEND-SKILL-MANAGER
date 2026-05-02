@@ -145,3 +145,11 @@ export interface ITrendingSkill extends IBaseEntity {
   openRoles: number;
   history: ITrendingSkillHistory[];
 }
+
+// Decay engine
+export interface DecayTickResult {
+  usersProcessed: number;
+  skillsDecayed: number;
+  skillsEnteredDebt: number;
+  errors: number;
+}
