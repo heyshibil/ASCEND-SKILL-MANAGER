@@ -96,7 +96,7 @@ export const refreshLiquidityScore = async (
         "liquidityScore.history": { score: newScore, date: new Date() },
       },
     },
-    { new: true },
+    { returnDocument: "after" },
   );
 
   if (!result) {
@@ -354,7 +354,7 @@ export const modifyUserStatus = async (userId: string, status: string) => {
   const user = await User.findByIdAndUpdate(
     userId,
     { status },
-    { new: true, runValidators: true },
+    { returnDocument: "after", runValidators: true },
   );
 
   if (!user) {
