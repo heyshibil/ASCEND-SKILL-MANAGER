@@ -183,6 +183,7 @@ export const applySkillBoost = async (
   }
 
   skill.currentScore = Math.min(100, skill.currentScore + hike);
+  skill.lastVerifiedDate = new Date(); 
   await skill.save();
 
   // refresh dashboard liquidity
