@@ -293,6 +293,11 @@ export default function VerificationTest() {
                       defaultLanguage="javascript"
                       value={codeAnswer}
                       onChange={(value) => setCodeAnswer(value)}
+                      onMount={(editor, monaco) => {
+                        document.fonts.ready.then(() => {
+                          monaco.editor.remeasureFonts();
+                        });
+                      }}
                       options={{
                         minimap: { enabled: false },
                         fontSize: 14,
@@ -301,7 +306,7 @@ export default function VerificationTest() {
                         cursorBlinking: "smooth",
                         fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
                       }}
-                      className="w-full flex-1"
+                      className="w-full flex-1 text-left"
                     />
                   </div>
                 </div>
