@@ -236,6 +236,7 @@ export const gradeVerificationTest = async (
   if (skillRecord) {
     skillRecord.baselineScore = Math.floor(finalScore);
     skillRecord.currentScore = Math.floor(finalScore);
+    skillRecord.lastVerifiedDate = new Date();
     await skillRecord.save();
   }
 
