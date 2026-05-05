@@ -9,6 +9,6 @@ export const scanQueue = new Queue("GITHUB_SCAN", {
       type: "exponential",
       delay: 5000,
     },
-    removeOnComplete: true, // Keep redis clean once finished
+    removeOnComplete: { count: 1000, age: 3600 }, // Keep recent jobs so frontend can poll status
   },
 });

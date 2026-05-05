@@ -31,6 +31,7 @@ const userSchema = new Schema<IUser & Document>(
     email: { type: String, required: true, unique: true, trim: true, lowercase: true },
     avatarUrl: { type: String },
     careerGoal: { type: String, default: "Fullstack Developer" },
+    coreLanguage: { type: String },
     onboardingStatus: {
       type: String,
       enum: ["pending_scan", "pending_discovery", "pending_test", "completed"],

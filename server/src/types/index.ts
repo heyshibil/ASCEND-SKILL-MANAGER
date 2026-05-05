@@ -38,6 +38,7 @@ export interface IUser extends IBaseEntity {
   email: string;
   avatarUrl?: string | undefined; //from github
   careerGoal: string;
+  coreLanguage?: string | undefined;
   onboardingStatus:
     | "pending_scan"
     | "pending_discovery"
