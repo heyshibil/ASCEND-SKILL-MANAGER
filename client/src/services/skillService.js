@@ -1,7 +1,7 @@
 import { API } from "./api";
 
-export const initSkills = async (selectedSkills) => {
-  const { data } = await API.post("/skills/init", { skills: selectedSkills });
+export const initSkills = async (payload) => {
+  const { data } = await API.post("/skills/init", payload);
   return data;
 };
 

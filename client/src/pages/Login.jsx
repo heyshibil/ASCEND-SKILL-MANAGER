@@ -64,9 +64,13 @@ export default function Login() {
         if (response.user.role === "admin") {
           navigate("/admin");
         } else {
-          response.user.onboardingStatus === "completed"
-            ? navigate("/dashboard")
-            : navigate("/discovery");
+          if (response.user.onboardingStatus === "completed") {
+            navigate("/dashboard");
+          } else if (response.user.onboardingStatus === "pending_test") {
+            navigate(`/test?skill=${encodeURIComponent(response.user.coreLanguage || 'JavaScript')}`);
+          } else {
+            navigate("/discovery");
+          }
         }
       } else {
         // --- REGISTER FLOW ---

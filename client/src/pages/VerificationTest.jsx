@@ -10,11 +10,26 @@ import {
   TabsTrigger,
 } from "../components/ui/tabs";
 import { Progress } from "../components/ui/progress";
+import useAuthStore from "../store/useAuthStore";
 
 export default function VerificationTest() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const skillName = searchParams.get("skill") || "React";
+
+  const user = useAuthStore((state) => state.user);
+  const refreshUser = useAuthStore((state) => state.refreshUser);
+  const coreLanguage = user?.coreLanguage || "javascript";
+
+  const getEditorLanguage = (lang) => {
+    const l = lang.toLowerCase();
+    if (l === "node.js" || l === "javascript") return "javascript";
+    if (l === "typescript") return "typescript";
+    if (l === "python") return "python";
+    if (l === "java") return "java";
+    if (l === "c++") return "cpp";
+    return "javascript";
+  };
 
   // Loading & Test Data States
   const [loading, setLoading] = useState(true);
@@ -106,6 +121,9 @@ export default function VerificationTest() {
         "Verification Complete! Score: " + result.finalScore + "/100",
         { id: "grading" },
       );
+
+      // Refresh auth state to update onboardingStatus
+      await refreshUser();
 
       setTimeout(() => {
         navigate("/report", {
@@ -290,7 +308,7 @@ export default function VerificationTest() {
                     <Editor
                       height="100%"
                       theme="vs-dark"
-                      defaultLanguage="javascript"
+                      language={getEditorLanguage(coreLanguage)}
                       value={codeAnswer}
                       onChange={(value) => setCodeAnswer(value)}
                       onMount={(editor, monaco) => {
