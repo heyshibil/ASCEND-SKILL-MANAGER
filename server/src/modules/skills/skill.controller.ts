@@ -107,8 +107,8 @@ export const initializeSkills = async (
   next: NextFunction,
 ) => {
   try {
-    const { skills } = req.body;
-    const result = await skillService.initUserSkills(req.userId!, skills);
+    const { skills, coreLanguage } = req.body;
+    const result = await skillService.initUserSkills(req.userId!, skills, coreLanguage);
 
     res.status(201).json({
       success: true,

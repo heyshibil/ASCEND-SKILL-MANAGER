@@ -37,17 +37,7 @@ export const githubCallback = async (
         username: user.username,
       });
 
-      // Pause and wait for the worker to finish
-      const result = await job.waitUntilFinished(queueEvents);
-
-      // Extract predicted skill array
-      const predictedSkills = result.predictedSkills || [];
-
-      if (predictedSkills.length > 0) {
-        redirectUrl = `${process.env.CLIENT_URL}/discovery?predicted=${encodeURIComponent(predictedSkills.join(","))}`;
-      } else {
-        redirectUrl = `${process.env.CLIENT_URL}/discovery`;
-      }
+      redirectUrl = `${process.env.CLIENT_URL}/discovery?scanJobId=${job.id}`;
     }
 
     setTokenCookie(res, token);
@@ -149,5 +139,29 @@ export const getMe = async (
     res.status(200).json({ success: true, user });
   } catch (error) {
     next(error);
+  }
+};
+
+export const getScanStatus = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { jobId } = req.params;
+    const job = await scanQueue.getJob(jobId as string);
+    if (!job) {
+      res.status(404).json({ error: "Job not found" });
+      return;
+    }
+    
+    const state = await job.getState();
+    if (state === "completed") {
+      res.json({ status: "completed", result: job.returnvalue });
+      return;
+    }
+    if (state === "failed") {
+      res.json({ status: "failed" });
+      return;
+    }
+    res.json({ status: "processing" });
+  } catch (err) {
+    next(err);
   }
 };

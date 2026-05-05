@@ -29,6 +29,15 @@ const useAuthStore = create(
         }
       },
 
+      refreshUser: async () => {
+        try {
+          const { user } = await authService.getMe();
+          set({ user, isAuthenticated: true }, false, "auth/refreshUser");
+        } catch {
+          // Silent fail
+        }
+      },
+
       login: async (email, password) => {
         const data = await authService.login(email, password);
         set({ user: data.user, isAuthenticated: true }, false, "auth/login");

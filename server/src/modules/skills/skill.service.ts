@@ -47,6 +47,7 @@ const getCatalogSkillsForInput = async (skills: SkillInput[]) => {
 export const initUserSkills = async (
   userId: string,
   selectedSkills: SkillInput[],
+  coreLanguage?: string,
 ) => {
   if (!selectedSkills || selectedSkills.length === 0) {
     throw new AppError("No skills provided", 400);
@@ -75,8 +76,11 @@ export const initUserSkills = async (
   // Bulk insert
   const insertedSkills = await Skill.insertMany(skillsToInsert);
 
-  // update status of user
-  await User.findByIdAndUpdate(userId, { onboardingStatus: "pending_test" });
+  // update status of user and coreLanguage
+  await User.findByIdAndUpdate(userId, { 
+    onboardingStatus: "pending_test",
+    coreLanguage: coreLanguage || "JavaScript"
+  });
 
   return insertedSkills;
 };
