@@ -40,7 +40,11 @@ export default function VerificationTest() {
   // User Answer States
   const [currentMcqIndex, setCurrentMcqIndex] = useState(0);
   const [mcqAnswers, setMcqAnswers] = useState([]);
-  const [codeAnswer, setCodeAnswer] = useState("// Write your solution here\n");
+  const [codeAnswer, setCodeAnswer] = useState(
+    (user?.coreLanguage || "").toLowerCase() === "python"
+      ? "# Write your solution here\n"
+      : "// Write your solution here\n",
+  );
 
   useEffect(() => {
     const fetchTest = async () => {
@@ -141,7 +145,10 @@ export default function VerificationTest() {
 
   if (loading) {
     return (
-      <div className="theme-dark min-h-screen flex items-center justify-center text-[14px] text-[var(--text-secondary)]" style={{ background: 'var(--bg-canvas)' }}>
+      <div
+        className="theme-dark min-h-screen flex items-center justify-center text-[14px] text-[var(--text-secondary)]"
+        style={{ background: "var(--bg-canvas)" }}
+      >
         <span className="animate-pulse-subtle">
           Initializing verification engine...
         </span>
@@ -150,19 +157,28 @@ export default function VerificationTest() {
   }
 
   return (
-    <div className="theme-dark min-h-screen flex flex-col items-center py-12 px-6 font-[var(--font-sans)]" style={{ background: 'var(--bg-canvas)' }}>
-
+    <div
+      className="theme-dark min-h-screen flex flex-col items-center py-12 px-6 font-[var(--font-sans)]"
+      style={{ background: "var(--bg-canvas)" }}
+    >
       <div className="relative z-10 w-full max-w-5xl flex flex-col gap-8">
         <div className="text-center w-full">
           <h1 className="text-[24px] font-medium text-[var(--text-primary)] tracking-[-0.01em]">
             Verification test
           </h1>
           <p className="text-[14px] text-[var(--text-secondary)] mt-2">
-            Complete the MCQ theory and compiler test to authenticate your baseline score.
+            Complete the MCQ theory and compiler test to authenticate your
+            baseline score.
           </p>
         </div>
 
-        <div className="w-full rounded-[var(--radius-lg)] border p-6 sm:p-8 flex flex-col gap-6" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}>
+        <div
+          className="w-full rounded-[var(--radius-lg)] border p-6 sm:p-8 flex flex-col gap-6"
+          style={{
+            background: "var(--bg-surface)",
+            borderColor: "var(--border-subtle)",
+          }}
+        >
           <Tabs defaultValue="theory" className="w-full">
             <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 p-1 mb-8">
               <TabsTrigger
@@ -192,7 +208,13 @@ export default function VerificationTest() {
                     />
                   </div>
 
-                  <div className="rounded-[var(--radius-lg)] p-6" style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-subtle)' }}>
+                  <div
+                    className="rounded-[var(--radius-lg)] p-6"
+                    style={{
+                      background: "var(--bg-raised)",
+                      border: "1px solid var(--border-subtle)",
+                    }}
+                  >
                     <span className="text-[var(--accent)] text-[12px] font-medium tracking-[0.02em] mb-2 block">
                       Question {currentMcqIndex + 1} of 5
                     </span>
@@ -212,11 +234,17 @@ export default function VerificationTest() {
                             onClick={() => handleOptionSelect(idx)}
                             className="text-left p-4 rounded-[var(--radius-lg)] border transition-all duration-200"
                             style={{
-                              background: selected ? 'var(--accent-bg)' : 'var(--bg-surface)',
-                              borderColor: selected ? 'var(--accent)' : 'var(--border-subtle)',
+                              background: selected
+                                ? "var(--accent-bg)"
+                                : "var(--bg-surface)",
+                              borderColor: selected
+                                ? "var(--accent)"
+                                : "var(--border-subtle)",
                             }}
                           >
-                            <span className={`text-[14px] font-medium ${selected ? "text-[var(--text-primary)]" : "text-[var(--text-secondary)]"}`}>
+                            <span
+                              className={`text-[14px] font-medium ${selected ? "text-[var(--text-primary)]" : "text-[var(--text-secondary)]"}`}
+                            >
                               {option}
                             </span>
                           </button>
@@ -225,7 +253,10 @@ export default function VerificationTest() {
                     )}
                   </div>
 
-                  <div className="flex justify-between mt-4 pt-4 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
+                  <div
+                    className="flex justify-between mt-4 pt-4 border-t"
+                    style={{ borderColor: "var(--border-subtle)" }}
+                  >
                     <button
                       onClick={() =>
                         setCurrentMcqIndex((curr) => Math.max(0, curr - 1))
@@ -255,7 +286,13 @@ export default function VerificationTest() {
             >
               {codeQuestion && (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[600px]">
-                  <div className="col-span-1 rounded-[var(--radius-lg)] border p-6 overflow-y-auto custom-scrollbar" style={{ background: 'var(--bg-raised)', borderColor: 'var(--border-subtle)' }}>
+                  <div
+                    className="col-span-1 rounded-[var(--radius-lg)] border p-6 overflow-y-auto custom-scrollbar"
+                    style={{
+                      background: "var(--bg-raised)",
+                      borderColor: "var(--border-subtle)",
+                    }}
+                  >
                     <span className="text-[var(--accent)] text-[12px] font-medium tracking-[0.02em] mb-2 block">
                       Code execution
                     </span>
@@ -266,7 +303,10 @@ export default function VerificationTest() {
                       {codeQuestion.question}
                     </p>
 
-                    <div className="mt-8 pt-4 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
+                    <div
+                      className="mt-8 pt-4 border-t"
+                      style={{ borderColor: "var(--border-subtle)" }}
+                    >
                       <h3 className="text-[12px] font-medium text-[var(--text-secondary)] mb-2">
                         Requirements:
                       </h3>
@@ -277,28 +317,57 @@ export default function VerificationTest() {
                     </div>
 
                     {/* Test cases */}
-                    {codeQuestion.testCases && codeQuestion.testCases.length > 0 && (
-                      <div className="mt-8 pt-4 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
-                        <h3 className="text-[12px] font-medium text-[var(--accent)] mb-4 tracking-[0.02em]">Example test cases:</h3>
-                        <div className="flex flex-col gap-3">
-                          {codeQuestion.testCases.map((tc, idx) => (
-                            <div key={idx} className="rounded-[var(--radius-md)] p-3 font-[var(--font-mono)] text-[12px] flex flex-col gap-2" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
-                              <div className="flex items-start">
-                                <span className="text-[var(--text-tertiary)] w-20 shrink-0">Input:</span>
-                                <span className="text-[var(--text-primary)]">{tc.input}</span>
+                    {codeQuestion.testCases &&
+                      codeQuestion.testCases.length > 0 && (
+                        <div
+                          className="mt-8 pt-4 border-t"
+                          style={{ borderColor: "var(--border-subtle)" }}
+                        >
+                          <h3 className="text-[12px] font-medium text-[var(--accent)] mb-4 tracking-[0.02em]">
+                            Example test cases:
+                          </h3>
+                          <div className="flex flex-col gap-3">
+                            {codeQuestion.testCases.map((tc, idx) => (
+                              <div
+                                key={idx}
+                                className="rounded-[var(--radius-md)] p-3 font-[var(--font-mono)] text-[12px] flex flex-col gap-2"
+                                style={{
+                                  background: "var(--bg-surface)",
+                                  border: "1px solid var(--border-subtle)",
+                                }}
+                              >
+                                <div className="flex items-start">
+                                  <span className="text-[var(--text-tertiary)] w-20 shrink-0">
+                                    Input:
+                                  </span>
+                                  <span className="text-[var(--text-primary)]">
+                                    {tc.input}
+                                  </span>
+                                </div>
+                                <div
+                                  className="flex items-start mt-1 pt-2 border-t"
+                                  style={{
+                                    borderColor: "var(--border-subtle)",
+                                  }}
+                                >
+                                  <span className="text-[var(--text-tertiary)] w-20 shrink-0">
+                                    Expected:
+                                  </span>
+                                  <span className="text-[var(--success)] font-medium">
+                                    {tc.output}
+                                  </span>
+                                </div>
                               </div>
-                              <div className="flex items-start mt-1 pt-2 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
-                                <span className="text-[var(--text-tertiary)] w-20 shrink-0">Expected:</span>
-                                <span className="text-[var(--success)] font-medium">{tc.output}</span>
-                              </div>
-                            </div>
-                          ))}
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
                   </div>
 
-                  <div className="col-span-1 lg:col-span-2 flex flex-col border rounded-[var(--radius-lg)] overflow-hidden bg-[#1e1e1e]" style={{ borderColor: 'var(--border-subtle)' }}>
+                  <div
+                    className="col-span-1 lg:col-span-2 flex flex-col border rounded-[var(--radius-lg)] overflow-hidden bg-[#1e1e1e]"
+                    style={{ borderColor: "var(--border-subtle)" }}
+                  >
                     <div className="h-10 bg-[#252526] border-b border-[#1a1a1a] flex items-center px-4 justify-between">
                       <span className="text-[12px] text-[var(--text-tertiary)] font-[var(--font-mono)]">
                         index.js
@@ -308,7 +377,11 @@ export default function VerificationTest() {
                     <Editor
                       height="100%"
                       theme="vs-dark"
-                      language={getEditorLanguage(coreLanguage)}
+                      language={
+                        getEditorLanguage(coreLanguage) === "python"
+                          ? "solution.py"
+                          : "index.js"
+                      }
                       value={codeAnswer}
                       onChange={(value) => setCodeAnswer(value)}
                       onMount={(editor, monaco) => {
@@ -330,7 +403,10 @@ export default function VerificationTest() {
                 </div>
               )}
 
-              <div className="pt-4 mt-4 border-t flex justify-end" style={{ borderColor: 'var(--border-subtle)' }}>
+              <div
+                className="pt-4 mt-4 border-t flex justify-end"
+                style={{ borderColor: "var(--border-subtle)" }}
+              >
                 <button
                   onClick={handleSubmitTest}
                   disabled={submitting}
