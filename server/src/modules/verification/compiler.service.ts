@@ -15,16 +15,36 @@ const lambdaClient = new LambdaClient({
   },
 });
 
-const FUNCTION_NAME =
-  process.env.LAMBDA_FUNCTION_NAME || "ascend-code-executor";
+// Lambda function registry
+const LAMBDA_FUNCTIONS: Record<string, string> = {
+  javascript: process.env.LAMBDA_FUNCTION_NAME!,
+  python: process.env.LAMBDA_PYTHON_FUNCTION_NAME!,
+};
+
 const CODE_TIMEOUT_MS = 5000;
+
+// Resolve lambda function name from runtime
+const resolveLambdaName = (runtime: string): string => {
+  const fn = LAMBDA_FUNCTIONS[runtime];
+
+  if (!fn) {
+    throw new AppError(`Unsupported runtime: ${runtime}`, 400);
+  }
+
+  return fn;
+};
 
 // -- Invoke Lambda --
 // Sends JS code to Lambda executor and returns stdout/stderr
 
-const invokeLambda = async (code: string): Promise<LambdaResponse> => {
+const invokeLambda = async (
+  code: string,
+  runtime: string,
+): Promise<LambdaResponse> => {
+  const functionName = resolveLambdaName(runtime);
+
   const command = new InvokeCommand({
-    FunctionName: FUNCTION_NAME,
+    FunctionName: functionName,
     InvocationType: "RequestResponse",
     Payload: Buffer.from(JSON.stringify({ code, timeoutMs: CODE_TIMEOUT_MS })),
   });
@@ -49,7 +69,11 @@ const invokeLambda = async (code: string): Promise<LambdaResponse> => {
 // -- Compose Executable Code --
 // Combines user code with all test case invocations into a single
 
-const composeTestScript = (userCode: string, testCases: TestCase[]): string => {
+// Compose JS code
+const composeJsTestScript = (
+  userCode: string,
+  testCases: TestCase[],
+): string => {
   const testRunner = testCases
     .map(
       (tc) =>
@@ -59,12 +83,42 @@ const composeTestScript = (userCode: string, testCases: TestCase[]): string => {
   return `${userCode}\n\n${testRunner}`;
 };
 
+// Compose Py code
+const composePyTestScript = (
+  userCode: string,
+  testCases: TestCase[],
+): string => {
+  const imports = `import json\n`;
+  const testRunner = testCases
+    .map(
+      (tc) =>
+        `try:\n    __r = ${tc.input}\n    print(json.dumps(__r) if isinstance(__r, (list, dict)) else __r)\nexcept Exception:\n    print("__EXEC_ERROR__")`,
+    )
+    .join("\n");
+  return `${imports}${userCode}\n\n${testRunner}`;
+};
+
+const composeTestScript = (
+  userCode: string,
+  testCases: TestCase[],
+  runtime: string,
+): string => {
+  switch (runtime) {
+    case "javascript":
+      return composeJsTestScript(userCode, testCases);
+    case "python":
+      return composePyTestScript(userCode, testCases);
+    default:
+      return composeJsTestScript(userCode, testCases);
+  }
+};
+
 // -- Lambda Public API --
 export const executeCodeTest = async (
   userCode: string,
   testCases: TestCase[],
   _validationScript: string,
-  _language: string,
+  runtime: string,
 ): Promise<CompilerResult> => {
   if (!testCases || testCases.length === 0) {
     console.warn("WARNING: Code question executed with ZERO test cases!");
@@ -72,9 +126,9 @@ export const executeCodeTest = async (
   }
 
   // compose full script
-  const fullCode = composeTestScript(userCode, testCases);
+  const fullCode = composeTestScript(userCode, testCases, runtime);
 
-  const result = await invokeLambda(fullCode);
+  const result = await invokeLambda(fullCode, runtime);
 
   // Handle timeout
   if (result.timedOut) {
