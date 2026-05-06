@@ -7,6 +7,7 @@ import { Skill } from "../../models/Skill.js";
 import { User } from "../../models/User.js";
 import { refreshLiquidityScore } from "../users/user.service.js";
 import { executeCodeTest } from "./compiler.service.js";
+import { resolveRuntime } from "../../utils/runtimeResolver.js";
 
 // -- Generate the Test and create active section --
 export const generateTest = async (
@@ -213,11 +214,12 @@ export const gradeVerificationTest = async (
   // Grade code (50)
   const dbCodeQ = await Question.findOne({ questionId: codeQuestionId });
 
+  const runtime = resolveRuntime(skillName)
   const { compilerScore } = await executeCodeTest(
     codeAnswer,
     dbCodeQ!.testCases!,
     dbCodeQ!.validationScript!,
-    skillName,
+    runtime,
   );
 
   // Gemini Audit (10)
@@ -447,11 +449,12 @@ export const gradeCompilerBoost = async (
     throw new AppError("Question not found", 404);
   }
 
+  const runtime = resolveRuntime(skillName)
   const { passedCases, totalCases } = await executeCodeTest(
     codeAnswer,
     dbCodeQ.testCases!,
     dbCodeQ.validationScript!,
-    skillName,
+    runtime,
   );
 
   let hike = 0;
