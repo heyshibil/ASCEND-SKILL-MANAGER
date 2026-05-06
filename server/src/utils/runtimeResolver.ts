@@ -5,7 +5,7 @@ const SKILL_RUNTIME_MAP: Record<string, string> = {
   typescript: "javascript",
   "node.js": "javascript",
   react: "javascript",
-  express: "javascript",
+  express: "JavaScript",
   mongodb: "javascript",
   "next.js": "javascript",
   redux: "javascript",
@@ -17,6 +17,23 @@ const SKILL_RUNTIME_MAP: Record<string, string> = {
   django: "python",
 };
 
+const SKILL_FALLBACK_MAP: Record<string, string> = {
+  react: "JavaScript",
+  express: "JavaScript",
+  "node.js": "JavaScript",
+  "next.js": "JavaScript",
+  redux: "JavaScript",
+  zustand: "JavaScript",
+  mongodb: "JavaScript",
+  typescript: "JavaScript",
+  "tailwind css": "JavaScript",
+  django: "Python",
+};
+
 export const resolveRuntime = (skillName: string): string => {
   return SKILL_RUNTIME_MAP[skillName.toLowerCase()] || "javascript";
+};
+
+export const getFallbackSkill = (skillName: string): string | null => {
+  return SKILL_FALLBACK_MAP[skillName.toLowerCase()] || null;
 };
