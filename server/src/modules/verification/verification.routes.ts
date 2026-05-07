@@ -35,4 +35,6 @@ router.post(
   verificationController.submitCompilerBoost,
 );
 
+router.post("/run-code", authenticate, verificationController.runCode);
+
 export default router;

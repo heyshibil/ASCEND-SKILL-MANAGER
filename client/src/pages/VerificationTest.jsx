@@ -34,8 +34,10 @@ export default function VerificationTest() {
   // Loading & Test Data States
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [running, setRunning] = useState(false);
   const [mcqQuestions, setMcqQuestions] = useState([]);
   const [codeQuestion, setCodeQuestion] = useState(null);
+  const [runResults, setRunResults] = useState(null);
 
   // User Answer States
   const [currentMcqIndex, setCurrentMcqIndex] = useState(0);
@@ -100,6 +102,35 @@ export default function VerificationTest() {
     const qId = mcqQuestions[currentMcqIndex]?.questionId;
     const answer = mcqAnswers.find((a) => a.questionId === qId);
     return answer?.answerIndex === index;
+  };
+
+  // -- Run code (dry run) --
+  const handleRun = async () => {
+    if (!codeQuestion) return;
+    try {
+      setRunning(true);
+      setRunResults(null);
+      toast.loading("Running test cases...", { id: "code-run" });
+
+      const { result } = await verificationService.runCode(
+        codeAnswer,
+        codeQuestion.questionId,
+      );
+
+      setRunResults(result);
+
+      if (result.timedOut) {
+        toast.error("Execution timed out.", { id: "code-run" });
+      } else if (result.passedCases === result.totalCases) {
+        toast.success(`All ${result.passedCases}/${result.totalCases} cases passed!`, { id: "code-run" });
+      } else {
+        toast.error(`Passed ${result.passedCases}/${result.totalCases} cases.`, { id: "code-run" });
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Run failed", { id: "code-run" });
+    } finally {
+      setRunning(false);
+    }
   };
 
   const handleSubmitTest = async () => {
@@ -286,104 +317,135 @@ export default function VerificationTest() {
             >
               {codeQuestion && (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[600px]">
+                  {/* Problem + Run Results */}
                   <div
-                    className="col-span-1 rounded-[var(--radius-lg)] border p-6 overflow-y-auto custom-scrollbar"
+                    className="col-span-1 rounded-[var(--radius-lg)] border overflow-y-auto custom-scrollbar flex flex-col"
                     style={{
                       background: "var(--bg-raised)",
                       borderColor: "var(--border-subtle)",
                     }}
                   >
-                    <span className="text-[var(--accent)] text-[12px] font-medium tracking-[0.02em] mb-2 block">
-                      Code execution
-                    </span>
-                    <h2 className="text-[18px] text-[var(--text-primary)] font-medium mb-4">
-                      Problem statement
-                    </h2>
-                    <p className="text-[var(--text-secondary)] text-[14px] whitespace-pre-wrap leading-relaxed">
-                      {codeQuestion.question}
-                    </p>
+                    <div className="p-6 flex-1">
+                      <span className="text-[var(--accent)] text-[12px] font-medium tracking-[0.02em] mb-2 block">
+                        Code execution
+                      </span>
+                      <h2 className="text-[18px] text-[var(--text-primary)] font-medium mb-4">
+                        Problem statement
+                      </h2>
+                      <p className="text-[var(--text-secondary)] text-[14px] whitespace-pre-wrap leading-relaxed">
+                        {codeQuestion.question}
+                      </p>
 
-                    <div
-                      className="mt-8 pt-4 border-t"
-                      style={{ borderColor: "var(--border-subtle)" }}
-                    >
-                      <h3 className="text-[12px] font-medium text-[var(--text-secondary)] mb-2">
-                        Requirements:
-                      </h3>
-                      <ul className="list-disc list-inside text-[var(--text-secondary)] text-[14px] space-y-2">
-                        <li>Function must execute efficiently</li>
-                        <li>Do not change the function signature</li>
-                      </ul>
-                    </div>
+                      <div
+                        className="mt-8 pt-4 border-t"
+                        style={{ borderColor: "var(--border-subtle)" }}
+                      >
+                        <h3 className="text-[12px] font-medium text-[var(--text-secondary)] mb-2">
+                          Requirements:
+                        </h3>
+                        <ul className="list-disc list-inside text-[var(--text-secondary)] text-[14px] space-y-2">
+                          <li>Function must execute efficiently</li>
+                          <li>Do not change the function signature</li>
+                        </ul>
+                      </div>
 
-                    {/* Test cases */}
-                    {codeQuestion.testCases &&
-                      codeQuestion.testCases.length > 0 && (
-                        <div
-                          className="mt-8 pt-4 border-t"
-                          style={{ borderColor: "var(--border-subtle)" }}
-                        >
+                      {/* Test cases (show when no run results) */}
+                      {codeQuestion.testCases && codeQuestion.testCases.length > 0 && !runResults && (
+                        <div className="mt-8 pt-4 border-t" style={{ borderColor: "var(--border-subtle)" }}>
                           <h3 className="text-[12px] font-medium text-[var(--accent)] mb-4 tracking-[0.02em]">
                             Example test cases:
                           </h3>
                           <div className="flex flex-col gap-3">
                             {codeQuestion.testCases.map((tc, idx) => (
-                              <div
-                                key={idx}
-                                className="rounded-[var(--radius-md)] p-3 font-[var(--font-mono)] text-[12px] flex flex-col gap-2"
-                                style={{
-                                  background: "var(--bg-surface)",
-                                  border: "1px solid var(--border-subtle)",
-                                }}
-                              >
+                              <div key={idx} className="rounded-[var(--radius-md)] p-3 font-[var(--font-mono)] text-[12px] flex flex-col gap-2" style={{ background: "var(--bg-surface)", border: "1px solid var(--border-subtle)" }}>
                                 <div className="flex items-start">
-                                  <span className="text-[var(--text-tertiary)] w-20 shrink-0">
-                                    Input:
-                                  </span>
-                                  <span className="text-[var(--text-primary)]">
-                                    {tc.input}
-                                  </span>
+                                  <span className="text-[var(--text-tertiary)] w-20 shrink-0">Input:</span>
+                                  <span className="text-[var(--text-primary)]">{tc.input}</span>
                                 </div>
-                                <div
-                                  className="flex items-start mt-1 pt-2 border-t"
-                                  style={{
-                                    borderColor: "var(--border-subtle)",
-                                  }}
-                                >
-                                  <span className="text-[var(--text-tertiary)] w-20 shrink-0">
-                                    Expected:
-                                  </span>
-                                  <span className="text-[var(--success)] font-medium">
-                                    {tc.output}
-                                  </span>
+                                <div className="flex items-start mt-1 pt-2 border-t" style={{ borderColor: "var(--border-subtle)" }}>
+                                  <span className="text-[var(--text-tertiary)] w-20 shrink-0">Expected:</span>
+                                  <span className="text-[var(--success)] font-medium">{tc.output}</span>
                                 </div>
                               </div>
                             ))}
                           </div>
                         </div>
                       )}
+
+                      {/* Run Results Panel */}
+                      {runResults && (
+                        <div className="mt-8 pt-4 border-t" style={{ borderColor: "var(--border-subtle)" }}>
+                          <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-[12px] font-medium text-[var(--accent)] tracking-[0.02em]">Test results:</h3>
+                            <span className="text-[12px] font-medium px-2 py-0.5 rounded-[var(--radius-sm)]" style={{ background: runResults.passedCases === runResults.totalCases ? "var(--success-bg)" : "var(--danger-bg)", color: runResults.passedCases === runResults.totalCases ? "var(--success)" : "var(--danger)" }}>
+                              {runResults.passedCases}/{runResults.totalCases} passed
+                            </span>
+                          </div>
+                          <div className="flex flex-col gap-3">
+                            {runResults.results.map((r, idx) => (
+                              <div key={idx} className="rounded-[var(--radius-md)] p-3 font-[var(--font-mono)] text-[12px] flex flex-col gap-2" style={{ background: "var(--bg-surface)", border: `1px solid ${r.passed ? "var(--success)" : "var(--danger)"}` }}>
+                                <span className="text-[11px] font-medium" style={{ color: r.passed ? "var(--success)" : "var(--danger)" }}>
+                                  Case {idx + 1} — {r.passed ? "Passed ✓" : "Failed ✗"}
+                                </span>
+                                <div className="flex items-start">
+                                  <span className="text-[var(--text-tertiary)] w-20 shrink-0">Input:</span>
+                                  <span className="text-[var(--text-primary)]">{r.input}</span>
+                                </div>
+                                <div className="flex items-start border-t pt-2" style={{ borderColor: "var(--border-subtle)" }}>
+                                  <span className="text-[var(--text-tertiary)] w-20 shrink-0">Expected:</span>
+                                  <span className="text-[var(--success)] font-medium">{r.expected}</span>
+                                </div>
+                                <div className="flex items-start border-t pt-2" style={{ borderColor: "var(--border-subtle)" }}>
+                                  <span className="text-[var(--text-tertiary)] w-20 shrink-0">Actual:</span>
+                                  <span className={`font-medium ${r.passed ? "text-[var(--success)]" : "text-[var(--danger)]"}`}>{r.actual}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
+                  {/* Editor with Run + Submit in toolbar */}
                   <div
                     className="col-span-1 lg:col-span-2 flex flex-col border rounded-[var(--radius-lg)] overflow-hidden bg-[#1e1e1e]"
                     style={{ borderColor: "var(--border-subtle)" }}
                   >
-                    <div className="h-10 bg-[#252526] border-b border-[#1a1a1a] flex items-center px-4 justify-between">
+                    <div className="h-11 bg-[#252526] border-b border-[#1a1a1a] flex items-center px-4 justify-between">
                       <span className="text-[12px] text-[var(--text-tertiary)] font-[var(--font-mono)]">
-                        index.js
+                        {getEditorLanguage(coreLanguage) === "python" ? "solution.py" : "index.js"}
                       </span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={handleRun}
+                          disabled={running || submitting}
+                          className="text-[13px] font-medium px-4 h-7 rounded-[var(--radius-md)] transition-colors border"
+                          style={{ borderColor: "var(--border-base)", color: "var(--text-secondary)", background: "transparent" }}
+                          onMouseEnter={(e) => (e.currentTarget.style.background = "var(--bg-raised)")}
+                          onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                        >
+                          {running ? "Running..." : "▶ Run"}
+                        </button>
+                        <button
+                          onClick={handleSubmitTest}
+                          disabled={running || submitting}
+                          className="bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-50 text-white text-[13px] font-medium px-4 h-7 rounded-[var(--radius-md)] transition-colors"
+                        >
+                          {submitting ? "Submitting..." : "Submit verification"}
+                        </button>
+                      </div>
                     </div>
 
                     <Editor
                       height="100%"
                       theme="vs-dark"
-                      language={
-                        getEditorLanguage(coreLanguage) === "python"
-                          ? "solution.py"
-                          : "index.js"
-                      }
+                      language={getEditorLanguage(coreLanguage)}
                       value={codeAnswer}
-                      onChange={(value) => setCodeAnswer(value)}
+                      onChange={(value) => {
+                        setCodeAnswer(value);
+                        setRunResults(null);
+                      }}
                       onMount={(editor, monaco) => {
                         document.fonts.ready.then(() => {
                           monaco.editor.remeasureFonts();
@@ -402,21 +464,6 @@ export default function VerificationTest() {
                   </div>
                 </div>
               )}
-
-              <div
-                className="pt-4 mt-4 border-t flex justify-end"
-                style={{ borderColor: "var(--border-subtle)" }}
-              >
-                <button
-                  onClick={handleSubmitTest}
-                  disabled={submitting}
-                  className="bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium px-6 h-9 rounded-[var(--radius-md)] transition-colors text-[14px]"
-                >
-                  {submitting
-                    ? "Analyzing test securely..."
-                    : "Submit complete verification"}
-                </button>
-              </div>
             </TabsContent>
           </Tabs>
         </div>

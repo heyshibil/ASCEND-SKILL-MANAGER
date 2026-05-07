@@ -121,11 +121,23 @@ export const registerUser = async (input: RegisterInput) => {
     to: input.email,
     subject: "Verify your Ascend account",
     html: `
-      <h2>Welcome to Ascend!</h2>
-      <p>Click the link below to verify your email:</p>
-      <a href="${verifyUrl}">${verifyUrl}</a>
-      <p>This link expires in 24 hours.</p>
-    `,
+<div style="font-family:'DM Sans',sans-serif;max-width:480px;margin:0 auto;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;">
+  <div style="background:#2563EB;padding:2rem 2.5rem 1.75rem;">
+    <span style="font-size:15px;font-weight:500;color:rgba(255,255,255,0.9);letter-spacing:0.08em;text-transform:uppercase;">Ascend</span>
+  </div>
+  <div style="padding:2rem 2.5rem;background:#ffffff;">
+    <p style="font-size:20px;font-weight:500;color:#111827;margin:0 0 0.75rem;">Verify your email</p>
+    <p style="font-size:14px;color:#6b7280;line-height:1.6;margin:0 0 1.75rem;">One click to activate your account. This link is only valid for 24 hours.</p>
+    <a href="${verifyUrl}" style="display:block;background:#2563EB;color:#ffffff;text-align:center;padding:0.8rem 1.5rem;border-radius:8px;font-size:14px;font-weight:500;text-decoration:none;">Verify my email →</a>
+    <hr style="border:none;border-top:1px solid #f3f4f6;margin:1.75rem 0;">
+    <p style="font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.07em;margin:0 0 0.4rem;">Or copy this link</p>
+    <p style="font-size:12px;color:#6b7280;word-break:break-all;font-family:monospace;line-height:1.5;margin:0;">${verifyUrl}</p>
+  </div>
+  <div style="padding:1rem 2.5rem 1.5rem;background:#ffffff;">
+    <p style="font-size:12px;color:#9ca3af;margin:0;">⏱ Expires in 24 hours · If you didn't create an account, ignore this email.</p>
+  </div>
+</div>
+`,
   });
 
   // Generate JWT token
