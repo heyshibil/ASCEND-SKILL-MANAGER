@@ -6,8 +6,11 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { Skill } from "../../models/Skill.js";
 import { User } from "../../models/User.js";
 import { refreshLiquidityScore } from "../users/user.service.js";
-import { executeCodeTest } from "./compiler.service.js";
-import { resolveRuntime } from "../../utils/runtimeResolver.js";
+import { executeCodeTest, runCodeTest } from "./compiler.service.js";
+import {
+  getFallbackSkill,
+  resolveRuntime,
+} from "../../utils/runtimeResolver.js";
 
 // -- Generate the Test and create active section --
 export const generateTest = async (
@@ -214,7 +217,7 @@ export const gradeVerificationTest = async (
   // Grade code (50)
   const dbCodeQ = await Question.findOne({ questionId: codeQuestionId });
 
-  const runtime = resolveRuntime(skillName)
+  const runtime = resolveRuntime(skillName);
   const { compilerScore } = await executeCodeTest(
     codeAnswer,
     dbCodeQ!.testCases!,
@@ -319,7 +322,7 @@ export const generateBoostTest = async (
       throw new AppError("Level is required for compiler test.", 400);
     }
 
-    const codeDbs = await Question.aggregate([
+    let codeDbs = await Question.aggregate([
       {
         $match: {
           skill: skillName,
@@ -330,6 +333,27 @@ export const generateBoostTest = async (
       },
       { $sample: { size: 1 } },
     ]);
+
+    if (codeDbs.length < 1) {
+      // throw new AppError(
+      //   "Not enough unique code questions available for this level.",
+      //   400,
+      // );
+
+      const fallbackSkill = getFallbackSkill(skillName);
+
+      codeDbs = await Question.aggregate([
+        {
+          $match: {
+            skill: fallbackSkill,
+            type: "code",
+            level: level.toLowerCase(),
+            questionId: { $nin: seenIds },
+          },
+        },
+        { $sample: { size: 1 } },
+      ]);
+    }
 
     if (codeDbs.length < 1) {
       throw new AppError(
@@ -449,7 +473,7 @@ export const gradeCompilerBoost = async (
     throw new AppError("Question not found", 404);
   }
 
-  const runtime = resolveRuntime(skillName)
+  const runtime = resolveRuntime(skillName);
   const { passedCases, totalCases } = await executeCodeTest(
     codeAnswer,
     dbCodeQ.testCases!,
@@ -487,4 +511,30 @@ export const gradeCompilerBoost = async (
     hikeApplied: hike,
     newScore: skillRecord?.currentScore,
   };
+};
+
+// Dry test run
+export const runCode = async (
+  userId: string,
+  code: string,
+  questionId: string,
+) => {
+  // Verify user has an active session (boost or test)
+  const boostSession = await redisConnection.get(`boost_session:${userId}`);
+  const testSession = await redisConnection.get(`test_session:${userId}`);
+
+  if (!boostSession && !testSession) {
+    throw new AppError("No active test session found.", 400);
+  }
+
+  const dbQuestion = await Question.findOne({questionId});
+
+   if (!dbQuestion || !dbQuestion.testCases) {
+    throw new AppError("Question not found or has no test cases.", 404);
+  }
+
+  const runtime = resolveRuntime(dbQuestion.skill);
+  const result = await runCodeTest(code, dbQuestion.testCases, runtime);
+
+  return result
 };
