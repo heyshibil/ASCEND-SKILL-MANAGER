@@ -6,7 +6,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { Skill } from "../../models/Skill.js";
 import { User } from "../../models/User.js";
 import { refreshLiquidityScore } from "../users/user.service.js";
-import { executeCodeTest } from "./compiler.service.js";
+import { executeCodeTest, runCodeTest } from "./compiler.service.js";
 import {
   getFallbackSkill,
   resolveRuntime,
@@ -355,7 +355,7 @@ export const generateBoostTest = async (
       ]);
     }
 
-     if (codeDbs.length < 1) {
+    if (codeDbs.length < 1) {
       throw new AppError(
         "Not enough unique code questions available for this level.",
         400,
@@ -511,4 +511,30 @@ export const gradeCompilerBoost = async (
     hikeApplied: hike,
     newScore: skillRecord?.currentScore,
   };
+};
+
+// Dry test run
+export const runCode = async (
+  userId: string,
+  code: string,
+  questionId: string,
+) => {
+  // Verify user has an active session (boost or test)
+  const boostSession = await redisConnection.get(`boost_session:${userId}`);
+  const testSession = await redisConnection.get(`test_session:${userId}`);
+
+  if (!boostSession && !testSession) {
+    throw new AppError("No active test session found.", 400);
+  }
+
+  const dbQuestion = await Question.findOne({questionId});
+
+   if (!dbQuestion || !dbQuestion.testCases) {
+    throw new AppError("Question not found or has no test cases.", 404);
+  }
+
+  const runtime = resolveRuntime(dbQuestion.skill);
+  const result = await runCodeTest(code, dbQuestion.testCases, runtime);
+
+  return result
 };

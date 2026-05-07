@@ -3,6 +3,7 @@ import { AppError } from "../../middlewares/error.middleware.js";
 import type {
   CompilerResult,
   LambdaResponse,
+  RunCodeResult,
   TestCase,
 } from "../../types/index.js";
 
@@ -158,4 +159,60 @@ export const executeCodeTest = async (
   const compilerScore = percentagePassed * 50;
 
   return { compilerScore, passedCases, totalCases: testCases.length };
+};
+
+// Run code test
+export const runCodeTest = async (
+  userCode: string,
+  testCases: TestCase[],
+  runtime: string,
+): Promise<RunCodeResult> => {
+  if (!testCases || testCases.length === 0) {
+    return { passedCases: 0, totalCases: 0, results: [], timedOut: false };
+  }
+
+  const fullCode = composeTestScript(userCode, testCases, runtime);
+  const result = await invokeLambda(fullCode, runtime);
+
+  if (result.timedOut) {
+    return {
+      passedCases: 0,
+      totalCases: testCases.length,
+      results: testCases.map((tc) => ({
+        input: tc.input,
+        expected: tc.output,
+        actual: "⏱ Timed out",
+        passed: false,
+      })),
+      timedOut: true,
+    };
+  }
+
+  const outputLines = result.stdout
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+
+  let passedCases = 0;
+
+  // validate actual outputs and expected outputs
+  const results = testCases.map((tc, i) => {
+    const actual = (outputLines[i] || "").replace(/\s+/g, " ").trim();
+    const expected = (tc.output || "").replace(/\s+/g, " ").trim();
+    const passed = actual === expected;
+    if (passed) passedCases++;
+    return {
+      input: tc.input,
+      expected: tc.output,
+      actual: outputLines[i] || "(no output)",
+      passed,
+    };
+  });
+
+  return {
+    passedCases,
+    totalCases: testCases.length,
+    results,
+    timedOut: false,
+  };
 };
