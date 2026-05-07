@@ -99,14 +99,49 @@ export const submitMcqBoost = async (
   }
 };
 
-export const submitCompilerBoost = async (req: Request, res: Response, next: NextFunction) => {
+export const submitCompilerBoost = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const { skillName, codeAnswer, questionId } = req.body;
 
-    const result = await verificationService.gradeCompilerBoost(req.userId!, skillName, codeAnswer, questionId);
+    const result = await verificationService.gradeCompilerBoost(
+      req.userId!,
+      skillName,
+      codeAnswer,
+      questionId,
+    );
 
-    res.status(200).json({ success: true, message: "Compiler Boost Graded", result });
+    res
+      .status(200)
+      .json({ success: true, message: "Compiler Boost Graded", result });
   } catch (error) {
-    next(error)
+    next(error);
   }
-}
+};
+
+export const runCode = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { code, questionId } = req.body;
+
+    if (!code || !questionId) {
+      throw new AppError("Code and questionId are required", 400);
+    }
+
+    const result = await verificationService.runCode(
+      req.userId!,
+      code,
+      questionId,
+    );
+    
+    res.status(200).json({ success: true, result });
+  } catch (error) {
+    next(error);
+  }
+};

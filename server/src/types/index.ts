@@ -154,3 +154,17 @@ export interface DecayTickResult {
   skillsEnteredDebt: number;
   errors: number;
 }
+
+// Run code test - types
+export interface RunCaseResult {
+  input: string;
+  expected: string;
+  actual: string;
+  passed: boolean;
+}
+export interface RunCodeResult {
+  passedCases: number;
+  totalCases: number;
+  results: RunCaseResult[];
+  timedOut: boolean;
+}
