@@ -39,6 +39,16 @@ export const verificationService = {
     return data;
   },
 
+  // Run code (dry run — no score change)
+  runCode: async (code, questionId) => {
+    const { data } = await API.post("/verification/run-code", {
+      code,
+      questionId,
+    });
+
+    return data;
+  },
+
   submitCompilerBoost: async (skillName, codeAnswer, questionId) => {
     const { data } = await API.post("/verification/boost/compiler/submit", {
       skillName,
