@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import useAuthStore from "../store/useAuthStore";
 import { toast } from "sonner";
-import { ChevronDown, Plus, X, Search, Loader2 } from "lucide-react";
-import { initSkills } from "../services/skillService";
+import { ChevronDown, Plus, X, Search, Loader2, Upload, FileText, CheckCircle2, AlertCircle } from "lucide-react";
+import { initSkills, parseResume } from "../services/skillService";
 import { useSkillCatalogStore } from "../store/useSkillCatalogStore";
 import { useScanPolling } from "../hooks/useScanPolling";
 
@@ -45,6 +45,12 @@ export default function SkillSelect() {
   const [loading,            setLoading]            = useState(false);
   const [dropdownOpen,       setDropdownOpen]       = useState(false);
   const [searchTerm,         setSearchTerm]         = useState("");
+
+  // ── Resume upload state ───────────────────────────────────────────────────
+  const [resumeParsing, setResumeParsing] = useState(false);
+  const [resumeResult, setResumeResult] = useState(null);
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef(null);
 
   const [selectedCoreLanguage, setSelectedCoreLanguage] = useState("");
 
@@ -153,6 +159,93 @@ export default function SkillSelect() {
     }
   };
 
+  // ── Resume Handlers ─────────────────────────────────────────────────────
+
+  const handleResumeFile = useCallback(async (file) => {
+    if (!file) return;
+
+    const validTypes = [
+      "application/pdf",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ];
+    if (!validTypes.includes(file.type)) {
+      return toast.error("Only PDF and DOCX files are allowed.");
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      return toast.error("File must be under 5MB.");
+    }
+
+    setResumeParsing(true);
+    setResumeResult(null);
+    try {
+      const data = await parseResume(file);
+      setResumeResult(data);
+
+      const totalNew = data.newSkills?.length || 0;
+      const totalDetected = data.allDetected?.length || 0;
+
+      if (totalDetected === 0) {
+        toast.error("No recognized skills found in this file.");
+      } else if (totalNew === 0) {
+        toast.info(`Found ${totalDetected} skills — all already added.`);
+      } else {
+        toast.success(`Detected ${totalNew} new skill${totalNew > 1 ? "s" : ""} from your resume!`);
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to parse resume.");
+      setResumeResult(null);
+    } finally {
+      setResumeParsing(false);
+    }
+  }, []);
+
+  const handleDrop = useCallback((e) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer?.files?.[0];
+    if (file) handleResumeFile(file);
+  }, [handleResumeFile]);
+
+  const handleDragOver = useCallback((e) => {
+    e.preventDefault();
+    setDragOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e) => {
+    e.preventDefault();
+    setDragOver(false);
+  }, []);
+
+  const handleAddResumeSkill = (skillName) => {
+    if (submittedSkills.some((s) => s.name === skillName)) {
+      return toast.error("Skill already added.");
+    }
+    setSubmittedSkills((prev) => [...prev, { name: skillName, confidence: 50 }]);
+    // Remove from newSkills in result so it greys out
+    setResumeResult((prev) => ({
+      ...prev,
+      newSkills: prev.newSkills.filter((s) => s.name !== skillName),
+      alreadyOwned: (prev.alreadyOwned || 0) + 1,
+    }));
+  };
+
+  const handleAddAllResumeSkills = () => {
+    if (!resumeResult?.newSkills?.length) return;
+    const existingNames = new Set(submittedSkills.map((s) => s.name));
+    const toAdd = resumeResult.newSkills
+      .filter((s) => !existingNames.has(s.name))
+      .map((s) => ({ name: s.name, confidence: 50 }));
+
+    if (toAdd.length === 0) return toast.info("All skills already added.");
+
+    setSubmittedSkills((prev) => [...prev, ...toAdd]);
+    setResumeResult((prev) => ({
+      ...prev,
+      newSkills: [],
+      alreadyOwned: (prev.alreadyOwned || 0) + toAdd.length,
+    }));
+    toast.success(`Added ${toAdd.length} skill${toAdd.length > 1 ? "s" : ""}.`);
+  };
   if (isScanning) return <ScanningScreen />;
 
   return (
@@ -170,6 +263,139 @@ export default function SkillSelect() {
           <p className="text-[14px] text-[var(--text-secondary)] mt-2 max-w-md mx-auto">
             Select your primary tech skills for verification. The first skill will be tested immediately.
           </p>
+        </div>
+
+        {/* Resume Upload Card */}
+        <div
+          className="rounded-[var(--radius-lg)] border p-6 flex flex-col gap-4"
+          style={{ background: "var(--bg-surface)", borderColor: "var(--border-subtle)" }}
+        >
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <FileText className="w-4 h-4 text-[var(--accent)]" />
+              <label className="text-[14px] font-medium text-[var(--text-primary)]">
+                Upload resume / CV
+              </label>
+            </div>
+            <p className="text-[12px] text-[var(--text-secondary)]">
+              Auto-detect skills from your resume. Supports PDF and DOCX.
+            </p>
+          </div>
+
+          {/* Drop Zone */}
+          <div
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onClick={() => fileInputRef.current?.click()}
+            className="relative flex flex-col items-center justify-center gap-3 py-8 rounded-[var(--radius-md)] border-2 border-dashed cursor-pointer transition-all"
+            style={{
+              borderColor: dragOver ? "var(--accent)" : "var(--border-base)",
+              background: dragOver ? "var(--accent-bg)" : "var(--bg-raised)",
+              boxShadow: dragOver ? "0 0 0 3px rgba(37,99,235,0.1)" : "none",
+            }}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.docx"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleResumeFile(file);
+                e.target.value = "";
+              }}
+              className="hidden"
+            />
+            {resumeParsing ? (
+              <>
+                <Loader2 className="w-6 h-6 text-[var(--accent)] animate-spin" />
+                <span className="text-[13px] text-[var(--text-secondary)]">Parsing resume...</span>
+              </>
+            ) : (
+              <>
+                <Upload
+                  className="w-6 h-6 transition-colors"
+                  style={{ color: dragOver ? "var(--accent)" : "var(--text-tertiary)" }}
+                />
+                <div className="text-center">
+                  <span className="text-[13px] text-[var(--text-secondary)]">
+                    {dragOver ? "Release to upload" : "Drop your resume here or "}
+                  </span>
+                  {!dragOver && (
+                    <span className="text-[13px] text-[var(--accent)] font-medium">
+                      click to browse
+                    </span>
+                  )}
+                </div>
+                <span className="text-[11px] text-[var(--text-tertiary)]">
+                  PDF, DOCX · Max 5MB
+                </span>
+              </>
+            )}
+          </div>
+
+          {/* Detected Skills Preview */}
+          {resumeResult && (resumeResult.newSkills?.length > 0 || resumeResult.alreadyOwned > 0) && (
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[12px] font-medium text-[var(--text-secondary)]">
+                  Detected skills
+                </span>
+                {resumeResult.newSkills?.length > 0 && (
+                  <button
+                    onClick={handleAddAllResumeSkills}
+                    className="text-[12px] font-medium text-[var(--accent)] hover:underline transition-colors"
+                  >
+                    Add all ({resumeResult.newSkills.length})
+                  </button>
+                )}
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {/* New skills — clickable to add */}
+                {resumeResult.newSkills?.map((s) => (
+                  <button
+                    key={s.name}
+                    onClick={() => handleAddResumeSkill(s.name)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-md)] border text-[13px] font-medium transition-all"
+                    style={{
+                      borderColor: "var(--accent)",
+                      color: "var(--accent)",
+                      background: "var(--accent-bg)",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "var(--accent)";
+                      e.currentTarget.style.color = "#fff";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "var(--accent-bg)";
+                      e.currentTarget.style.color = "var(--accent)";
+                    }}
+                  >
+                    <Plus className="w-3 h-3" />
+                    {s.name}
+                    <span className="text-[10px] opacity-60">{s.category}</span>
+                  </button>
+                ))}
+
+                {/* Already owned indicator */}
+                {resumeResult.alreadyOwned > 0 && (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-md)] text-[12px] text-[var(--text-tertiary)]">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    {resumeResult.alreadyOwned} already added
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* No skills found state */}
+          {resumeResult && resumeResult.allDetected?.length === 0 && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-[var(--radius-md)] text-[13px]" style={{ background: "var(--warning-bg)", color: "var(--warning)" }}>
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              No platform-supported skills detected. Try adding skills manually below.
+            </div>
+          )}
         </div>
 
         {/* Core Language Selection */}
