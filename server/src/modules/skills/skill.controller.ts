@@ -6,6 +6,7 @@ import {
   skillDefinitionCreateSchema,
   skillDefinitionUpdateSchema,
 } from "./skill.validation.js";
+import { parseResume } from "./resume-parser.service.js";
 
 export const getSkillCatalog = async (
   _req: Request,
@@ -90,7 +91,9 @@ export const deleteSkillPreset = async (
   next: NextFunction,
 ) => {
   try {
-    await skillCatalogService.deleteSkillDefinition(req.params.skillId as string);
+    await skillCatalogService.deleteSkillDefinition(
+      req.params.skillId as string,
+    );
 
     res.status(200).json({
       success: true,
@@ -108,7 +111,11 @@ export const initializeSkills = async (
 ) => {
   try {
     const { skills, coreLanguage } = req.body;
-    const result = await skillService.initUserSkills(req.userId!, skills, coreLanguage);
+    const result = await skillService.initUserSkills(
+      req.userId!,
+      skills,
+      coreLanguage,
+    );
 
     res.status(201).json({
       success: true,
@@ -200,6 +207,28 @@ export const boostSkills = async (
       message: "Skill boosted successfully",
       newScore: result,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const parseResumeUpload = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    if (!req.file) {
+      throw new AppError("No file uploaded.", 400);
+    }
+
+    const result = await parseResume(
+      req.file.buffer,
+      req.file.mimetype,
+      req.userId!,
+    );
+    
+    res.status(200).json({ success: true, ...result });
   } catch (error) {
     next(error);
   }

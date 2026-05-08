@@ -2,6 +2,7 @@ import { Router } from "express";
 import * as skillController from "./skill.controller.js";
 import { authenticate } from "../../middlewares/auth.middleware.js";
 import { isAdmin } from "../../middlewares/admin.middleware.js";
+import { resumeUpload } from "../../middlewares/upload.middleware.js";
 
 const router = Router();
 
@@ -39,5 +40,7 @@ router.delete("/:skillId", authenticate, skillController.deleteSkill);
 
 router.get("/categorized", authenticate, skillController.categorizeSkills);
 router.post("/boost", authenticate, skillController.boostSkills);
+
+router.post("/parse-resume", authenticate, resumeUpload, skillController.parseResumeUpload)
 
 export default router;
