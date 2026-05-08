@@ -29,3 +29,13 @@ export const boostSkill = async (skillName, level) => {
   const { data } = await API.post("/skills/boost", { skillName, level });
   return data;
 };
+
+export const parseResume = async (file) => {
+  const formData = new FormData();
+  formData.append("resume", file);
+
+  const { data } = await API.post("/skills/parse-resume", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return data;
+};
