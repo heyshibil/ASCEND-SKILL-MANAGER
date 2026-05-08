@@ -22,6 +22,8 @@ import BoostMcqTest from "./pages/BoostMcqTest";
 import BoostCompilerTest from "./pages/BoostCompilerTest";
 import MarketIntel from "./pages/MarketIntel";
 import Settings from "./pages/Settings";
+import Problems from "./pages/Problems";
+import ProblemWorkspace from "./pages/ProblemWorkspace";
 
 export const router = createBrowserRouter([
   {
@@ -64,6 +66,8 @@ export const router = createBrowserRouter([
               { path: "skill-control", element: <SkillControl /> },
               { path: "boost/mcq", element: <BoostMcqTest /> },
               { path: "boost/compiler", element: <BoostCompilerTest /> },
+              { path: "problems", element: <Problems /> },
+              { path: "problems/:questionId", element: <ProblemWorkspace /> },
               { path: "market-intel", element: <MarketIntel /> },
               { path: "settings", element: <Settings /> },
             ],

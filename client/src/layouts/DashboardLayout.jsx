@@ -92,10 +92,10 @@ export default function DashboardLayout() {
             <TrendingUp className="w-4 h-4" />
             Market
           </NavLink>
-          {/* <NavLink to="/dashboard/challenges" className={navItemClass}>
+          <NavLink to="/dashboard/problems" className={navItemClass}>
             <Swords className="w-4 h-4" />
-            Challenges
-          </NavLink> */}
+            Problems
+          </NavLink>
 
           <NavLink to="/dashboard/settings" className={navItemClass}>
             <Settings className="w-4 h-4" />
