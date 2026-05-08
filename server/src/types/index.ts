@@ -155,7 +155,7 @@ export interface DecayTickResult {
   errors: number;
 }
 
-// Run code test - types
+// Run code test --
 export interface RunCaseResult {
   input: string;
   expected: string;
@@ -167,4 +167,29 @@ export interface RunCodeResult {
   totalCases: number;
   results: RunCaseResult[];
   timedOut: boolean;
+}
+
+// Problem Solving --
+export interface ISubmission extends IBaseEntity {
+  userId: Types.ObjectId;
+  questionId: string;
+  code: string;
+  runtime: string;
+  status: "accepted" | "wrong_answer" | "runtime_error" | "time_limit";
+  passedCases: number;
+  totalCases: number;
+  executionTimeMs?: number;
+}
+
+export interface IUserProblemStats extends IBaseEntity {
+  userId: Types.ObjectId;
+  totalSolved: number;
+  easySolved: number;
+  mediumSolved: number;
+  hardSolved: number;
+  totalSubmissions: number;
+  currentStreak: number;
+  longestStreak: number;
+  lastSolvedDate?: Date;
+  solvedQuestionIds: string[];
 }
