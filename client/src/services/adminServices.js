@@ -47,7 +47,9 @@ export const adminService = {
   },
 
   updateUserStatus: async (userId, status) => {
-    const { data } = await API.patch(`/users/admin/status/${userId}`, { status });
+    const { data } = await API.patch(`/users/admin/status/${userId}`, {
+      status,
+    });
     return data;
   },
 
@@ -63,12 +65,25 @@ export const adminService = {
   },
 
   updateSkillPreset: async (skillId, payload) => {
-    const { data } = await API.patch(`/skills/admin/catalog/${skillId}`, payload);
+    const { data } = await API.patch(
+      `/skills/admin/catalog/${skillId}`,
+      payload,
+    );
     return data;
   },
 
   deleteSkillPreset: async (skillId) => {
     const { data } = await API.delete(`/skills/admin/catalog/${skillId}`);
+    return data;
+  },
+
+  getAdminDashboard: async () => {
+    const { data } = await API.get("/users/admin/dashboard");
+    return data;
+  },
+
+  getAdminDashboardCharts: async (period) => {
+    const { data } = await API.get(`/users/admin/charts?period=${period}`);
     return data;
   },
 };
