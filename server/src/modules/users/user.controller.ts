@@ -5,6 +5,7 @@ import {
   requestPasswordChangeSchema,
   updateProfileSchema,
 } from "./user.validation.js";
+import type { ChartPeriod } from "../../types/index.js";
 
 export const getDashboardStats = async (
   req: Request,
@@ -163,6 +164,33 @@ export const updateUserStatus = async (
 
     res.status(200).json({ success: true, user });
   } catch (error) {
-    next(error)
+    next(error);
+  }
+};
+
+export const getAdminDashboardStats = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const data = await userService.getAdminDashboardData();
+    res.status(200).json({ success: true, data });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAdminChartData = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const period = (req.query.period as ChartPeriod) || "days";
+    const data = await userService.getAdminChartData(period);
+    res.status(200).json({ success: true, data });
+  } catch (error) {
+    next(error);
   }
 };

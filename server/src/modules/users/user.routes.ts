@@ -25,11 +25,16 @@ router.get("/password-change/verify/:token", userController.verifyPasswordChange
 
 // --- ADMIN ROUTES ---
 router.get("/admin/all", authenticate, isAdmin, userController.getAllUsers);
+
 router.patch(
   "/admin/status/:userId",
   authenticate,
   isAdmin,
   userController.updateUserStatus,
 );
+
+router.get("/admin/dashboard", authenticate, isAdmin, userController.getAdminDashboardStats);
+
+router.get("/admin/charts", authenticate, isAdmin, userController.getAdminChartData);
 
 export default router;
