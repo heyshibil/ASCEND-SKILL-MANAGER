@@ -11,6 +11,9 @@ import type {
   UpdateProfileInput,
 } from "./user.validation.js";
 import { UserProblemStats } from "../../models/UserProblemStats.js";
+import { SkillDefinition } from "../../models/SkillDefinition.js";
+import { Question } from "../../models/Question.js";
+import type { ChartPeriod } from "../../types/index.js";
 
 const SETTINGS_TOKEN_TTL_MS = 30 * 60 * 1000;
 
@@ -373,4 +376,84 @@ export const modifyUserStatus = async (userId: string, status: string) => {
   }
 
   return user;
+};
+
+export const getAdminDashboardData = async () => {
+  const [totalUsers, totalSkills, totalQuestions] = await Promise.all([
+    User.countDocuments(),
+    SkillDefinition.countDocuments({ isActive: true }),
+    Question.countDocuments({type: "code"}),
+  ]);
+
+  const recentUsers = await User.find()
+    .select("username email careerGoal onboardingStatus createdAt")
+    .sort({ createdAt: -1 })
+    .limit(5)
+    .lean();
+
+  return {
+    metrics: {
+      totalUsers,
+      totalSkills,
+      totalQuestions,
+    },
+    recentUsers,
+  };
+};
+
+export const getAdminChartData = async (period: ChartPeriod) => {
+  const now = new Date();
+  let startDate = new Date();
+  let groupByFormat = "";
+
+  if (period === 'days') {
+    startDate.setDate(now.getDate() - 30);
+    groupByFormat = "%Y-%m-%d"; 
+  } else if (period === 'week') {
+    startDate.setDate(now.getDate() - 90);
+    groupByFormat = "%Y-%U";
+  } else {
+    startDate.setMonth(now.getMonth() - 12);
+    groupByFormat = "%Y-%m";
+  }
+
+  const userGrowth = await User.aggregate([
+    { $match: { createdAt: { $gte: startDate } } },
+    {
+      $group: {
+        _id: { $dateToString: { format: groupByFormat, date: "$createdAt" } },
+        count: { $sum: 1 }
+      }
+    },
+    { $sort: { "_id": 1 } }
+  ]);
+
+  let cumulativeCount = await User.countDocuments({ createdAt: { $lt: startDate } });
+  
+  const formattedUserGrowth = userGrowth.map(item => {
+    cumulativeCount += item.count;
+    return { date: item._id, count: cumulativeCount };
+  });
+
+  const liquidityData = await User.aggregate([
+    { $unwind: "$liquidityScore.history" },
+    { $match: { "liquidityScore.history.date": { $gte: startDate } } },
+    {
+      $group: {
+        _id: { $dateToString: { format: groupByFormat, date: "$liquidityScore.history.date" } },
+        avgScore: { $avg: "$liquidityScore.history.score" }
+      }
+    },
+    { $sort: { "_id": 1 } }
+  ]);
+
+  const formattedLiquidity = liquidityData.map(item => ({
+    date: item._id,
+    score: Math.round(item.avgScore)
+  }));
+
+  return {
+    userGrowth: formattedUserGrowth,
+    liquidity: formattedLiquidity
+  };
 };
