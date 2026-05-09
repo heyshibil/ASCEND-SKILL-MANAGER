@@ -193,3 +193,6 @@ export interface IUserProblemStats extends IBaseEntity {
   lastSolvedDate?: Date;
   solvedQuestionIds: string[];
 }
+
+// Admin chart 
+export type ChartPeriod = 'days' | 'week' | 'month';
