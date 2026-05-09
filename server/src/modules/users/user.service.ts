@@ -10,6 +10,7 @@ import type {
   RequestPasswordChangeInput,
   UpdateProfileInput,
 } from "./user.validation.js";
+import { UserProblemStats } from "../../models/UserProblemStats.js";
 
 const SETTINGS_TOKEN_TTL_MS = 30 * 60 * 1000;
 
@@ -133,6 +134,9 @@ export const getDashboardData = async (userId: string) => {
     .slice(0, 5)
     .map((s) => ({ name: s.name, score: Math.round(s.currentScore) }));
 
+  // User problems stats
+  const problemStats = await UserProblemStats.findOne({ userId }).lean();
+
   return {
     score: currentScore,
     scoreHistory: user.liquidityScore.history,
@@ -143,6 +147,10 @@ export const getDashboardData = async (userId: string) => {
       drainingSkills,
     },
     topSkills,
+    problemStats: {
+      totalSolved: problemStats?.totalSolved || 0,
+      currentStreak: problemStats?.currentStreak || 0,
+    },
   };
 };
 
@@ -265,7 +273,10 @@ export const requestPasswordChange = async (
   const isSamePassword = await argon2.verify(user.password, input.newPassword);
 
   if (isSamePassword) {
-    throw new AppError("New password must be different from current password", 400);
+    throw new AppError(
+      "New password must be different from current password",
+      400,
+    );
   }
 
   const { token, hashedToken, expiresAt } = createVerificationToken();

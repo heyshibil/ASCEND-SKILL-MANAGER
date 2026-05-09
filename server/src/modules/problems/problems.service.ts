@@ -150,7 +150,7 @@ const updateStatsOnAccepted = async (
     lastDate.setHours(0, 0, 0, 0);
 
     const diffDays = Math.floor(
-      today.getTime() - lastDate.getTime() / (1000 * 60 * 60 * 24),
+      (today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24),
     );
 
     if (diffDays === 1) {
