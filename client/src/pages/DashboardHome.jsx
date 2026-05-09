@@ -107,13 +107,13 @@ export default function DashboardHome() {
         >
           <div className="flex justify-between items-start">
             <span className="text-[12px] font-medium text-[var(--text-tertiary)] tracking-[0.02em]">
-              Tasks completed
+              Problems solved
             </span>
             <CheckCircle2 className="w-4 h-4 text-[#34D399]" />
           </div>
           <div>
             <h3 className="text-[28px] font-medium text-[var(--text-primary)] tracking-tight">
-              {pad(23)}
+              {loading ? "--" : pad(data?.problemStats?.totalSolved || 0)}
             </h3>
           </div>
         </motion.div>
@@ -129,13 +129,13 @@ export default function DashboardHome() {
         >
           <div className="flex justify-between items-start">
             <span className="text-[12px] font-medium text-[var(--text-tertiary)] tracking-[0.02em]">
-              Hot market skills
+              Current streak
             </span>
             <Flame className="w-4 h-4 text-[#FB923C]" />
           </div>
           <div>
             <h3 className="text-[28px] font-medium text-[var(--text-primary)] tracking-tight">
-              {pad(3)}
+              {loading ? "--" : pad(data?.problemStats?.currentStreak || 0)}
             </h3>
           </div>
         </motion.div>

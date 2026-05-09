@@ -7,6 +7,10 @@ const useDashboardData = () => {
     activeSkills: 0,
     skillDebts: { total: 0, critical: 0, drainingSkills: 0 },
     topSkills: [],
+    problemStats: {
+      totalSolved: 0,
+      currentStreak: 0,
+    },
   });
 
   const [loading, setLoading] = useState(true);
@@ -20,8 +24,6 @@ const useDashboardData = () => {
         const res = await axios.get("/api/users/dashboard", {
           withCredentials: true,
         });
-
-        console.log(res.data)
 
         if (isMounted && res.data.success) {
           setData(res.data.data);
