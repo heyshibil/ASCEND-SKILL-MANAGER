@@ -1,15 +1,51 @@
-// src/pages/admin/AdminDashboard.jsx
-import React from 'react';
-import { Users, Code, Activity, Server, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { Users, Code, Activity, Server, ArrowUpRight, ArrowDownRight, Loader2 } from 'lucide-react';
+import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useAdminStore } from '../../store/useAdminStore';
+
+// Custom time formatter matching UsersManagement.jsx logic
+const formatTimeAgo = (dateInput) => {
+  if (!dateInput) return 'Unknown';
+  const now = new Date();
+  const past = new Date(dateInput);
+  const diffInMinutes = Math.floor((now - past) / (1000 * 60));
+
+  if (diffInMinutes < 1) return 'Just now';
+  if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+  if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
+  if (diffInMinutes < 43200) return `${Math.floor(diffInMinutes / 1440)}d ago`; // up to 30 days
+  return past.toLocaleDateString();
+};
 
 export default function AdminDashboard() {
-  // Demo Data Array
-  const metrics = [
-    { title: "Total Platform Users", value: "1,248", change: "+12.5%", isPositive: true, icon: Users },
-    { title: "Skill Verifications", value: "4,291", change: "+5.2%", isPositive: true, icon: Code },
-    { title: "Liquidity Transfers", value: "314", change: "-2.1%", isPositive: false, icon: Activity },
+  const { 
+    metrics, 
+    recentUsers, 
+    chartData, 
+    timeframe, 
+    loadingBase, 
+    loadingCharts, 
+    fetchDashboardBase, 
+    setTimeframe 
+  } = useAdminStore();
+
+  useEffect(() => {
+    fetchDashboardBase();
+    setTimeframe('days'); // Trigger initial chart fetch
+  }, [fetchDashboardBase, setTimeframe]);
+
+  if (loadingBase && !metrics) {
+    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 text-[var(--accent)] animate-spin" /></div>;
+  }
+
+  const statCards = [
+    { title: "Total Platform Users", value: metrics?.totalUsers || 0, change: "Live", isPositive: true, icon: Users },
+    { title: "Supported Skills", value: metrics?.totalSkills || 0, change: "Live", isPositive: true, icon: Code },
+    { title: "Coding Problems", value: metrics?.totalQuestions || 0, change: "Live", isPositive: true, icon: Activity },
     { title: "System Uptime", value: "99.9%", change: "Stable", isPositive: true, icon: Server },
   ];
+
+  const currentChartData = chartData[timeframe] || { userGrowth: [], liquidity: [] };
 
   return (
     <div className="max-w-7xl mx-auto flex flex-col gap-8">
@@ -30,7 +66,7 @@ export default function AdminDashboard() {
 
       {/* Primary Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {metrics.map((item, idx) => (
+        {statCards.map((item, idx) => (
           <div key={idx} className="p-5 rounded-[var(--radius-lg)] border flex flex-col justify-between h-[120px] transition-colors hover:bg-[var(--bg-raised)]" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}>
             <div className="flex justify-between items-start">
               <div className="w-9 h-9 rounded-[var(--radius-md)] flex items-center justify-center" style={{ background: 'var(--bg-raised)' }}>
@@ -43,7 +79,9 @@ export default function AdminDashboard() {
             </div>
             <div>
               <p className="text-[12px] font-medium text-[var(--text-tertiary)]">{item.title}</p>
-              <h3 className="text-[24px] font-medium text-[var(--text-primary)] tracking-tight mt-0.5">{item.value}</h3>
+              <h3 className="text-[24px] font-medium text-[var(--text-primary)] tracking-tight mt-0.5">
+                {loadingBase ? "--" : item.value}
+              </h3>
             </div>
           </div>
         ))}
@@ -69,29 +107,26 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y" style={{ borderColor: 'var(--border-subtle)' }}>
-                {[
-                  { name: 'Sarah Connor', email: 'sarah@example.com', role: 'Frontend Engineer', status: 'Verifying', date: 'Just now' },
-                  { name: 'John Doe', email: 'john@example.com', role: 'Fullstack Dev', status: 'Completed', date: '2h ago' },
-                  { name: 'Alice Smith', email: 'alice@example.com', role: 'Backend Engineer', status: 'Scanning', date: '5h ago' },
-                  { name: 'Bob Wilson', email: 'bob@example.com', role: 'DevOps', status: 'Completed', date: '1d ago' },
-                ].map((row, i) => (
-                  <tr key={i} className="hover:bg-[var(--bg-raised)] transition-colors">
+                {recentUsers?.map((user) => (
+                  <tr key={user._id} className="hover:bg-[var(--bg-raised)] transition-colors">
                     <td className="px-6 py-4">
-                      <p className="font-medium text-[var(--text-primary)]">{row.name}</p>
-                      <p className="text-[12px] text-[var(--text-tertiary)]">{row.email}</p>
+                      <p className="font-medium text-[var(--text-primary)]">{user.username}</p>
+                      <p className="text-[12px] text-[var(--text-tertiary)]">{user.email}</p>
                     </td>
-                    <td className="px-6 py-4 text-[var(--text-secondary)]">{row.role}</td>
+                    <td className="px-6 py-4 text-[var(--text-secondary)]">{user.careerGoal}</td>
                     <td className="px-6 py-4">
                       <span className={`px-2 py-0.5 text-[12px] font-medium rounded-[var(--radius-sm)]`}
                         style={{
-                          background: row.status === 'Completed' ? 'var(--accent-bg)' : row.status === 'Verifying' ? 'var(--warning-bg)' : 'var(--bg-raised)',
-                          color: row.status === 'Completed' ? 'var(--accent)' : row.status === 'Verifying' ? 'var(--warning)' : 'var(--text-secondary)',
+                          background: user.onboardingStatus === 'completed' ? 'var(--accent-bg)' : 'var(--warning-bg)',
+                          color: user.onboardingStatus === 'completed' ? 'var(--accent)' : 'var(--warning)',
                         }}
                       >
-                        {row.status}
+                        {user.onboardingStatus === 'completed' ? 'Completed' : 'Onboarding'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-[var(--text-tertiary)] text-right">{row.date}</td>
+                    <td className="px-6 py-4 text-[var(--text-tertiary)] text-right">
+                      {formatTimeAgo(user.createdAt)}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -126,6 +161,77 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+      </div>
+
+      {/* Analytics Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* User Growth Chart */}
+        <div className="rounded-[var(--radius-lg)] border p-6 flex flex-col gap-6" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}>
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-[15px] font-medium text-[var(--text-primary)]">User Growth</h3>
+              <p className="text-[12px] text-[var(--text-tertiary)] mt-1">Cumulative platform registrations</p>
+            </div>
+            <div className="flex gap-1 bg-[var(--bg-raised)] p-1 rounded-[var(--radius-md)]">
+              {['days', 'week', 'month'].map(tf => (
+                <button 
+                  key={tf}
+                  onClick={() => setTimeframe(tf)}
+                  className={`text-[12px] font-medium px-3 py-1 rounded-[var(--radius-sm)] capitalize transition-all ${timeframe === tf ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm' : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'}`}
+                >
+                  {tf}
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          <div className="h-[250px] w-full relative">
+            {loadingCharts && <div className="absolute inset-0 z-10 flex items-center justify-center bg-[var(--bg-surface)] bg-opacity-50 backdrop-blur-sm"><Loader2 className="w-6 h-6 animate-spin text-[var(--accent)]" /></div>}
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={currentChartData.userGrowth} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-subtle)" />
+                <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--text-tertiary)' }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--text-tertiary)' }} />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', borderRadius: '8px', fontSize: '13px' }}
+                  itemStyle={{ color: 'var(--text-primary)' }}
+                />
+                <Line type="monotone" dataKey="count" stroke="var(--accent)" strokeWidth={3} dot={false} activeDot={{ r: 6, fill: 'var(--accent)', stroke: 'var(--bg-surface)', strokeWidth: 2 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Avg Liquidity Score Chart */}
+        <div className="rounded-[var(--radius-lg)] border p-6 flex flex-col gap-6" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}>
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-[15px] font-medium text-[var(--text-primary)]">Avg Career Liquidity</h3>
+              <p className="text-[12px] text-[var(--text-tertiary)] mt-1">Platform-wide score health</p>
+            </div>
+          </div>
+          
+          <div className="h-[250px] w-full relative">
+            {loadingCharts && <div className="absolute inset-0 z-10 flex items-center justify-center bg-[var(--bg-surface)] bg-opacity-50 backdrop-blur-sm"><Loader2 className="w-6 h-6 animate-spin text-[var(--accent)]" /></div>}
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={currentChartData.liquidity} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="var(--success)" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="var(--success)" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-subtle)" />
+                <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--text-tertiary)' }} dy={10} />
+                <YAxis domain={[0, 100]} axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--text-tertiary)' }} />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', borderRadius: '8px', fontSize: '13px' }}
+                />
+                <Area type="monotone" dataKey="score" stroke="var(--success)" strokeWidth={2} fillOpacity={1} fill="url(#colorScore)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
       </div>
     </div>
   );
