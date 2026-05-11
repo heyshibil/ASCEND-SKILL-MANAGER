@@ -24,6 +24,7 @@ import MarketIntel from "./pages/MarketIntel";
 import Settings from "./pages/Settings";
 import Problems from "./pages/Problems";
 import ProblemWorkspace from "./pages/ProblemWorkspace";
+import Leaderboard from "./pages/Leaderboard";
 
 export const router = createBrowserRouter([
   {
@@ -68,6 +69,7 @@ export const router = createBrowserRouter([
               { path: "boost/compiler", element: <BoostCompilerTest /> },
               { path: "problems", element: <Problems /> },
               { path: "problems/:questionId", element: <ProblemWorkspace /> },
+              { path: "leaderboard", element: <Leaderboard /> },
               { path: "market-intel", element: <MarketIntel /> },
               { path: "settings", element: <Settings /> },
             ],
