@@ -31,8 +31,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/skills", skillRoutes);
 app.use("/api/verification", verificationRoutes);
 app.use("/api/users", userRoutes);
-+app.use("/api/problems", problemRoutes);
-+app.use("/api/leaderboard", leaderboardRoutes);
+app.use("/api/problems", problemRoutes);
+app.use("/api/leaderboard", leaderboardRoutes);
 
 
 // -- Admin Routes --

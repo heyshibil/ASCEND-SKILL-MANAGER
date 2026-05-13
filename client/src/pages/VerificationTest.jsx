@@ -48,13 +48,15 @@ export default function VerificationTest() {
       : "// Write your solution here\n",
   );
 
+  const expectedLevel = searchParams.get("level") || "beginner";
+
   useEffect(() => {
     const fetchTest = async () => {
       try {
         setLoading(true);
         const data = await verificationService.startTest(
           skillName,
-          "Intermediate",
+          expectedLevel,
         );
         setMcqQuestions(data.mcqs);
         setCodeQuestion(data.codeTest);
@@ -122,12 +124,20 @@ export default function VerificationTest() {
       if (result.timedOut) {
         toast.error("Execution timed out.", { id: "code-run" });
       } else if (result.passedCases === result.totalCases) {
-        toast.success(`All ${result.passedCases}/${result.totalCases} cases passed!`, { id: "code-run" });
+        toast.success(
+          `All ${result.passedCases}/${result.totalCases} cases passed!`,
+          { id: "code-run" },
+        );
       } else {
-        toast.error(`Passed ${result.passedCases}/${result.totalCases} cases.`, { id: "code-run" });
+        toast.error(
+          `Passed ${result.passedCases}/${result.totalCases} cases.`,
+          { id: "code-run" },
+        );
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || "Run failed", { id: "code-run" });
+      toast.error(error.response?.data?.message || "Run failed", {
+        id: "code-run",
+      });
     } finally {
       setRunning(false);
     }
@@ -195,7 +205,7 @@ export default function VerificationTest() {
       <div className="relative z-10 w-full max-w-5xl flex flex-col gap-8">
         <div className="text-center w-full">
           <h1 className="text-[24px] font-medium text-[var(--text-primary)] tracking-[-0.01em]">
-            Verification test
+            {expectedLevel} Verification test
           </h1>
           <p className="text-[14px] text-[var(--text-secondary)] mt-2">
             Complete the MCQ theory and compiler test to authenticate your
@@ -350,54 +360,138 @@ export default function VerificationTest() {
                       </div>
 
                       {/* Test cases (show when no run results) */}
-                      {codeQuestion.testCases && codeQuestion.testCases.length > 0 && !runResults && (
-                        <div className="mt-8 pt-4 border-t" style={{ borderColor: "var(--border-subtle)" }}>
-                          <h3 className="text-[12px] font-medium text-[var(--accent)] mb-4 tracking-[0.02em]">
-                            Example test cases:
-                          </h3>
-                          <div className="flex flex-col gap-3">
-                            {codeQuestion.testCases.map((tc, idx) => (
-                              <div key={idx} className="rounded-[var(--radius-md)] p-3 font-[var(--font-mono)] text-[12px] flex flex-col gap-2" style={{ background: "var(--bg-surface)", border: "1px solid var(--border-subtle)" }}>
-                                <div className="flex items-start">
-                                  <span className="text-[var(--text-tertiary)] w-20 shrink-0">Input:</span>
-                                  <span className="text-[var(--text-primary)]">{tc.input}</span>
+                      {codeQuestion.testCases &&
+                        codeQuestion.testCases.length > 0 &&
+                        !runResults && (
+                          <div
+                            className="mt-8 pt-4 border-t"
+                            style={{ borderColor: "var(--border-subtle)" }}
+                          >
+                            <h3 className="text-[12px] font-medium text-[var(--accent)] mb-4 tracking-[0.02em]">
+                              Example test cases:
+                            </h3>
+                            <div className="flex flex-col gap-3">
+                              {codeQuestion.testCases.map((tc, idx) => (
+                                <div
+                                  key={idx}
+                                  className="rounded-[var(--radius-md)] p-3 font-[var(--font-mono)] text-[12px] flex flex-col gap-2"
+                                  style={{
+                                    background: "var(--bg-surface)",
+                                    border: "1px solid var(--border-subtle)",
+                                  }}
+                                >
+                                  <div className="flex items-start">
+                                    <span className="text-[var(--text-tertiary)] w-20 shrink-0">
+                                      Input:
+                                    </span>
+                                    <span className="text-[var(--text-primary)]">
+                                      {tc.input}
+                                    </span>
+                                  </div>
+                                  <div
+                                    className="flex items-start mt-1 pt-2 border-t"
+                                    style={{
+                                      borderColor: "var(--border-subtle)",
+                                    }}
+                                  >
+                                    <span className="text-[var(--text-tertiary)] w-20 shrink-0">
+                                      Expected:
+                                    </span>
+                                    <span className="text-[var(--success)] font-medium">
+                                      {tc.output}
+                                    </span>
+                                  </div>
                                 </div>
-                                <div className="flex items-start mt-1 pt-2 border-t" style={{ borderColor: "var(--border-subtle)" }}>
-                                  <span className="text-[var(--text-tertiary)] w-20 shrink-0">Expected:</span>
-                                  <span className="text-[var(--success)] font-medium">{tc.output}</span>
-                                </div>
-                              </div>
-                            ))}
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )}
 
                       {/* Run Results Panel */}
                       {runResults && (
-                        <div className="mt-8 pt-4 border-t" style={{ borderColor: "var(--border-subtle)" }}>
+                        <div
+                          className="mt-8 pt-4 border-t"
+                          style={{ borderColor: "var(--border-subtle)" }}
+                        >
                           <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-[12px] font-medium text-[var(--accent)] tracking-[0.02em]">Test results:</h3>
-                            <span className="text-[12px] font-medium px-2 py-0.5 rounded-[var(--radius-sm)]" style={{ background: runResults.passedCases === runResults.totalCases ? "var(--success-bg)" : "var(--danger-bg)", color: runResults.passedCases === runResults.totalCases ? "var(--success)" : "var(--danger)" }}>
-                              {runResults.passedCases}/{runResults.totalCases} passed
+                            <h3 className="text-[12px] font-medium text-[var(--accent)] tracking-[0.02em]">
+                              Test results:
+                            </h3>
+                            <span
+                              className="text-[12px] font-medium px-2 py-0.5 rounded-[var(--radius-sm)]"
+                              style={{
+                                background:
+                                  runResults.passedCases ===
+                                  runResults.totalCases
+                                    ? "var(--success-bg)"
+                                    : "var(--danger-bg)",
+                                color:
+                                  runResults.passedCases ===
+                                  runResults.totalCases
+                                    ? "var(--success)"
+                                    : "var(--danger)",
+                              }}
+                            >
+                              {runResults.passedCases}/{runResults.totalCases}{" "}
+                              passed
                             </span>
                           </div>
                           <div className="flex flex-col gap-3">
                             {runResults.results.map((r, idx) => (
-                              <div key={idx} className="rounded-[var(--radius-md)] p-3 font-[var(--font-mono)] text-[12px] flex flex-col gap-2" style={{ background: "var(--bg-surface)", border: `1px solid ${r.passed ? "var(--success)" : "var(--danger)"}` }}>
-                                <span className="text-[11px] font-medium" style={{ color: r.passed ? "var(--success)" : "var(--danger)" }}>
-                                  Case {idx + 1} — {r.passed ? "Passed ✓" : "Failed ✗"}
+                              <div
+                                key={idx}
+                                className="rounded-[var(--radius-md)] p-3 font-[var(--font-mono)] text-[12px] flex flex-col gap-2"
+                                style={{
+                                  background: "var(--bg-surface)",
+                                  border: `1px solid ${r.passed ? "var(--success)" : "var(--danger)"}`,
+                                }}
+                              >
+                                <span
+                                  className="text-[11px] font-medium"
+                                  style={{
+                                    color: r.passed
+                                      ? "var(--success)"
+                                      : "var(--danger)",
+                                  }}
+                                >
+                                  Case {idx + 1} —{" "}
+                                  {r.passed ? "Passed ✓" : "Failed ✗"}
                                 </span>
                                 <div className="flex items-start">
-                                  <span className="text-[var(--text-tertiary)] w-20 shrink-0">Input:</span>
-                                  <span className="text-[var(--text-primary)]">{r.input}</span>
+                                  <span className="text-[var(--text-tertiary)] w-20 shrink-0">
+                                    Input:
+                                  </span>
+                                  <span className="text-[var(--text-primary)]">
+                                    {r.input}
+                                  </span>
                                 </div>
-                                <div className="flex items-start border-t pt-2" style={{ borderColor: "var(--border-subtle)" }}>
-                                  <span className="text-[var(--text-tertiary)] w-20 shrink-0">Expected:</span>
-                                  <span className="text-[var(--success)] font-medium">{r.expected}</span>
+                                <div
+                                  className="flex items-start border-t pt-2"
+                                  style={{
+                                    borderColor: "var(--border-subtle)",
+                                  }}
+                                >
+                                  <span className="text-[var(--text-tertiary)] w-20 shrink-0">
+                                    Expected:
+                                  </span>
+                                  <span className="text-[var(--success)] font-medium">
+                                    {r.expected}
+                                  </span>
                                 </div>
-                                <div className="flex items-start border-t pt-2" style={{ borderColor: "var(--border-subtle)" }}>
-                                  <span className="text-[var(--text-tertiary)] w-20 shrink-0">Actual:</span>
-                                  <span className={`font-medium ${r.passed ? "text-[var(--success)]" : "text-[var(--danger)]"}`}>{r.actual}</span>
+                                <div
+                                  className="flex items-start border-t pt-2"
+                                  style={{
+                                    borderColor: "var(--border-subtle)",
+                                  }}
+                                >
+                                  <span className="text-[var(--text-tertiary)] w-20 shrink-0">
+                                    Actual:
+                                  </span>
+                                  <span
+                                    className={`font-medium ${r.passed ? "text-[var(--success)]" : "text-[var(--danger)]"}`}
+                                  >
+                                    {r.actual}
+                                  </span>
                                 </div>
                               </div>
                             ))}
@@ -414,16 +508,27 @@ export default function VerificationTest() {
                   >
                     <div className="h-11 bg-[#252526] border-b border-[#1a1a1a] flex items-center px-4 justify-between">
                       <span className="text-[12px] text-[var(--text-tertiary)] font-[var(--font-mono)]">
-                        {getEditorLanguage(coreLanguage) === "python" ? "solution.py" : "index.js"}
+                        {getEditorLanguage(coreLanguage) === "python"
+                          ? "solution.py"
+                          : "index.js"}
                       </span>
                       <div className="flex items-center gap-2">
                         <button
                           onClick={handleRun}
                           disabled={running || submitting}
                           className="text-[13px] font-medium px-4 h-7 rounded-[var(--radius-md)] transition-colors border"
-                          style={{ borderColor: "var(--border-base)", color: "var(--text-secondary)", background: "transparent" }}
-                          onMouseEnter={(e) => (e.currentTarget.style.background = "var(--bg-raised)")}
-                          onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                          style={{
+                            borderColor: "var(--border-base)",
+                            color: "var(--text-secondary)",
+                            background: "transparent",
+                          }}
+                          onMouseEnter={(e) =>
+                            (e.currentTarget.style.background =
+                              "var(--bg-raised)")
+                          }
+                          onMouseLeave={(e) =>
+                            (e.currentTarget.style.background = "transparent")
+                          }
                         >
                           {running ? "Running..." : "▶ Run"}
                         </button>
