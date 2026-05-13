@@ -2,7 +2,8 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom";
 import useAuthStore from "../store/useAuthStore";
 import { toast } from "sonner";
-import { ChevronDown, Plus, X, Search, Loader2, Upload, FileText, CheckCircle2, AlertCircle } from "lucide-react";
+import { ChevronDown, ChevronUp, Plus, X, Search, Loader2, Upload, FileText, CheckCircle2, AlertCircle } from "lucide-react";
+import { createPortal } from "react-dom";
 import { initSkills, parseResume } from "../services/skillService";
 import { useSkillCatalogStore } from "../store/useSkillCatalogStore";
 import { useScanPolling } from "../hooks/useScanPolling";
@@ -22,6 +23,12 @@ function deriveCoresFromSkills(skills) {
   if (cores.size === 0) cores.add("JavaScript");
   return Array.from(cores);
 }
+
+const getLevelFromConfidence = (confidence) => {
+  if (confidence > 70) return "advanced";
+  if (confidence > 35) return "intermediate";
+  return "beginner";
+};
 
 export default function SkillSelect() {
   const navigate = useNavigate();
@@ -46,11 +53,28 @@ export default function SkillSelect() {
   const [dropdownOpen,       setDropdownOpen]       = useState(false);
   const [searchTerm,         setSearchTerm]         = useState("");
 
-  // ── Resume upload state ───────────────────────────────────────────────────
+  // ── CV panel toggle ───────────────────────────────────────────────────────
+  const [cvPanelOpen, setCvPanelOpen] = useState(false);
   const [resumeParsing, setResumeParsing] = useState(false);
   const [resumeResult, setResumeResult] = useState(null);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef(null);
+
+  // ── Dropdown anchor ref for fixed positioning ─────────────────────────────
+  const dropdownAnchorRef = useRef(null);
+  const [dropdownRect, setDropdownRect] = useState(null);
+
+  const openDropdown = useCallback(() => {
+    if (dropdownAnchorRef.current) {
+      setDropdownRect(dropdownAnchorRef.current.getBoundingClientRect());
+    }
+    setDropdownOpen(true);
+  }, []);
+
+  const closeDropdown = useCallback(() => {
+    setDropdownOpen(false);
+    setDropdownRect(null);
+  }, []);
 
   const [selectedCoreLanguage, setSelectedCoreLanguage] = useState("");
 
@@ -59,9 +83,6 @@ export default function SkillSelect() {
     [submittedSkills],
   );
 
-  /**
-   * Filtered skill list for the dropdown — memoised so it doesn't recalculate
-   */
   const filteredOptions = useMemo(
     () =>
       catalogSkills.filter(
@@ -85,10 +106,9 @@ export default function SkillSelect() {
     if (!coresParam || selectedCoreLanguage) return;
     const first = coresParam.split(",").filter(Boolean)[0];
     if (first) setSelectedCoreLanguage(first);
-  }, [coresParam]); // selectedCoreLanguage omitted — seed once only
+  }, [coresParam]);
 
   // 3b. Keep selection valid as skills are added/removed.
-  //     If the selected core no longer exists in the derived list, fall back.
   useEffect(() => {
     if (availableCores.length === 0) return;
     if (!availableCores.includes(selectedCoreLanguage)) {
@@ -96,7 +116,7 @@ export default function SkillSelect() {
     }
   }, [availableCores]);
 
-  // 4. Pre-populate skills from URL predicted param (runs once catalog is ready)
+  // 4. Pre-populate skills from URL predicted param
   useEffect(() => {
     if (!predictedParam || catalogSkills.length === 0 || submittedSkills.length > 0) return;
 
@@ -115,7 +135,7 @@ export default function SkillSelect() {
     if (initial.length > 0) setSubmittedSkills(initial);
   }, [predictedParam, catalogSkills]);
 
-  // 5. Scan polling — extracted into a focused custom hook
+  // 5. Scan polling
   const isScanning = useScanPolling(scanJobId, searchParams, setSearchParams);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
@@ -150,8 +170,14 @@ export default function SkillSelect() {
         skills: submittedSkills,
         coreLanguage: selectedCoreLanguage || "JavaScript",
       });
+
       await checkAuth();
-      navigate(`/test?skill=${encodeURIComponent(selectedCoreLanguage || "JavaScript")}`);
+
+      // Determine the max confidence from the skills they entered
+      const maxConfidence = submittedSkills.reduce((max, s) => Math.max(max, s.confidence), 0);
+      const chosenLevel = getLevelFromConfidence(maxConfidence)
+
+      navigate(`/test?skill=${encodeURIComponent(selectedCoreLanguage || "JavaScript")}&level=${chosenLevel}`);
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to start verification.");
     } finally {
@@ -221,7 +247,6 @@ export default function SkillSelect() {
       return toast.error("Skill already added.");
     }
     setSubmittedSkills((prev) => [...prev, { name: skillName, confidence: 50 }]);
-    // Remove from newSkills in result so it greys out
     setResumeResult((prev) => ({
       ...prev,
       newSkills: prev.newSkills.filter((s) => s.name !== skillName),
@@ -246,371 +271,386 @@ export default function SkillSelect() {
     }));
     toast.success(`Added ${toAdd.length} skill${toAdd.length > 1 ? "s" : ""}.`);
   };
+
   if (isScanning) return <ScanningScreen />;
 
   return (
     <div
-      className="theme-dark min-h-screen flex flex-col items-center justify-center px-6 py-16 font-[var(--font-sans)]"
+      className="theme-dark min-h-screen flex flex-col items-center justify-center px-8 py-12 font-[var(--font-sans)]"
       style={{ background: "var(--bg-canvas)" }}
     >
-      <div className="w-full max-w-lg flex flex-col gap-8 relative z-10">
+      <div className="w-full max-w-5xl flex flex-col gap-10 relative z-10">
 
-        {/* Header */}
-        <div className="text-center">
-          <h1 className="text-[24px] font-medium text-[var(--text-primary)] tracking-[-0.01em]">
+        {/* ── Header ─────────────────────────────────────────────────────── */}
+        <div>
+          <h1 className="text-[26px] font-medium text-[var(--text-primary)] tracking-[-0.02em]">
             Skill discovery
           </h1>
-          <p className="text-[14px] text-[var(--text-secondary)] mt-2 max-w-md mx-auto">
+          <p className="text-[14px] text-[var(--text-secondary)] mt-2 max-w-lg leading-relaxed">
             Select your primary tech skills for verification. The first skill will be tested immediately.
           </p>
         </div>
 
-        {/* Resume Upload Card */}
-        <div
-          className="rounded-[var(--radius-lg)] border p-6 flex flex-col gap-4"
-          style={{ background: "var(--bg-surface)", borderColor: "var(--border-subtle)" }}
-        >
-          <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-2">
-              <FileText className="w-4 h-4 text-[var(--accent)]" />
-              <label className="text-[14px] font-medium text-[var(--text-primary)]">
-                Upload resume / CV
-              </label>
-            </div>
-            <p className="text-[12px] text-[var(--text-secondary)]">
-              Auto-detect skills from your resume. Supports PDF and DOCX.
-            </p>
-          </div>
+        {/* ── Two-column body ─────────────────────────────────────────────── */}
+        {/* Changed from items-stretch to items-start to prevent columns from stretching continuously */}
+        <div className="grid grid-cols-[1fr_1.2fr] gap-8 items-start">
 
-          {/* Drop Zone */}
-          <div
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onClick={() => fileInputRef.current?.click()}
-            className="relative flex flex-col items-center justify-center gap-3 py-8 rounded-[var(--radius-md)] border-2 border-dashed cursor-pointer transition-all"
-            style={{
-              borderColor: dragOver ? "var(--accent)" : "var(--border-base)",
-              background: dragOver ? "var(--accent-bg)" : "var(--bg-raised)",
-              boxShadow: dragOver ? "0 0 0 3px rgba(37,99,235,0.1)" : "none",
-            }}
-          >
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".pdf,.docx"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) handleResumeFile(file);
-                e.target.value = "";
-              }}
-              className="hidden"
-            />
-            {resumeParsing ? (
-              <>
-                <Loader2 className="w-6 h-6 text-[var(--accent)] animate-spin" />
-                <span className="text-[13px] text-[var(--text-secondary)]">Parsing resume...</span>
-              </>
-            ) : (
-              <>
-                <Upload
-                  className="w-6 h-6 transition-colors"
-                  style={{ color: dragOver ? "var(--accent)" : "var(--text-tertiary)" }}
-                />
-                <div className="text-center">
-                  <span className="text-[13px] text-[var(--text-secondary)]">
-                    {dragOver ? "Release to upload" : "Drop your resume here or "}
-                  </span>
-                  {!dragOver && (
-                    <span className="text-[13px] text-[var(--accent)] font-medium">
-                      click to browse
-                    </span>
-                  )}
-                </div>
-                <span className="text-[11px] text-[var(--text-tertiary)]">
-                  PDF, DOCX · Max 5MB
-                </span>
-              </>
-            )}
-          </div>
+          {/* ══ LEFT COLUMN — CV import + core language ══════════════════ */}
+          {/* Added `sticky top-10` to keep it firmly fixed in viewport as the right side scrolls */}
+          <div className="flex flex-col gap-6 sticky top-10">
 
-          {/* Detected Skills Preview */}
-          {resumeResult && (resumeResult.newSkills?.length > 0 || resumeResult.alreadyOwned > 0) && (
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <span className="text-[12px] font-medium text-[var(--text-secondary)]">
-                  Detected skills
-                </span>
-                {resumeResult.newSkills?.length > 0 && (
-                  <button
-                    onClick={handleAddAllResumeSkills}
-                    className="text-[12px] font-medium text-[var(--accent)] hover:underline transition-colors"
-                  >
-                    Add all ({resumeResult.newSkills.length})
-                  </button>
-                )}
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                {/* New skills — clickable to add */}
-                {resumeResult.newSkills?.map((s) => (
-                  <button
-                    key={s.name}
-                    onClick={() => handleAddResumeSkill(s.name)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-md)] border text-[13px] font-medium transition-all"
-                    style={{
-                      borderColor: "var(--accent)",
-                      color: "var(--accent)",
-                      background: "var(--accent-bg)",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "var(--accent)";
-                      e.currentTarget.style.color = "#fff";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "var(--accent-bg)";
-                      e.currentTarget.style.color = "var(--accent)";
-                    }}
-                  >
-                    <Plus className="w-3 h-3" />
-                    {s.name}
-                    <span className="text-[10px] opacity-60">{s.category}</span>
-                  </button>
-                ))}
-
-                {/* Already owned indicator */}
-                {resumeResult.alreadyOwned > 0 && (
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-md)] text-[12px] text-[var(--text-tertiary)]">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    {resumeResult.alreadyOwned} already added
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* No skills found state */}
-          {resumeResult && resumeResult.allDetected?.length === 0 && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-[var(--radius-md)] text-[13px]" style={{ background: "var(--warning-bg)", color: "var(--warning)" }}>
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              No platform-supported skills detected. Try adding skills manually below.
-            </div>
-          )}
-        </div>
-
-        {/* Core Language Selection */}
-        {availableCores.length > 0 && (
-          <div
-            className="rounded-[var(--radius-lg)] border p-6 flex flex-col gap-4"
-            style={{ background: "var(--bg-surface)", borderColor: "var(--border-subtle)" }}
-          >
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[14px] font-medium text-[var(--text-primary)]">
-                Confirm your core language
-              </label>
-              <p className="text-[12px] text-[var(--text-secondary)]">
-                This language will be used to calibrate your compiler verification tests.
-              </p>
-              <div className="flex flex-wrap gap-3 mt-2">
-                {availableCores.map((lang) => (
-                  <button
-                    key={lang}
-                    onClick={() => setSelectedCoreLanguage(lang)}
-                    className={`px-4 py-2 rounded-[var(--radius-md)] text-[14px] font-medium border transition-all duration-200 ${
-                      selectedCoreLanguage === lang
-                        ? "bg-[#2563EB] text-white border-[#2563EB]"
-                        : "bg-transparent text-[var(--text-secondary)] border-[var(--border-base)] hover:bg-[var(--bg-raised)] hover:text-[var(--text-primary)]"
-                    }`}
-                  >
-                    {lang}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Selection Card */}
-        <div
-          className="rounded-[var(--radius-lg)] border p-6 flex flex-col gap-6"
-          style={{ background: "var(--bg-surface)", borderColor: "var(--border-subtle)" }}
-        >
-          {/* Dropdown */}
-          <div className="flex flex-col gap-1.5 relative">
-            <label className="text-[12px] font-medium text-[var(--text-secondary)]">
-              Select skill
-            </label>
-
-            {dropdownOpen && (
-              <div className="fixed inset-0 z-40" onClick={() => setDropdownOpen(false)} />
-            )}
-
+            {/* CV / Resume panel */}
+            {/* Swapped `flex-1` for `min-h-[340px]` to maintain initial equal heights without scaling */}
             <div
-              className="relative z-50 flex items-center justify-between w-full border h-9 rounded-[var(--radius-md)] px-3 cursor-pointer text-[14px]"
-              onClick={() => setDropdownOpen((o) => !o)}
-              style={{
-                background: "var(--bg-surface)",
-                borderColor: dropdownOpen ? "var(--accent)" : "var(--border-base)",
-                color: selectedSkill ? "var(--text-primary)" : "var(--text-tertiary)",
-                boxShadow: dropdownOpen ? "0 0 0 2px rgba(37,99,235,0.15)" : "none",
-              }}
+              className="rounded-[var(--radius-lg)] border p-6 flex flex-col gap-5 min-h-[340px]"
+              style={{ background: "var(--bg-surface)", borderColor: "var(--border-subtle)" }}
             >
-              <span>{selectedSkill || "Choose a skill..."}</span>
-              <ChevronDown
-                className={`w-4 h-4 text-[var(--text-tertiary)] transition-transform duration-200 ${
-                  dropdownOpen ? "rotate-180" : ""
-                }`}
-              />
-            </div>
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4" style={{ color: "var(--accent)" }} />
+                  <h2 className="text-[14px] font-medium text-[var(--text-primary)]">
+                    Extract from CV / Resume
+                  </h2>
+                </div>
+                <p className="text-[12px] text-[var(--text-secondary)] leading-relaxed">
+                  Auto-detect skills from your resume. Supports PDF and DOCX, max 5 MB.
+                </p>
+              </div>
 
-            {dropdownOpen && (
+              {/* Drop Zone */}
               <div
-                className="absolute top-[calc(100%+4px)] left-0 w-full z-50 rounded-[var(--radius-lg)] overflow-hidden"
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onClick={() => fileInputRef.current?.click()}
+                className="flex flex-col items-center justify-center gap-3 rounded-[var(--radius-md)] border-2 border-dashed cursor-pointer transition-all flex-1"
                 style={{
-                  background: "var(--bg-surface)",
-                  border: "1px solid var(--border-subtle)",
-                  boxShadow: "var(--shadow-md)",
+                  minHeight: "140px",
+                  borderColor: dragOver ? "var(--accent)" : "var(--border-base)",
+                  background: dragOver ? "var(--accent-bg)" : "var(--bg-raised)",
+                  boxShadow: dragOver ? "0 0 0 3px rgba(37,99,235,0.1)" : "none",
                 }}
               >
-                <div className="p-2 border-b" style={{ borderColor: "var(--border-subtle)" }}>
-                  <div className="flex items-center gap-2 px-2">
-                    <Search className="w-4 h-4 text-[var(--text-tertiary)]" />
-                    <input
-                      type="text"
-                      placeholder="Search skills..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full bg-transparent text-[14px] outline-none text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)]"
-                      autoFocus
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,.docx"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleResumeFile(file);
+                    e.target.value = "";
+                  }}
+                  className="hidden"
+                />
+                {resumeParsing ? (
+                  <>
+                    <Loader2 className="w-6 h-6 text-[var(--accent)] animate-spin" />
+                    <span className="text-[13px] text-[var(--text-secondary)]">Parsing resume…</span>
+                  </>
+                ) : (
+                  <>
+                    <Upload
+                      className="w-6 h-6 transition-colors"
+                      style={{ color: dragOver ? "var(--accent)" : "var(--text-tertiary)" }}
                     />
+                    <div className="text-center px-4">
+                      <p className="text-[13px] text-[var(--text-secondary)]">
+                        {dragOver ? "Release to upload" : (
+                          <>Drop here or{" "}
+                            <span style={{ color: "var(--accent)", fontWeight: 500 }}>click to browse</span>
+                          </>
+                        )}
+                      </p>
+                      <p className="text-[11px] text-[var(--text-tertiary)] mt-1">PDF · DOCX · Max 5 MB</p>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Detected Skills */}
+              {resumeResult && (resumeResult.newSkills?.length > 0 || resumeResult.alreadyOwned > 0) && (
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
+                      Detected
+                    </span>
+                    {resumeResult.newSkills?.length > 0 && (
+                      <button
+                        onClick={handleAddAllResumeSkills}
+                        className="text-[12px] font-medium text-[var(--accent)] hover:underline"
+                      >
+                        Add all ({resumeResult.newSkills.length})
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {resumeResult.newSkills?.map((s) => (
+                      <button
+                        key={s.name}
+                        onClick={() => handleAddResumeSkill(s.name)}
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[var(--radius-md)] border text-[12px] font-medium transition-all"
+                        style={{ borderColor: "var(--accent)", color: "var(--accent)", background: "var(--accent-bg)" }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = "var(--accent)"; e.currentTarget.style.color = "#fff"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = "var(--accent-bg)"; e.currentTarget.style.color = "var(--accent)"; }}
+                      >
+                        <Plus className="w-3 h-3" />
+                        {s.name}
+                        <span className="text-[10px] opacity-60">{s.category}</span>
+                      </button>
+                    ))}
+                    {resumeResult.alreadyOwned > 0 && (
+                      <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[var(--radius-md)] text-[12px] text-[var(--text-tertiary)]">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        {resumeResult.alreadyOwned} already added
+                      </div>
+                    )}
                   </div>
                 </div>
+              )}
 
-                <div className="max-h-56 overflow-y-auto">
-                  {filteredOptions.length > 0 ? (
-                    filteredOptions.map((skill) => (
-                      <div
-                        key={skill._id}
-                        onClick={() => {
-                          setSelectedSkill(skill.name);
-                          setDropdownOpen(false);
-                          setSearchTerm("");
-                        }}
-                        className="px-3 py-2 text-[14px] cursor-pointer transition-colors text-[var(--text-secondary)] hover:bg-[var(--bg-raised)] hover:text-[var(--text-primary)]"
-                      >
-                        <div className="flex items-center justify-between gap-3">
-                          <span>{skill.name}</span>
-                          <span className="text-[11px] text-[var(--text-tertiary)]">{skill.category}</span>
-                        </div>
-                      </div>
-                    ))
-                  ) : catalogLoading ? (
-                    <div className="p-3 text-[13px] text-[var(--text-tertiary)] text-center">
-                      Loading presets...
-                    </div>
-                  ) : (
-                    <div className="p-3 text-[13px] text-[var(--text-tertiary)] text-center">
-                      No skills found
-                    </div>
-                  )}
+              {/* No skills found */}
+              {resumeResult && resumeResult.allDetected?.length === 0 && (
+                <div
+                  className="flex items-center gap-2 px-3 py-2.5 rounded-[var(--radius-md)] text-[12px]"
+                  style={{ background: "var(--warning-bg)", color: "var(--warning)" }}
+                >
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  No platform-supported skills detected. Try adding manually.
+                </div>
+              )}
+            </div>
+
+            {/* Core Language — only shown once skills exist */}
+            {availableCores.length > 0 && (
+              <div
+                className="rounded-[var(--radius-lg)] border p-6 flex flex-col gap-4"
+                style={{ background: "var(--bg-surface)", borderColor: "var(--border-subtle)" }}
+              >
+                <div className="flex flex-col gap-1">
+                  <label className="text-[14px] font-medium text-[var(--text-primary)]">
+                    Core language
+                  </label>
+                  <p className="text-[12px] text-[var(--text-secondary)]">
+                    Calibrates your compiler verification tests.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {availableCores.map((lang) => (
+                    <button
+                      key={lang}
+                      onClick={() => setSelectedCoreLanguage(lang)}
+                      className={`px-4 py-2 rounded-[var(--radius-md)] text-[13px] font-medium border transition-all duration-200 ${
+                        selectedCoreLanguage === lang
+                          ? "bg-[#2563EB] text-white border-[#2563EB]"
+                          : "bg-transparent text-[var(--text-secondary)] border-[var(--border-base)] hover:bg-[var(--bg-raised)] hover:text-[var(--text-primary)]"
+                      }`}
+                    >
+                      {lang}
+                    </button>
+                  ))}
                 </div>
               </div>
             )}
           </div>
 
-          {/* Confidence Slider */}
-          {selectedSkill && (
-            <div className="flex flex-col gap-2 transition-all">
-              <div className="flex justify-between text-[12px]">
-                <span className="text-[var(--text-secondary)] font-medium">Confidence level</span>
-                <span className="text-[var(--accent)] font-medium">{confidence}%</span>
+          {/* ══ RIGHT COLUMN — skill selector + selected list ════════════ */}
+          <div className="flex flex-col gap-6">
+
+            {/* Skill selector card */}
+            {/* Added `min-h-[340px]` so it matches the initial visual height of the left column */}
+            <div
+              className="rounded-[var(--radius-lg)] border p-6 flex flex-col gap-6 min-h-[340px]"
+              style={{ background: "var(--bg-surface)", borderColor: "var(--border-subtle)" }}
+            >
+              <div className="flex flex-col gap-1">
+                <h2 className="text-[14px] font-medium text-[var(--text-primary)]">Add a skill</h2>
+                <p className="text-[12px] text-[var(--text-secondary)]">
+                  Choose from the catalog and set your confidence level.
+                </p>
               </div>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={confidence}
-                onChange={(e) => setConfidence(Number(e.target.value))}
-                className="w-full accent-[#2563EB]"
-              />
-            </div>
-          )}
 
-          {/* Add Button */}
-          <button
-            onClick={handleAddSkill}
-            disabled={!selectedSkill}
-            className="flex items-center justify-center gap-2 w-full h-9 border rounded-[var(--radius-md)] text-[14px] font-medium transition-colors disabled:opacity-30"
-            style={{ borderColor: "var(--border-base)", color: "var(--text-secondary)" }}
-            onMouseEnter={(e) => { if (selectedSkill) e.currentTarget.style.background = "var(--bg-raised)"; }}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-          >
-            <Plus className="w-4 h-4" />
-            Add skill
-          </button>
-        </div>
-
-        {/* Selected Skills List */}
-        {submittedSkills.length > 0 && (
-          <div
-            className="rounded-[var(--radius-lg)] border p-6 flex flex-col gap-4"
-            style={{ background: "var(--bg-surface)", borderColor: "var(--border-subtle)" }}
-          >
-            <div className="flex justify-between items-center">
-              <h2 className="text-[15px] font-medium text-[var(--text-primary)]">Selected skills</h2>
-              <span className="text-[12px] font-medium text-[var(--text-tertiary)]">
-                {submittedSkills.length} selected
-              </span>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              {submittedSkills.map((skill, index) => (
+              {/* Dropdown trigger */}
+              <div className="flex flex-col gap-1.5 relative">
+                <label className="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
+                  Select skill
+                </label>
                 <div
-                  key={skill.name}
-                  className="flex flex-col gap-2 py-2 px-3 rounded-[var(--radius-md)] border"
-                  style={{ background: "var(--bg-raised)", borderColor: "var(--border-subtle)" }}
+                  ref={dropdownAnchorRef}
+                  className="flex items-center justify-between w-full border h-10 rounded-[var(--radius-md)] px-3.5 cursor-pointer text-[14px]"
+                  onClick={() => dropdownOpen ? closeDropdown() : openDropdown()}
+                  style={{
+                    background: "var(--bg-raised)",
+                    borderColor: dropdownOpen ? "var(--accent)" : "var(--border-base)",
+                    color: selectedSkill ? "var(--text-primary)" : "var(--text-tertiary)",
+                    boxShadow: dropdownOpen ? "0 0 0 2px rgba(37,99,235,0.15)" : "none",
+                  }}
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="text-[14px] font-medium text-[var(--text-primary)]">{skill.name}</span>
-                    <button
-                      onClick={() => handleRemoveSkill(index)}
-                      className="text-[var(--text-tertiary)] hover:text-[var(--danger)] transition-colors"
+                  <span>{selectedSkill || "Choose a skill…"}</span>
+                  <ChevronDown
+                    className={`w-4 h-4 text-[var(--text-tertiary)] transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`}
+                  />
+                </div>
+
+                {/* Fixed-position dropdown panel & backdrop */}
+                {dropdownOpen && dropdownRect && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={closeDropdown} />
+                    
+                    <div
+                      className="z-50 rounded-[var(--radius-lg)] overflow-hidden"
+                      style={{
+                        position: "fixed",
+                        top: dropdownRect.bottom + 4,
+                        left: dropdownRect.left,
+                        width: dropdownRect.width,
+                        background: "var(--bg-surface)",
+                        border: "1px solid var(--border-subtle)",
+                        boxShadow: "var(--shadow-md)",
+                      }}
                     >
-                      <X className="w-4 h-4" />
-                    </button>
+                      <div className="p-2 border-b" style={{ borderColor: "var(--border-subtle)" }}>
+                        <div className="flex items-center gap-2 px-2">
+                          <Search className="w-4 h-4 text-[var(--text-tertiary)]" />
+                          <input
+                            type="text"
+                            placeholder="Search skills…"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full bg-transparent text-[14px] outline-none text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)]"
+                            autoFocus
+                          />
+                        </div>
+                      </div>
+                      <div className="max-h-[300px] overflow-y-auto overscroll-contain">
+                        {filteredOptions.length > 0 ? (
+                          filteredOptions.map((skill) => (
+                            <div
+                              key={skill._id}
+                              onClick={() => { setSelectedSkill(skill.name); closeDropdown(); setSearchTerm(""); }}
+                              className="px-3.5 py-2.5 text-[14px] cursor-pointer transition-colors text-[var(--text-secondary)] hover:bg-[var(--bg-raised)] hover:text-[var(--text-primary)]"
+                            >
+                              <div className="flex items-center justify-between gap-3">
+                                <span>{skill.name}</span>
+                                <span className="text-[11px] text-[var(--text-tertiary)]">{skill.category}</span>
+                              </div>
+                            </div>
+                          ))
+                        ) : catalogLoading ? (
+                          <div className="p-4 text-[13px] text-[var(--text-tertiary)] text-center">Loading presets…</div>
+                        ) : (
+                          <div className="p-4 text-[13px] text-[var(--text-tertiary)] text-center">No skills found</div>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Confidence Slider */}
+              {selectedSkill && (
+                <div className="flex flex-col gap-2.5">
+                  <div className="flex justify-between text-[12px]">
+                    <span className="text-[var(--text-secondary)] font-medium">Confidence level</span>
+                    <span className="font-medium" style={{ color: "var(--accent)" }}>{confidence}%</span>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={skill.confidence}
-                      onChange={(e) => handleUpdateConfidence(index, Number(e.target.value))}
-                      className="w-full accent-[#2563EB] h-1"
-                    />
-                    <span className="text-[12px] text-[var(--text-tertiary)] font-[var(--font-mono)] w-8 text-right shrink-0">
-                      {skill.confidence}%
-                    </span>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={confidence}
+                    onChange={(e) => setConfidence(Number(e.target.value))}
+                    className="w-full accent-[#2563EB]"
+                  />
+                  <div className="flex justify-between text-[10px] text-[var(--text-tertiary)]">
+                    <span>Beginner</span>
+                    <span>Expert</span>
                   </div>
                 </div>
-              ))}
+              )}
+
+              {/* Add Button */}
+              <button
+                onClick={handleAddSkill}
+                disabled={!selectedSkill}
+                className="flex items-center justify-center gap-2 w-full h-10 border rounded-[var(--radius-md)] text-[13px] font-medium transition-colors disabled:opacity-30 mt-auto"
+                style={{ borderColor: "var(--border-base)", color: "var(--text-secondary)" }}
+                onMouseEnter={(e) => { if (selectedSkill) e.currentTarget.style.background = "var(--bg-raised)"; }}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+              >
+                <Plus className="w-4 h-4" />
+                Add skill
+              </button>
             </div>
 
-            <button
-              onClick={handleConfirmAndTest}
-              disabled={loading || submittedSkills.length < 3}
-              className="mt-2 w-full h-10 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-medium rounded-[var(--radius-md)] text-[14px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {loading ? (
-                <><Loader2 className="w-4 h-4 animate-spin" />Initializing...</>
-              ) : submittedSkills.length < 3 ? (
-                `Confirm & start verification (${submittedSkills.length}/3 min)`
-              ) : (
-                "Confirm & start verification"
-              )}
-            </button>
+            {/* Selected Skills List */}
+            {submittedSkills.length > 0 && (
+              <div
+                className="rounded-[var(--radius-lg)] border p-6 flex flex-col gap-5"
+                style={{ background: "var(--bg-surface)", borderColor: "var(--border-subtle)" }}
+              >
+                <div className="flex justify-between items-center">
+                  <h2 className="text-[14px] font-medium text-[var(--text-primary)]">Selected skills</h2>
+                  <span
+                    className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
+                    style={{
+                      background: submittedSkills.length >= 3 ? "rgba(37,99,235,0.12)" : "var(--bg-raised)",
+                      color: submittedSkills.length >= 3 ? "var(--accent)" : "var(--text-tertiary)",
+                    }}
+                  >
+                    {submittedSkills.length} / 3 min
+                  </span>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  {submittedSkills.map((skill, index) => (
+                    <div
+                      key={skill.name}
+                      className="flex flex-col gap-2.5 py-3 px-4 rounded-[var(--radius-md)] border"
+                      style={{ background: "var(--bg-raised)", borderColor: "var(--border-subtle)" }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-[13px] font-medium text-[var(--text-primary)]">{skill.name}</span>
+                        <button
+                          onClick={() => handleRemoveSkill(index)}
+                          className="text-[var(--text-tertiary)] hover:text-[var(--danger)] transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="range"
+                          min="0"
+                          max="100"
+                          value={skill.confidence}
+                          onChange={(e) => handleUpdateConfidence(index, Number(e.target.value))}
+                          className="w-full accent-[#2563EB] h-1"
+                        />
+                        <span className="text-[12px] text-[var(--text-tertiary)] font-[var(--font-mono)] w-8 text-right shrink-0">
+                          {skill.confidence}%
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  onClick={handleConfirmAndTest}
+                  disabled={loading || submittedSkills.length < 3}
+                  className="w-full h-11 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-medium rounded-[var(--radius-md)] text-[14px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {loading ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" />Initializing…</>
+                  ) : submittedSkills.length < 3 ? (
+                    `Add ${3 - submittedSkills.length} more skill${3 - submittedSkills.length > 1 ? "s" : ""} to continue`
+                  ) : (
+                    "Confirm & start verification"
+                  )}
+                </button>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

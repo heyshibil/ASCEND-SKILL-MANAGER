@@ -47,10 +47,17 @@ export const generateTest = async (
   // Seen Ids
   const seenIds = recentHistories.flatMap((history) => history.questionIds);
 
+  const level = expectedLevel.toLowerCase();
+
   // Fetch 5 random MCQs (nin 4w)
   const mcqs = await Question.aggregate([
     {
-      $match: { skill: skillName, type: "mcq", questionId: { $nin: seenIds } },
+      $match: {
+        skill: skillName,
+        type: "mcq",
+        level,
+        questionId: { $nin: seenIds },
+      },
     },
     {
       $sample: { size: 5 },
@@ -71,7 +78,7 @@ export const generateTest = async (
       $match: {
         skill: skillName,
         type: "code",
-        level: expectedLevel.toLowerCase(),
+        level,
         questionId: { $nin: seenIds },
       },
     },
@@ -88,6 +95,7 @@ export const generateTest = async (
   // -- Redis test caching --
   const sessionData = {
     skillName,
+    level,
     mcqIds: mcqs.map((q) => q.questionId),
     codeId: codeTest.questionId,
     startTime: Date.now(),
@@ -293,6 +301,18 @@ export const generateBoostTest = async (
   });
   const seenIds = recentHistories.flatMap((history) => history.questionIds);
 
+  // Fetch user's current score for this skill
+  const skillRecord = await Skill.findOne({ userId, name: skillName }).lean();
+  const currentScore = skillRecord?.currentScore || 0;
+
+  // Determine Confidence Level
+  let targetLevel = "beginner";
+  if (currentScore > 70) {
+    targetLevel = "advanced";
+  } else if (currentScore > 35) {
+    targetLevel = "intermediate";
+  }
+
   let mcqs = null;
   let codeTest = null;
   let mcqIds: string[] = [];
@@ -304,6 +324,7 @@ export const generateBoostTest = async (
         $match: {
           skill: skillName,
           type: "mcq",
+          level: targetLevel,
           questionId: { $nin: seenIds },
         },
       },
@@ -327,7 +348,7 @@ export const generateBoostTest = async (
         $match: {
           skill: skillName,
           type: "code",
-          level: level.toLowerCase(),
+          level,
           questionId: { $nin: seenIds },
         },
       },
@@ -347,7 +368,7 @@ export const generateBoostTest = async (
           $match: {
             skill: fallbackSkill,
             type: "code",
-            level: level.toLowerCase(),
+            level,
             questionId: { $nin: seenIds },
           },
         },
@@ -527,14 +548,14 @@ export const runCode = async (
     throw new AppError("No active test session found.", 400);
   }
 
-  const dbQuestion = await Question.findOne({questionId});
+  const dbQuestion = await Question.findOne({ questionId });
 
-   if (!dbQuestion || !dbQuestion.testCases) {
+  if (!dbQuestion || !dbQuestion.testCases) {
     throw new AppError("Question not found or has no test cases.", 404);
   }
 
   const runtime = resolveRuntime(dbQuestion.skill);
   const result = await runCodeTest(code, dbQuestion.testCases, runtime);
 
-  return result
+  return result;
 };

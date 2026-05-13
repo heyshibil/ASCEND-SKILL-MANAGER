@@ -10,6 +10,7 @@ import {
   Settings,
   LogOut,
   Swords,
+  Trophy
 } from "lucide-react";
 import useDashboardData from "../hooks/useDashboardData";
 import LogoutModal from "../components/LogoutModal";
@@ -92,9 +93,15 @@ export default function DashboardLayout() {
             <TrendingUp className="w-4 h-4" />
             Market
           </NavLink>
+
           <NavLink to="/dashboard/problems" className={navItemClass}>
             <Swords className="w-4 h-4" />
             Problems
+          </NavLink>
+
+          <NavLink to="/dashboard/leaderboard" className={navItemClass}>
+            <Trophy className="w-4 h-4" />
+            Leaderboard
           </NavLink>
 
           <NavLink to="/dashboard/settings" className={navItemClass}>

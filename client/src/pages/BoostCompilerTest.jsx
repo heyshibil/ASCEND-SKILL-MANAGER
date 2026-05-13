@@ -4,6 +4,7 @@ import Editor from "@monaco-editor/react";
 import { toast } from "sonner";
 import { verificationService } from "../services/verificationService";
 import { SKILL_EDITOR_MAP } from "../utils/skillEditorMap";
+import { useSkillStore } from "../store/useSkillStore";
 
 // -- Skill : Editor config
 const resolveEditorConfig = (skill) => {
@@ -25,6 +26,8 @@ export default function BoostCompilerTest() {
   const [codeQuestion, setCodeQuestion] = useState(null);
   const [codeAnswer, setCodeAnswer] = useState(editorConfig.starter);
   const [runResults, setRunResults] = useState(null);
+
+  const fetchSkills = useSkillStore((state) => state.fetchSkills);
 
   useEffect(() => {
     if (!skillName || !level) return navigate("/dashboard/skill-control");
@@ -69,12 +72,20 @@ export default function BoostCompilerTest() {
       if (result.timedOut) {
         toast.error("Execution timed out.", { id: "code-run" });
       } else if (result.passedCases === result.totalCases) {
-        toast.success(`All ${result.passedCases}/${result.totalCases} cases passed!`, { id: "code-run" });
+        toast.success(
+          `All ${result.passedCases}/${result.totalCases} cases passed!`,
+          { id: "code-run" },
+        );
       } else {
-        toast.error(`Passed ${result.passedCases}/${result.totalCases} cases.`, { id: "code-run" });
+        toast.error(
+          `Passed ${result.passedCases}/${result.totalCases} cases.`,
+          { id: "code-run" },
+        );
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || "Run failed", { id: "code-run" });
+      toast.error(error.response?.data?.message || "Run failed", {
+        id: "code-run",
+      });
     } finally {
       setRunning(false);
     }
@@ -103,6 +114,7 @@ export default function BoostCompilerTest() {
         );
       }
 
+      await fetchSkills();
       setTimeout(() => navigate("/dashboard/skill-control"), 3500);
     } catch (error) {
       toast.error(error.response?.data?.message || "Submission failed", {
@@ -124,7 +136,7 @@ export default function BoostCompilerTest() {
     <div className="max-w-6xl mx-auto flex flex-col gap-6 h-[calc(100vh-8rem)]">
       <div>
         <h1 className="text-[24px] font-medium text-[var(--text-primary)] tracking-[-0.01em]">
-          {level.charAt(0).toUpperCase() + level.slice(1)} compiler boost - {" "}
+          {level.charAt(0).toUpperCase() + level.slice(1)} compiler boost -{" "}
           {skillName}
         </h1>
         <p className="text-[14px] text-[var(--text-secondary)] mt-1">
@@ -229,21 +241,46 @@ export default function BoostCompilerTest() {
                       }}
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-[11px] font-medium" style={{ color: r.passed ? "var(--success)" : "var(--danger)" }}>
+                        <span
+                          className="text-[11px] font-medium"
+                          style={{
+                            color: r.passed
+                              ? "var(--success)"
+                              : "var(--danger)",
+                          }}
+                        >
                           Case {idx + 1} — {r.passed ? "Passed ✓" : "Failed ✗"}
                         </span>
                       </div>
                       <div className="flex items-start">
-                        <span className="text-[var(--text-tertiary)] w-20 shrink-0">Input:</span>
-                        <span className="text-[var(--text-primary)]">{r.input}</span>
+                        <span className="text-[var(--text-tertiary)] w-20 shrink-0">
+                          Input:
+                        </span>
+                        <span className="text-[var(--text-primary)]">
+                          {r.input}
+                        </span>
                       </div>
-                      <div className="flex items-start border-t pt-2" style={{ borderColor: "var(--border-subtle)" }}>
-                        <span className="text-[var(--text-tertiary)] w-20 shrink-0">Expected:</span>
-                        <span className="text-[var(--success)] font-medium">{r.expected}</span>
+                      <div
+                        className="flex items-start border-t pt-2"
+                        style={{ borderColor: "var(--border-subtle)" }}
+                      >
+                        <span className="text-[var(--text-tertiary)] w-20 shrink-0">
+                          Expected:
+                        </span>
+                        <span className="text-[var(--success)] font-medium">
+                          {r.expected}
+                        </span>
                       </div>
-                      <div className="flex items-start border-t pt-2" style={{ borderColor: "var(--border-subtle)" }}>
-                        <span className="text-[var(--text-tertiary)] w-20 shrink-0">Actual:</span>
-                        <span className={`font-medium ${r.passed ? "text-[var(--success)]" : "text-[var(--danger)]"}`}>
+                      <div
+                        className="flex items-start border-t pt-2"
+                        style={{ borderColor: "var(--border-subtle)" }}
+                      >
+                        <span className="text-[var(--text-tertiary)] w-20 shrink-0">
+                          Actual:
+                        </span>
+                        <span
+                          className={`font-medium ${r.passed ? "text-[var(--success)]" : "text-[var(--danger)]"}`}
+                        >
                           {r.actual}
                         </span>
                       </div>
@@ -275,8 +312,12 @@ export default function BoostCompilerTest() {
                   color: "var(--text-secondary)",
                   background: "transparent",
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = "var(--bg-raised)")}
-                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.background = "var(--bg-raised)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.background = "transparent")
+                }
               >
                 {running ? "Running..." : "▶ Run"}
               </button>
