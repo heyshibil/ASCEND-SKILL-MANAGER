@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast, Toaster } from "sonner";
 import { verificationService } from "../services/verificationService";
 import { Progress } from "../components/ui/progress";
+import { useSkillStore } from "../store/useSkillStore";
 
 export default function BoostMcqTest() {
   const navigate = useNavigate();
@@ -14,6 +15,8 @@ export default function BoostMcqTest() {
   const [mcqQuestions, setMcqQuestions] = useState([]);
   const [currentMcqIndex, setCurrentMcqIndex] = useState(0);
   const [mcqAnswers, setMcqAnswers] = useState([]);
+
+  const fetchSkills = useSkillStore((state) => state.fetchSkills);
 
   useEffect(() => {
     if (!skillName) return navigate("/dashboard/skill-control");
@@ -68,6 +71,7 @@ export default function BoostMcqTest() {
         `Boost complete! You got ${result.correctCount}/5 correct. (+${result.hikeApplied}% hike)`,
         { id: "mcq-grading" }
       );
+      await fetchSkills();
       setTimeout(() => navigate("/dashboard/skill-control"), 2500);
     } catch (error) {
       toast.error(error.response?.data?.message || "Submission failed", { id: "mcq-grading" });
