@@ -6,6 +6,25 @@ import type { RunCodeResult } from "../../types/index.js";
 import { resolveRuntime } from "../../utils/runtimeResolver.js";
 import { runCodeTest } from "../verification/compiler.service.js";
 
+// helper: getEffective streak rate
+export const getEffectiveStreak = (
+  currentStreak: number,
+  lastSolvedDate: Date | null,
+): number => {
+  if (!lastSolvedDate) return 0;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const lastDay = new Date(lastSolvedDate);
+  lastDay.setHours(0, 0, 0, 0);
+
+  const diffDays =
+    Math.floor(today.getTime() - lastDay.getTime()) / (1000 * 60 * 60 * 24);
+
+  return diffDays <= 1 ? currentStreak : 0;
+};
+
 // -- List all problems with pagination,filters --
 export const listProblems = async (
   userId: string,
@@ -248,13 +267,19 @@ export const submitProblem = async (
 // -- Get user's problem stats --
 export const getUserStats = async (userId: string) => {
   const stats = await UserProblemStats.findOne({ userId }).lean();
+
+  const currentStreak = getEffectiveStreak(
+    stats?.currentStreak || 0,
+    stats?.lastSolvedDate || null,
+  );
+
   return {
     totalSolved: stats?.totalSolved || 0,
     easySolved: stats?.easySolved || 0,
     mediumSolved: stats?.mediumSolved || 0,
     hardSolved: stats?.hardSolved || 0,
     totalSubmissions: stats?.totalSubmissions || 0,
-    currentStreak: stats?.currentStreak || 0,
+    currentStreak,
     longestStreak: stats?.longestStreak || 0,
   };
 };
