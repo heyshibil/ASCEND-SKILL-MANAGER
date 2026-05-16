@@ -25,6 +25,7 @@ export default function ProblemWorkspace() {
   const [running, setRunning] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [problem, setProblem] = useState(null);
+  const [loadedQuestionId, setLoadedQuestionId] = useState(null);
   const [solved, setSolved] = useState(false);
   const [codeAnswer, setCodeAnswer] = useState("");
   const [runResults, setRunResults] = useState(null);
@@ -33,12 +34,23 @@ export default function ProblemWorkspace() {
 
   // Fetch problem
   useEffect(() => {
+    let isActive = true;
+
     const fetchProblem = async () => {
       try {
         setLoading(true);
+        setLoadedQuestionId(null);
+        setProblem(null);
+        setSolved(false);
+        setRunResults(null);
+        setSubmitResult(null);
+
         const data = await problemService.getProblem(questionId);
+        if (!isActive) return;
+
         setProblem(data.problem);
         setSolved(data.solved);
+        setLoadedQuestionId(questionId);
 
         const config = resolveEditorConfig(data.problem.skill);
         setEditorConfig(config);
@@ -51,14 +63,19 @@ export default function ProblemWorkspace() {
         } else {
           setCodeAnswer(config.starter);
         }
-      } catch (error) {
+      } catch {
+        if (!isActive) return;
         toast.error("Failed to load problem.");
         setTimeout(() => navigate("/dashboard/problems"), 2000);
       } finally {
-        setLoading(false);
+        if (isActive) setLoading(false);
       }
     };
     fetchProblem();
+
+    return () => {
+      isActive = false;
+    };
   }, [questionId, navigate]);
 
   // Run code
@@ -112,15 +129,15 @@ export default function ProblemWorkspace() {
     }
   };
 
-  if (loading) {
+  const isProblemReady = loadedQuestionId === questionId && problem;
+
+  if (loading || !isProblemReady) {
     return (
       <div className="h-full flex items-center justify-center text-[var(--text-secondary)] text-[14px] animate-pulse-subtle">
         Loading problem...
       </div>
     );
   }
-
-  if (!problem) return null;
 
   const levelColors = {
     beginner: { text: "var(--success)", bg: "var(--success-bg)" },

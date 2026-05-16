@@ -24,6 +24,7 @@ export default function BoostCompilerTest() {
   const [running, setRunning] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [codeQuestion, setCodeQuestion] = useState(null);
+  const [loadedTestKey, setLoadedTestKey] = useState(null);
   const [codeAnswer, setCodeAnswer] = useState(editorConfig.starter);
   const [runResults, setRunResults] = useState(null);
 
@@ -32,28 +33,44 @@ export default function BoostCompilerTest() {
   useEffect(() => {
     if (!skillName || !level) return navigate("/dashboard/skill-control");
 
+    let isActive = true;
+    const testKey = `${skillName}:${level}`;
+
     const fetchTest = async () => {
       try {
         setLoading(true);
+        setLoadedTestKey(null);
+        setCodeQuestion(null);
+        setCodeAnswer(editorConfig.starter);
+        setRunResults(null);
+
         const data = await verificationService.generateBoostTest(
           skillName,
           "compiler",
           level,
         );
+        if (!isActive) return;
+
         setCodeQuestion(data.codeTest);
+        setLoadedTestKey(testKey);
         if (data.codeTest?.starterCode)
           setCodeAnswer(data.codeTest.starterCode);
       } catch (error) {
+        if (!isActive) return;
         toast.error(
           error.response?.data?.message || "Failed to load compiler test.",
         );
         setTimeout(() => navigate("/dashboard/skill-control"), 2000);
       } finally {
-        setLoading(false);
+        if (isActive) setLoading(false);
       }
     };
     fetchTest();
-  }, [skillName, level, navigate]);
+
+    return () => {
+      isActive = false;
+    };
+  }, [skillName, level, navigate, editorConfig.starter]);
 
   // -- Run code (dry run) --
   const handleRun = async () => {
@@ -124,10 +141,21 @@ export default function BoostCompilerTest() {
     }
   };
 
-  if (loading) {
+  const currentTestKey = `${skillName}:${level}`;
+  const isTestReady = loadedTestKey === currentTestKey;
+
+  if (loading || !isTestReady) {
     return (
       <div className="h-full flex items-center justify-center text-[var(--text-secondary)] text-[14px] animate-pulse-subtle">
         Loading compiler...
+      </div>
+    );
+  }
+
+  if (!codeQuestion) {
+    return (
+      <div className="h-full flex items-center justify-center text-[var(--text-secondary)] text-[14px] animate-pulse-subtle">
+        Preparing challenge...
       </div>
     );
   }

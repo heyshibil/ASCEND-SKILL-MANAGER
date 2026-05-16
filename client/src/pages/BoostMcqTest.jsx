@@ -13,6 +13,7 @@ export default function BoostMcqTest() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [mcqQuestions, setMcqQuestions] = useState([]);
+  const [loadedSkillName, setLoadedSkillName] = useState(null);
   const [currentMcqIndex, setCurrentMcqIndex] = useState(0);
   const [mcqAnswers, setMcqAnswers] = useState([]);
 
@@ -20,19 +21,35 @@ export default function BoostMcqTest() {
 
   useEffect(() => {
     if (!skillName) return navigate("/dashboard/skill-control");
+
+    let isActive = true;
+
     const fetchTest = async () => {
       try {
         setLoading(true);
+        setLoadedSkillName(null);
+        setMcqQuestions([]);
+        setCurrentMcqIndex(0);
+        setMcqAnswers([]);
+
         const data = await verificationService.generateBoostTest(skillName, "mcq");
+        if (!isActive) return;
+
         setMcqQuestions(data.mcqs);
+        setLoadedSkillName(skillName);
       } catch (error) {
+        if (!isActive) return;
         toast.error(error.response?.data?.message || "Failed to load test.");
         setTimeout(() => navigate("/dashboard/skill-control"), 2000);
       } finally {
-        setLoading(false);
+        if (isActive) setLoading(false);
       }
     };
     fetchTest();
+
+    return () => {
+      isActive = false;
+    };
   }, [skillName, navigate]);
 
   const handleOptionSelect = (index) => {
@@ -79,7 +96,9 @@ export default function BoostMcqTest() {
     }
   };
 
-  if (loading) {
+  const isTestReady = loadedSkillName === skillName;
+
+  if (loading || !isTestReady) {
     return (
       <div className="h-full flex items-center justify-center text-[var(--text-secondary)] text-[14px] animate-pulse-subtle">
         Loading quick boost...

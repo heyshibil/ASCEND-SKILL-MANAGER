@@ -14,6 +14,7 @@ import { UserProblemStats } from "../../models/UserProblemStats.js";
 import { SkillDefinition } from "../../models/SkillDefinition.js";
 import { Question } from "../../models/Question.js";
 import type { ChartPeriod } from "../../types/index.js";
+import { getEffectiveStreak } from "../problems/problems.service.js";
 
 const SETTINGS_TOKEN_TTL_MS = 30 * 60 * 1000;
 
@@ -139,6 +140,10 @@ export const getDashboardData = async (userId: string) => {
 
   // User problems stats
   const problemStats = await UserProblemStats.findOne({ userId }).lean();
+  const currentStreak = getEffectiveStreak(
+    problemStats?.currentStreak || 0,
+    problemStats?.lastSolvedDate || null,
+  );
 
   return {
     score: currentScore,
@@ -152,7 +157,7 @@ export const getDashboardData = async (userId: string) => {
     topSkills,
     problemStats: {
       totalSolved: problemStats?.totalSolved || 0,
-      currentStreak: problemStats?.currentStreak || 0,
+      currentStreak,
     },
   };
 };
