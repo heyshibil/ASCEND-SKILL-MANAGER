@@ -2,8 +2,9 @@ import type { PipelineStage } from "mongoose";
 import { UserProblemStats } from "../../models/UserProblemStats.js";
 import { User } from "../../models/User.js";
 import { getEffectiveStreak } from "../problems/problems.service.js";
+import { withCache } from "../../utils/cache.js";
 
-export const getGlobalLeaderboard = async (
+const fetchLeaderboardFromDB = async (
   userId: string,
   mode: "solved" | "score" | "streak" = "solved",
   page: number = 1,
@@ -153,4 +154,25 @@ export const getGlobalLeaderboard = async (
     hallOfFame,
     hasMore: leaderboardList.length === limit,
   };
+};
+
+export const getGlobalLeaderboard = async (
+  userId: string,
+  mode: "solved" | "score" | "streak" = "solved",
+  page: number = 1,
+  limit: number = 10,
+) => {
+  /** Page 1 includes user-specific rank context (currentUserContext),
+   so its cache key must be scoped per user to prevent serving User A's rank to User B.
+   Pages 2+ are generic leaderboard rows — shared key is safe.*/
+  const cacheKey =
+    page === 1
+      ? `leaderboard:${mode}:page1:uid:${userId}`
+      : `leaderboard:${mode}:page${page}`;
+
+  return withCache(
+    cacheKey,
+    () => fetchLeaderboardFromDB(userId, mode, page, limit),
+    { ttl: 600, stale: 120 },
+  );
 };

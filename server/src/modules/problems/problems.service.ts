@@ -3,6 +3,7 @@ import { Question } from "../../models/Question.js";
 import { Submission } from "../../models/Submission.js";
 import { UserProblemStats } from "../../models/UserProblemStats.js";
 import type { RunCodeResult } from "../../types/index.js";
+import { invalidateCache } from "../../utils/cache.js";
 import { resolveRuntime } from "../../utils/runtimeResolver.js";
 import { runCodeTest } from "../verification/compiler.service.js";
 
@@ -242,6 +243,12 @@ export const submitProblem = async (
   // Update status
   if (status === "accepted") {
     await updateStatsOnAccepted(userId, questionId, problem.level);
+    // Invalidate caches - Leaderboard page 1 keys are now user-scoped (uid:${userId}) to prevent rank cross-contamination
+    await invalidateCache(
+      `dashboard:${userId}`,
+      `leaderboard:solved:page1:uid:${userId}`,
+      `leaderboard:streak:page1:uid:${userId}`,
+    );
   }
 
   // Always Increment total submissions
