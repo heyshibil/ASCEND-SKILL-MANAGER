@@ -15,7 +15,7 @@ import {
   Trophy,
   User,
 } from "lucide-react";
-import { useLeaderboardData } from "../hooks/useLeaderboardData";
+import { useLeaderboard } from "../hooks/useLeaderboard";
 
 const MotionDiv = motion.div;
 const MotionButton = motion.button;
@@ -417,7 +417,8 @@ export default function Leaderboard() {
     error,
     loadMore,
     refresh,
-  } = useLeaderboardData(metricMode);
+  } = useLeaderboard(metricMode);
+  // ^ Each mode has its own TQ cache entry — switching modes shows instant cached data
 
   const top3Users = useMemo(() => entries.slice(0, 3), [entries]);
   const restUsers = useMemo(() => entries.slice(3), [entries]);

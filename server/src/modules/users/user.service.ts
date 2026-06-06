@@ -14,6 +14,8 @@ import { UserProblemStats } from "../../models/UserProblemStats.js";
 import { SkillDefinition } from "../../models/SkillDefinition.js";
 import { Question } from "../../models/Question.js";
 import type { ChartPeriod } from "../../types/index.js";
+import { getEffectiveStreak } from "../problems/problems.service.js";
+import { withCache } from "../../utils/cache.js";
 
 const SETTINGS_TOKEN_TTL_MS = 30 * 60 * 1000;
 
@@ -86,32 +88,7 @@ const computeLiquidityScore = (skills: { currentScore: number }[]): number => {
   return Math.round(total / skills.length);
 };
 
-export const refreshLiquidityScore = async (
-  userId: string,
-): Promise<number> => {
-  const skills = await Skill.find({ userId }).select("currentScore");
-  const newScore = computeLiquidityScore(skills);
-
-  const result = await User.findByIdAndUpdate(
-    userId,
-    {
-      $set: { "liquidityScore.current": newScore },
-      $push: {
-        "liquidityScore.history": { score: newScore, date: new Date() },
-      },
-    },
-    { returnDocument: "after" },
-  );
-
-  if (!result) {
-    throw new AppError("User not found while updating liquidity score", 404);
-  }
-
-  return newScore;
-};
-
-export const getDashboardData = async (userId: string) => {
-  // Refresh and persist score
+const fetchDashboardFromDB = async (userId: string) => {
   const currentScore = await refreshLiquidityScore(userId);
 
   const user = await User.findById(userId).select("liquidityScore");
@@ -139,6 +116,10 @@ export const getDashboardData = async (userId: string) => {
 
   // User problems stats
   const problemStats = await UserProblemStats.findOne({ userId }).lean();
+  const currentStreak = getEffectiveStreak(
+    problemStats?.currentStreak || 0,
+    problemStats?.lastSolvedDate || null,
+  );
 
   return {
     score: currentScore,
@@ -152,9 +133,41 @@ export const getDashboardData = async (userId: string) => {
     topSkills,
     problemStats: {
       totalSolved: problemStats?.totalSolved || 0,
-      currentStreak: problemStats?.currentStreak || 0,
+      currentStreak,
     },
   };
+};
+
+export const refreshLiquidityScore = async (
+  userId: string,
+): Promise<number> => {
+  const skills = await Skill.find({ userId }).select("currentScore");
+  const newScore = computeLiquidityScore(skills);
+
+  const result = await User.findByIdAndUpdate(
+    userId,
+    {
+      $set: { "liquidityScore.current": newScore },
+      $push: {
+        "liquidityScore.history": { score: newScore, date: new Date() },
+      },
+    },
+    { returnDocument: "after" },
+  );
+
+  if (!result) {
+    throw new AppError("User not found while updating liquidity score", 404);
+  }
+
+  return newScore;
+};
+
+//  getDashboard with redis caching
+export const getDashboardData = async (userId: string) => {
+  return withCache(`dashboard:${userId}`, () => fetchDashboardFromDB(userId), {
+    ttl: 300,
+    stale: 60,
+  });
 };
 
 export const updateProfile = async (
@@ -382,7 +395,7 @@ export const getAdminDashboardData = async () => {
   const [totalUsers, totalSkills, totalQuestions] = await Promise.all([
     User.countDocuments(),
     SkillDefinition.countDocuments({ isActive: true }),
-    Question.countDocuments({type: "code"}),
+    Question.countDocuments({ type: "code" }),
   ]);
 
   const recentUsers = await User.find()
@@ -406,10 +419,10 @@ export const getAdminChartData = async (period: ChartPeriod) => {
   let startDate = new Date();
   let groupByFormat = "";
 
-  if (period === 'days') {
+  if (period === "days") {
     startDate.setDate(now.getDate() - 30);
-    groupByFormat = "%Y-%m-%d"; 
-  } else if (period === 'week') {
+    groupByFormat = "%Y-%m-%d";
+  } else if (period === "week") {
     startDate.setDate(now.getDate() - 90);
     groupByFormat = "%Y-%U";
   } else {
@@ -422,15 +435,17 @@ export const getAdminChartData = async (period: ChartPeriod) => {
     {
       $group: {
         _id: { $dateToString: { format: groupByFormat, date: "$createdAt" } },
-        count: { $sum: 1 }
-      }
+        count: { $sum: 1 },
+      },
     },
-    { $sort: { "_id": 1 } }
+    { $sort: { _id: 1 } },
   ]);
 
-  let cumulativeCount = await User.countDocuments({ createdAt: { $lt: startDate } });
-  
-  const formattedUserGrowth = userGrowth.map(item => {
+  let cumulativeCount = await User.countDocuments({
+    createdAt: { $lt: startDate },
+  });
+
+  const formattedUserGrowth = userGrowth.map((item) => {
     cumulativeCount += item.count;
     return { date: item._id, count: cumulativeCount };
   });
@@ -440,20 +455,25 @@ export const getAdminChartData = async (period: ChartPeriod) => {
     { $match: { "liquidityScore.history.date": { $gte: startDate } } },
     {
       $group: {
-        _id: { $dateToString: { format: groupByFormat, date: "$liquidityScore.history.date" } },
-        avgScore: { $avg: "$liquidityScore.history.score" }
-      }
+        _id: {
+          $dateToString: {
+            format: groupByFormat,
+            date: "$liquidityScore.history.date",
+          },
+        },
+        avgScore: { $avg: "$liquidityScore.history.score" },
+      },
     },
-    { $sort: { "_id": 1 } }
+    { $sort: { _id: 1 } },
   ]);
 
-  const formattedLiquidity = liquidityData.map(item => ({
+  const formattedLiquidity = liquidityData.map((item) => ({
     date: item._id,
-    score: Math.round(item.avgScore)
+    score: Math.round(item.avgScore),
   }));
 
   return {
     userGrowth: formattedUserGrowth,
-    liquidity: formattedLiquidity
+    liquidity: formattedLiquidity,
   };
 };

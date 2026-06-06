@@ -11,8 +11,9 @@ import {
   Flame,
 } from "lucide-react";
 import { toast } from "sonner";
-import { problemService } from "../services/problemService";
 import SelectDropdown from "../components/ui/SelectDropdown";
+import { useProblemStats } from "../hooks/useProblemStats";
+import { useProblems } from "../hooks/useProblems";
 
 const SKILLS = [
   { value: "", label: "All skills" },
@@ -41,53 +42,27 @@ export default function Problems() {
   const [level, setLevel] = useState("all");
   const [page, setPage] = useState(1);
 
-  // Data
-  const [problems, setProblems] = useState([]);
-  const [pagination, setPagination] = useState({
-    page: 1,
-    totalPages: 1,
-    total: 0,
-  });
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [skillDropdownOpen, setSkillDropdownOpen] = useState(false);
   const skillDropdownRef = useRef(null);
 
-  // Fetch problems
-  const fetchProblems = useCallback(async () => {
-    try {
-      setLoading(true);
-      const params = { page, limit: 20 };
-      if (search) params.search = search;
-      if (skill) params.skill = skill;
-      if (level !== "all") params.level = level;
+  // User stats via TanStack Query — cached, no loading flash on re-visit
+  const { data: stats } = useProblemStats();
 
-      const data = await problemService.listProblems(params);
-      setProblems(data.problems);
-      setPagination(data.pagination);
-    } catch (error) {
-      toast.error("Failed to load problems.");
-    } finally {
-      setLoading(false);
-    }
-  }, [page, search, skill, level]);
+  // Problems list via TanStack Query — cached per filters combination
+  const { data: problemsData, isLoading } = useProblems({
+    page,
+    search,
+    skill,
+    level: level !== "all" ? level : undefined,
+  });
 
-  // Fetch stats
-  useEffect(() => {
-    const loadStats = async () => {
-      try {
-        const data = await problemService.getUserStats();
-        setStats(data.stats);
-      } catch {
-        // Stats are optional, fail silently
-      }
-    };
-    loadStats();
-  }, []);
-
-  useEffect(() => {
-    fetchProblems();
-  }, [fetchProblems]);
+  const problems = problemsData?.problems ?? [];
+  const pagination = problemsData?.pagination ?? {
+    page: 1,
+    totalPages: 1,
+    total: 0,
+  };
+  const loading = isLoading;
 
   // Debounced search
   const [searchInput, setSearchInput] = useState("");

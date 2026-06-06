@@ -11,6 +11,7 @@ import {
   getFallbackSkill,
   resolveRuntime,
 } from "../../utils/runtimeResolver.js";
+import { invalidateCache } from "../../utils/cache.js";
 
 // -- Generate the Test and create active section --
 export const generateTest = async (
@@ -270,6 +271,9 @@ export const gradeVerificationTest = async (
   // update user onboarding status
   await User.findByIdAndUpdate(userId, { onboardingStatus: "completed" });
 
+  // Invalidate cache
+  invalidateCache(`dashboard:${userId}`);
+
   // delete session after test
   await redisConnection.del(`test_session:${userId}`);
 
@@ -457,6 +461,8 @@ export const gradeMcqBoost = async (
     skillName,
     questionIds: activeSession.mcqIds,
   });
+
+  await invalidateCache(`dashboard:${userId}`);
   await redisConnection.del(`boost_session:${userId}`);
 
   return {

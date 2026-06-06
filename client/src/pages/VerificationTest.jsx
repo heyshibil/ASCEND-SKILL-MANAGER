@@ -37,6 +37,7 @@ export default function VerificationTest() {
   const [running, setRunning] = useState(false);
   const [mcqQuestions, setMcqQuestions] = useState([]);
   const [codeQuestion, setCodeQuestion] = useState(null);
+  const [loadedTestKey, setLoadedTestKey] = useState(null);
   const [runResults, setRunResults] = useState(null);
 
   // User Answer States
@@ -49,33 +50,57 @@ export default function VerificationTest() {
   );
 
   const expectedLevel = searchParams.get("level") || "beginner";
+  const testKey = `${skillName}:${expectedLevel}`;
 
   useEffect(() => {
+    let isActive = true;
+
     const fetchTest = async () => {
       try {
         setLoading(true);
+        setLoadedTestKey(null);
+        setMcqQuestions([]);
+        setCodeQuestion(null);
+        setRunResults(null);
+        setCurrentMcqIndex(0);
+        setMcqAnswers([]);
+        setCodeAnswer(
+          (user?.coreLanguage || "").toLowerCase() === "python"
+            ? "# Write your solution here\n"
+            : "// Write your solution here\n",
+        );
+
         const data = await verificationService.startTest(
           skillName,
           expectedLevel,
         );
+        if (!isActive) return;
+
         setMcqQuestions(data.mcqs);
         setCodeQuestion(data.codeTest);
+        setLoadedTestKey(testKey);
 
         // Add starter code
         if (data.codeTest?.starterCode) {
           setCodeAnswer(data.codeTest.starterCode);
         }
       } catch (error) {
+        if (!isActive) return;
         toast.error(
           error.response?.data?.message ||
             "Failed to load test. Session may already exist.",
         );
+        setLoadedTestKey(testKey);
       } finally {
-        setLoading(false);
+        if (isActive) setLoading(false);
       }
     };
     fetchTest();
-  }, [skillName]);
+
+    return () => {
+      isActive = false;
+    };
+  }, [skillName, expectedLevel, testKey, user?.coreLanguage]);
 
   const handleOptionSelect = (index) => {
     const questionId = mcqQuestions[currentMcqIndex].questionId;
@@ -184,7 +209,9 @@ export default function VerificationTest() {
     }
   };
 
-  if (loading) {
+  const isTestReady = loadedTestKey === testKey;
+
+  if (loading || !isTestReady) {
     return (
       <div
         className="theme-dark min-h-screen flex items-center justify-center text-[14px] text-[var(--text-secondary)]"
