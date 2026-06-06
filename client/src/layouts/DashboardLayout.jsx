@@ -12,7 +12,7 @@ import {
   Swords,
   Trophy
 } from "lucide-react";
-import useDashboardData from "../hooks/useDashboardData";
+import { useDashboard } from "../hooks/useDashboard";
 import LogoutModal from "../components/LogoutModal";
 import useAuthStore from "../store/useAuthStore";
 import { useMarketStore } from "../store/useMarketStore";
@@ -33,7 +33,7 @@ export default function DashboardLayout() {
     };
   }, [initializeMarketStream, closeMarketStream]);
 
-  const { data } = useDashboardData();
+  const { data } = useDashboard();
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const navigate = useNavigate();
@@ -118,13 +118,13 @@ export default function DashboardLayout() {
           <div className="flex justify-between items-center text-[13px]">
             <span className="text-[var(--text-secondary)]">Skill debts</span>
             <span className="text-[var(--danger)] font-medium font-[var(--font-mono)]">
-              {data.skillDebts.critical}
+            {data?.skillDebts?.critical ?? 0}
             </span>
           </div>
           <div className="flex justify-between items-center text-[13px]">
             <span className="text-[var(--text-secondary)]">Draining</span>
             <span className="text-[var(--warning)] font-medium font-[var(--font-mono)]">
-              {data.skillDebts.drainingSkills}
+            {data?.skillDebts?.drainingSkills ?? 0}
             </span>
           </div>
         </div>

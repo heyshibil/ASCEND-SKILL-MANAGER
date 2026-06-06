@@ -1,7 +1,7 @@
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Activity, Zap, CheckCircle2, Flame, Star } from "lucide-react";
-import useDashboardData from "../hooks/useDashboardData";
+import { useDashboard } from "../hooks/useDashboard";
 import {
   getDashboardOffset,
   getScoreColors,
@@ -28,15 +28,18 @@ const itemVariants = {
 const pad = (n) => String(n).padStart(2, "0");
 
 export default function DashboardHome() {
-  const { data, error, loading } = useDashboardData();
+  const { data, isLoading, isError } = useDashboard();
+
+  const isFirstLoad = data === undefined;
+
   const score = data?.score || 0;
   const circumference = 2 * Math.PI * 90;
 
-  // Career liquidty scores
+  // Career liquidity scores
   const { bg, color, label } = getScoreLabel(score);
 
   const { scoreColor, scoreShadow } = getScoreColors(score);
-  const dashOffset = getDashboardOffset(score, loading, circumference);
+  const dashOffset = getDashboardOffset(score, isLoading, circumference);
 
   const hotSkills = useMarketStore((state) => state.skills);
   const topFiveHotSkills = [...hotSkills]
@@ -46,8 +49,9 @@ export default function DashboardHome() {
   return (
     <motion.div
       variants={containerVariants}
-      initial="hidden"
-      animate="show"
+      // Only animate on first load — passing `false` disables animation entirely on re-visits
+      initial={isFirstLoad ? "hidden" : false}
+      animate={isFirstLoad ? "show" : false}
       className="max-w-7xl mx-auto flex flex-col gap-8"
     >
       {/* 1. Header Metrics Row */}
@@ -69,7 +73,7 @@ export default function DashboardHome() {
           </div>
           <div>
             <h3 className="text-[28px] font-medium text-[var(--text-primary)] tracking-tight">
-              {loading ? "--" : pad(data?.activeSkills || 0)}
+              {isLoading ? "--" : pad(data?.activeSkills || 0)}
             </h3>
           </div>
         </motion.div>
@@ -91,7 +95,7 @@ export default function DashboardHome() {
           </div>
           <div>
             <h3 className="text-[28px] font-medium text-[var(--text-primary)] tracking-tight">
-              {loading ? "--" : pad(data?.skillDebts?.total || 0)}
+              {isLoading ? "--" : pad(data?.skillDebts?.total || 0)}
             </h3>
           </div>
         </motion.div>
@@ -113,7 +117,7 @@ export default function DashboardHome() {
           </div>
           <div>
             <h3 className="text-[28px] font-medium text-[var(--text-primary)] tracking-tight">
-              {loading ? "--" : pad(data?.problemStats?.totalSolved || 0)}
+              {isLoading ? "--" : pad(data?.problemStats?.totalSolved || 0)}
             </h3>
           </div>
         </motion.div>
@@ -135,7 +139,7 @@ export default function DashboardHome() {
           </div>
           <div>
             <h3 className="text-[28px] font-medium text-[var(--text-primary)] tracking-tight">
-              {loading ? "--" : pad(data?.problemStats?.currentStreak || 0)}
+              {isLoading ? "--" : pad(data?.problemStats?.currentStreak || 0)}
             </h3>
           </div>
         </motion.div>
@@ -158,7 +162,7 @@ export default function DashboardHome() {
               className="px-2 py-0.5 rounded-[var(--radius-sm)] text-[12px] font-medium transition-colors"
               style={{ background: bg, color: color }}
             >
-              {loading ? "—" : label}
+              {isLoading ? "—" : label}
             </div>
           </div>
 
@@ -206,19 +210,24 @@ export default function DashboardHome() {
                   strokeDasharray={`${circumference} ${circumference}`}
                   initial={{ strokeDashoffset: circumference }}
                   animate={{ strokeDashoffset: dashOffset }}
-                  transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }}
+                  // On first load: slow dramatic animation. On tab switch: fast snap to current value.
+                  transition={{
+                    duration: isFirstLoad ? 1.5 : 0.3,
+                    ease: "easeOut",
+                    delay: isFirstLoad ? 0.2 : 0,
+                  }}
                   strokeLinecap="round"
                 />
               </svg>
 
               <div className="flex flex-col items-center">
                 <motion.span
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
+                  initial={isFirstLoad ? { opacity: 0, scale: 0.8 } : false}
+                  animate={isFirstLoad ? { opacity: 1, scale: 1 } : false}
                   transition={{ duration: 0.4, delay: 0.5 }}
                   className="text-[60px] font-medium tracking-tighter text-[var(--text-primary)]"
                 >
-                  {loading ? "--" : score}
+                  {isLoading ? "--" : score}
                 </motion.span>
                 <span className="text-[15px] text-[var(--text-tertiary)] tracking-wide font-medium mt-1">
                   /100
@@ -274,11 +283,12 @@ export default function DashboardHome() {
                       style={{ background: "var(--bg-raised)" }}
                     >
                       <motion.div
-                        initial={{ width: 0 }}
+                        // On first load: animate from 0. On tab switch: snap to value immediately.
+                        initial={isFirstLoad ? { width: 0 } : false}
                         animate={{ width: `${skill.score}%` }}
                         transition={{
-                          duration: 1,
-                          delay: i * 0.1,
+                          duration: isFirstLoad ? 1 : 0.3,
+                          delay: isFirstLoad ? i * 0.1 : 0,
                           ease: "easeOut",
                         }}
                         className="h-full rounded-full bg-green-400"
