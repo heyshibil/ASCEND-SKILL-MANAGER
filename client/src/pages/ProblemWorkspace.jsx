@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { ArrowLeft, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { problemService } from "../services/problemService";
 import { SKILL_EDITOR_MAP } from "../utils/skillEditorMap";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "../lib/queryKeys";
 
 const resolveEditorConfig = (skill) => {
   return SKILL_EDITOR_MAP[skill?.toLowerCase()] || SKILL_EDITOR_MAP.javascript;
@@ -20,6 +22,7 @@ const STATUS_CONFIG = {
 export default function ProblemWorkspace() {
   const navigate = useNavigate();
   const { questionId } = useParams();
+  const queryClient = useQueryClient();
 
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
@@ -117,6 +120,13 @@ export default function ProblemWorkspace() {
       if (data.submission.status === "accepted") {
         setSolved(true);
         toast.success("Accepted! All test cases passed.", { id: "problem-submit" });
+
+        // Invalidate TQ caches
+        queryClient.invalidateQueries({ queryKey: queryKeys.dashboard() });
+        queryClient.invalidateQueries({ queryKey: queryKeys.problemStats() });
+        queryClient.invalidateQueries({ queryKey: queryKeys.leaderboard("solved") });
+        queryClient.invalidateQueries({ queryKey: queryKeys.leaderboard("streak") });
+
         setTimeout(() => navigate("/dashboard/problems"), 1500);
       } else {
         const cfg = STATUS_CONFIG[data.submission.status];
