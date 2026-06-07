@@ -1,6 +1,10 @@
 import { createBrowserRouter } from "react-router-dom";
+import { lazy, Suspense } from "react";
 import App from "./App";
 import Login from "./pages/Login";
+
+// Lazy-load landing page to code-split Three.js (~200KB) from the app bundle
+const LandingPage = lazy(() => import("./pages/LandingPage"));
 import DashboardLayout from "./layouts/DashboardLayout";
 import DashboardHome from "./pages/DashboardHome";
 import VerifyEmail from "./pages/VerifyEmail";
@@ -31,7 +35,8 @@ export const router = createBrowserRouter([
     path: "/",
     element: <App />,
     children: [
-      { index: true, element: <Login /> },
+      { index: true, element: <Suspense fallback={<div style={{ background: '#0C0C0B', minHeight: '100vh' }} />}><LandingPage /></Suspense> },
+      { path: "login", element: <Login /> },
       {
         path: "verify-email/:token",
         element: <VerifyEmail />,
