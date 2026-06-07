@@ -1,5 +1,5 @@
-import dontenv from "dotenv";
-dontenv.config();
+import dotenv from "dotenv";
+dotenv.config();
 import { Redis, type RedisOptions } from "ioredis";
 
 const redisUrl = process.env.REDIS_URL as string;
