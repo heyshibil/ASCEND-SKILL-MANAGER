@@ -272,7 +272,10 @@ export const gradeVerificationTest = async (
   await User.findByIdAndUpdate(userId, { onboardingStatus: "completed" });
 
   // Invalidate cache
-  invalidateCache(`dashboard:${userId}`);
+  await invalidateCache(
+    `dashboard:${userId}`,
+    `leaderboard:score:page1:uid:${userId}`,
+  );
 
   // delete session after test
   await redisConnection.del(`test_session:${userId}`);
@@ -462,7 +465,10 @@ export const gradeMcqBoost = async (
     questionIds: activeSession.mcqIds,
   });
 
-  await invalidateCache(`dashboard:${userId}`);
+  await invalidateCache(
+    `dashboard:${userId}`,
+    `leaderboard:score:page1:uid:${userId}`,
+  );
   await redisConnection.del(`boost_session:${userId}`);
 
   return {
@@ -531,6 +537,11 @@ export const gradeCompilerBoost = async (
   });
 
   await redisConnection.del(`boost_session:${userId}`);
+
+  await invalidateCache(
+    `dashboard:${userId}`,
+    `leaderboard:score:page1:uid:${userId}`,
+  );
 
   return {
     passedCases,
