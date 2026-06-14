@@ -42,8 +42,11 @@ export const handleGithubAuth = async (code: string) => {
   let user = await User.findOne({ githubId: profile.id.toString() });
   let isNewUser = false;
 
-   if (user && user.status === "blocked") {
-    throw new AppError("Your account is suspended. Please contact support.", 403);
+  if (user && user.status === "blocked") {
+    throw new AppError(
+      "Your account is suspended. Please contact support.",
+      403,
+    );
   }
 
   if (!user) {
@@ -60,6 +63,11 @@ export const handleGithubAuth = async (code: string) => {
       careerGoal: "Fullstack Developer",
     });
   }
+
+  // new
+  console.log("JWT USER ID:", user._id.toString());
+  const verifyUser = await User.findById(user._id);
+  console.log("VERIFY USER EXISTS:", !!verifyUser);
 
   // Generate JWT token
   const token = generateJWT(user._id!.toString());
