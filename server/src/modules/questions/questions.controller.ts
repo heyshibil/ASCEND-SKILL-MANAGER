@@ -11,7 +11,6 @@ import { AppError } from "../../middlewares/error.middleware.js";
 import { resolveRuntime } from "../../utils/runtimeResolver.js";
 import { runCodeTest } from "../verification/compiler.service.js";
 
-
 export const seedBulkQuestions = async (
   req: Request,
   res: Response,
@@ -91,23 +90,36 @@ export const getAllQuestions = async (
   next: NextFunction,
 ) => {
   try {
-    const { page = 1, limit = 20, skill, level, type, search, showHidden } =
-      req.query;
+    const {
+      page = 1,
+      limit = 20,
+      skill,
+      level,
+      type,
+      search,
+      showHidden,
+      isVerified,
+    } = req.query;
 
     const filter: Record<string, any> = {};
 
     if (showHidden === "true") {
-      filter.isHidden = true;          // ONLY hidden questions
+      filter.isHidden = true; // ONLY hidden questions
     } else {
       filter.isHidden = { $ne: true }; // ONLY visible questions
     }
-    if (skill) filter.skill = skill;
+
+    if (isVerified === "true") filter.isVerified = true;
+    if (isVerified === "false") filter.isVerified = { $ne: true };
+    if (skill) filter.skill = { $regex: new RegExp(`^${skill}$`, "i") };
     if (level) filter.level = level;
     if (type) filter.type = type;
     if (search) {
       filter.$or = [
         { question: { $regex: search, $options: "i" } },
+        { skill: { $regex: search, $options: "i" } },
         { topic: { $regex: search, $options: "i" } },
+        { level: { $regex: search, $options: "i" } },
         { questionId: { $regex: search, $options: "i" } },
       ];
     }

@@ -10,8 +10,11 @@ import {
   ChevronRight,
   CheckCircle2,
   HelpCircle,
+  ShieldCheck,
+  Play,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 import { adminService } from "../../services/adminServices";
 import ConfirmModal from "../../components/ui/ConfirmModal";
 import EditQuestionModal from "../../components/admin/EditQuestionModal";
@@ -148,6 +151,7 @@ function QuestionDetails({ question }) {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function QuestionsViewer() {
+  const navigate = useNavigate();
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -467,6 +471,17 @@ export default function QuestionsViewer() {
                                 Hidden
                               </span>
                             )}
+                            {question.isVerified && (
+                              <span
+                                className="text-[11px] font-semibold px-1.5 py-0.5 rounded-[var(--radius-sm)] flex items-center gap-1"
+                                style={{
+                                  background: "var(--success-bg)",
+                                  color: "var(--success)",
+                                }}
+                              >
+                                <ShieldCheck className="w-3 h-3" /> Verified
+                              </span>
+                            )}
                           </div>
                         </td>
 
@@ -507,6 +522,22 @@ export default function QuestionsViewer() {
                         {/* Actions */}
                         <td className="px-6 py-4 align-middle">
                           <div className="flex items-center justify-end gap-1.5">
+                            {/* Run — code questions only */}
+                            {question.type === "code" && (
+                              <button
+                                onClick={() =>
+                                  navigate(
+                                    `/admin/questions/run?id=${question.questionId}`,
+                                  )
+                                }
+                                title="Open in Run Code page"
+                                className="px-2 py-1 flex items-center gap-1.5 text-[12px] font-medium rounded-[var(--radius-sm)] border transition-colors text-[var(--text-secondary)] hover:text-[var(--accent)] hover:bg-[var(--accent-bg)]"
+                                style={{ borderColor: "var(--border-base)" }}
+                              >
+                                <Play className="w-3 h-3" /> Run
+                              </button>
+                            )}
+
                             {/* Edit */}
                             <button
                               onClick={() => setEditQuestion(question)}
