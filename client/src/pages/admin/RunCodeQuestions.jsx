@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Terminal,
   Play,
@@ -15,14 +15,23 @@ import {
   EyeOff,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useSearchParams } from "react-router-dom";
 import { adminService } from "../../services/adminServices";
 import EditQuestionModal from "../../components/admin/EditQuestionModal";
 import SelectDropdown from "../../components/ui/SelectDropdown";
+import CodeMirror from "@uiw/react-codemirror";
+import { javascript } from "@codemirror/lang-javascript";
 
 // ── Filter option constants ───────────────────────────────────────────────────
 const VISIBILITY_OPTIONS = [
   { value: "visible", label: "Visible" },
   { value: "hidden", label: "Hidden" },
+];
+
+const VERIFIED_OPTIONS = [
+  { value: "", label: "Any status" },
+  { value: "true", label: "Verified" },
+  { value: "false", label: "Unverified" },
 ];
 
 const SKILL_OPTIONS = [
@@ -49,11 +58,14 @@ const LEVEL_COLORS = {
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-// filters: { visibility: "visible"|"hidden", skill: "", level: "" }
+// filters: { visibility, verified, skill, level }
 function buildFilterParams(filters, search, page) {
   const params = { type: "code", limit: 30, page };
-  if (search) params.search = search;
+  if (search.trim()) params.search = search.trim();
   if (filters.visibility === "hidden") params.showHidden = "true";
+  // verified: send "true" or "false" string; empty means no filter
+  if (filters.verified === "true") params.isVerified = "true";
+  if (filters.verified === "false") params.isVerified = "false";
   if (filters.skill) params.skill = filters.skill;
   if (filters.level) params.level = filters.level;
   return params;
@@ -208,12 +220,15 @@ function EmptyRunPanel() {
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function RunCodeQuestions() {
+  const [searchParams, setSearchParams] = useSearchParams();
+
   // List state
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState({
     visibility: "visible",
+    verified: "",
     skill: "",
     level: "",
   });
@@ -230,17 +245,39 @@ export default function RunCodeQuestions() {
   const [verifying, setVerifying] = useState(false);
   const [editQuestion, setEditQuestion] = useState(null);
 
+  // Ref for auto-scrolling to results after run
+  const resultsRef = useRef(null);
+
   // ── Fetch ──────────────────────────────────────────────────────────────────
+  // Note: `search` is passed explicitly so it is never stale inside the closure.
   const fetchQuestions = useCallback(
-    async (page = pagination.page) => {
+    async (page = pagination.page, currentSearch = search) => {
       try {
         setLoading(true);
-        const params = buildFilterParams(filters, search, page);
+        const params = buildFilterParams(filters, currentSearch, page);
         const res = await adminService.getAllQuestions(params);
-        setQuestions(res?.data?.questions || []);
+        const loaded = res?.data?.questions || [];
+        setQuestions(loaded);
         setPagination(
           res?.data?.pagination ?? { page: 1, pages: 1, total: 0 },
         );
+
+        // If navigated here from QuestionsViewer with ?id=<questionId>, auto-select
+        const targetId = searchParams.get("id");
+        if (targetId && loaded.length > 0) {
+          const match = loaded.find((q) => q.questionId === targetId);
+          if (match) {
+            setSelectedQuestion(match);
+            setRunCode(match.starterCode || "");
+            setRunResult(null);
+            setRunError(null);
+          } else {
+            // Target not on this page — it may be hidden; try a direct ID search
+            toast.info(`Question ${targetId} not found in visible questions.`);
+          }
+          // Clear the param so it doesn't persist on filter changes
+          setSearchParams({}, { replace: true });
+        }
       } catch {
         toast.error("Failed to load questions");
         setQuestions([]);
@@ -249,11 +286,11 @@ export default function RunCodeQuestions() {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [filters, pagination.page],
+    [filters],
   );
 
   useEffect(() => {
-    fetchQuestions(pagination.page);
+    fetchQuestions(pagination.page, search);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters, pagination.page]);
 
@@ -268,9 +305,17 @@ export default function RunCodeQuestions() {
 
   const handleSearchKey = (e) => {
     if (e.key === "Enter") {
+      // Pass search value directly — avoids any stale closure issue
       setPagination((p) => ({ ...p, page: 1 }));
-      fetchQuestions(1);
+      fetchQuestions(1, search);
     }
+  };
+
+  // Clear search resets to page 1 and refetches with empty string
+  const handleSearchClear = () => {
+    setSearch("");
+    setPagination((p) => ({ ...p, page: 1 }));
+    fetchQuestions(1, "");
   };
 
   const handleSelectQuestion = (q) => {
@@ -298,6 +343,10 @@ export default function RunCodeQuestions() {
       );
     } finally {
       setRunning(false);
+      // Auto-scroll to results after a short paint delay
+      setTimeout(() => {
+        resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 80);
     }
   };
 
@@ -371,39 +420,44 @@ export default function RunCodeQuestions() {
             borderColor: "var(--border-subtle)",
           }}
         >
-          {/* ── Filter dropdowns ── */}
+          {/* ── Filters + Search ── */}
           <div
             className="px-3 pt-3 pb-2.5 border-b flex flex-col gap-2"
             style={{ borderColor: "var(--border-subtle)" }}
           >
-            {/* Visibility */}
-            <SelectDropdown
-              options={VISIBILITY_OPTIONS}
-              value={filters.visibility}
-              onChange={(v) => handleFilterChange("visibility", v)}
-              placeholder="Visibility"
-            />
-            {/* Skill */}
-            <SelectDropdown
-              options={SKILL_OPTIONS}
-              value={filters.skill}
-              onChange={(v) => handleFilterChange("skill", v)}
-              placeholder="All skills"
-            />
-            {/* Level */}
-            <SelectDropdown
-              options={LEVEL_OPTIONS}
-              value={filters.level}
-              onChange={(v) => handleFilterChange("level", v)}
-              placeholder="All levels"
-            />
-          </div>
+            {/* 2-column grid — dropdowns fill their cells (SelectDropdown button is now w-full) */}
+            <div className="grid grid-cols-2 gap-1.5">
+              <SelectDropdown
+                options={VISIBILITY_OPTIONS}
+                value={filters.visibility}
+                onChange={(v) => handleFilterChange("visibility", v)}
+                placeholder="Visibility"
+                className="w-full"
+              />
+              <SelectDropdown
+                options={VERIFIED_OPTIONS}
+                value={filters.verified}
+                onChange={(v) => handleFilterChange("verified", v)}
+                placeholder="Any status"
+                className="w-full"
+              />
+              <SelectDropdown
+                options={SKILL_OPTIONS}
+                value={filters.skill}
+                onChange={(v) => handleFilterChange("skill", v)}
+                placeholder="All skills"
+                className="w-full"
+              />
+              <SelectDropdown
+                options={LEVEL_OPTIONS}
+                value={filters.level}
+                onChange={(v) => handleFilterChange("level", v)}
+                placeholder="All levels"
+                className="w-full"
+              />
+            </div>
 
-          {/* ── Search ── */}
-          <div
-            className="px-3 py-2 border-b"
-            style={{ borderColor: "var(--border-subtle)" }}
-          >
+            {/* Search — full width below the grid */}
             <div className="relative">
               <Search
                 className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5"
@@ -411,22 +465,35 @@ export default function RunCodeQuestions() {
               />
               <input
                 type="text"
-                placeholder="Search… (Enter)"
+                placeholder="Search ID, text, skill… ↵"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={handleSearchKey}
-                className="pl-8 pr-3 h-8 w-full rounded-[var(--radius-md)] border text-[12px] outline-none focus:border-[var(--accent)] transition-colors"
+                className="pl-8 h-8 w-full rounded-[var(--radius-md)] border text-[12px] outline-none focus:border-[var(--accent)] transition-colors"
                 style={{
                   background: "var(--bg-raised)",
                   borderColor: "var(--border-base)",
                   color: "var(--text-primary)",
+                  paddingRight: search ? "28px" : "8px",
                 }}
               />
+              {search && (
+                <button
+                  onClick={handleSearchClear}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors"
+                  aria-label="Clear search"
+                >
+                  ✕
+                </button>
+              )}
             </div>
           </div>
 
           {/* ── Question list — scrolls independently ── */}
-          <div className="flex-1 overflow-y-auto min-h-0">
+          <div
+            className="flex-1 overflow-y-auto min-h-0"
+            style={{ scrollbarColor: "var(--border-base) transparent", scrollbarWidth: "thin" }}
+          >
             {loading ? (
               [...Array(6)].map((_, i) => (
                 <div
@@ -649,7 +716,10 @@ export default function RunCodeQuestions() {
               </div>
 
               {/* ── Scrollable panel body ── */}
-              <div className="flex-1 overflow-y-auto min-h-0 p-6 flex flex-col gap-6">
+              <div
+                className="flex-1 overflow-y-auto min-h-0 p-6 flex flex-col gap-6"
+                style={{ scrollbarColor: "var(--border-base) transparent", scrollbarWidth: "thin" }}
+              >
                 {/* Problem statement */}
                 <div>
                   <span
@@ -710,7 +780,7 @@ export default function RunCodeQuestions() {
                   </div>
                 )}
 
-                {/* Code editor */}
+                {/* Code editor — CodeMirror (matches EditQuestionModal / QuestionsManager) */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <span
@@ -729,22 +799,24 @@ export default function RunCodeQuestions() {
                       Reset to starter code
                     </button>
                   </div>
-                  <textarea
-                    value={runCode}
-                    onChange={(e) => setRunCode(e.target.value)}
-                    rows={12}
-                    spellCheck={false}
-                    className="w-full border rounded-[var(--radius-md)] px-4 py-3 text-[13px] font-[var(--font-mono)] leading-relaxed outline-none transition-colors focus:border-[var(--accent)] resize-y"
-                    style={{
-                      background: "var(--bg-surface)",
-                      borderColor: "var(--border-base)",
-                      color: "var(--text-primary)",
-                    }}
-                    placeholder="Paste or write your solution here…"
-                  />
+                  <div
+                    className="rounded-[var(--radius-lg)] overflow-hidden border"
+                    style={{ borderColor: "var(--border-base)" }}
+                  >
+                    <CodeMirror
+                      value={runCode}
+                      height="280px"
+                      extensions={[javascript()]}
+                      onChange={(val) => setRunCode(val)}
+                      theme="light"
+                    />
+                  </div>
                 </div>
 
-                {/* Result summary inline (below code, above per-test rows) */}
+                {/* Results anchor — auto-scrolled to after run */}
+                <div ref={resultsRef} />
+
+                {/* Result summary inline */}
                 {runResult && !running && (
                   <div className="flex items-center gap-3">
                     <span
