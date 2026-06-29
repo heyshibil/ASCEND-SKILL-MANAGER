@@ -74,7 +74,7 @@ export default function AdminLayout() {
           <NavLink to="/admin/market" className={navItemClass}>
             <TrendingUp className="w-4 h-4" /> Market
           </NavLink>
-          <NavLink to="/admin/questions" className={navItemClass}>
+          <NavLink to="/admin/questions" end className={navItemClass}>
             <HelpCircle className="w-4 h-4" /> Seed questions
           </NavLink>
           <NavLink to="/admin/questions/viewer" className={navItemClass}>
