@@ -99,6 +99,7 @@ export const getAllQuestions = async (
       search,
       showHidden,
       isVerified,
+      sort,
     } = req.query;
 
     const filter: Record<string, any> = {};
@@ -127,9 +128,18 @@ export const getAllQuestions = async (
     const pageNum = Number(page);
     const limitNum = Number(limit);
 
+    let sortObj: Record<string, any> = { createdAt: -1 };
+    if (sort === "old") {
+      sortObj = { createdAt: 1 };
+    } else if (sort === "verified") {
+      sortObj = { isVerified: -1, createdAt: -1 };
+    } else if (sort === "unverified") {
+      sortObj = { isVerified: 1, createdAt: -1 };
+    }
+
     const [questions, total] = await Promise.all([
       Question.find(filter)
-        .sort({ createdAt: -1 })
+        .sort(sortObj)
         .skip((pageNum - 1) * limitNum)
         .limit(limitNum)
         .lean(),

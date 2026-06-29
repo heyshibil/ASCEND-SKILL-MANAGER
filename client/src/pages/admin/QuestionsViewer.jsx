@@ -18,6 +18,7 @@ import { useNavigate } from "react-router-dom";
 import { adminService } from "../../services/adminServices";
 import ConfirmModal from "../../components/ui/ConfirmModal";
 import EditQuestionModal from "../../components/admin/EditQuestionModal";
+import SelectDropdown from "../../components/ui/SelectDropdown";
 
 // ── QuestionDetails ────────────────────────────────────────────────────────────
 // Renders the full expanded detail panel below a question row.
@@ -157,6 +158,7 @@ export default function QuestionsViewer() {
   const [search, setSearch] = useState("");
   const [showHidden, setShowHidden] = useState(false);
   const [filters, setFilters] = useState({ type: "", level: "" });
+  const [sortBy, setSortBy] = useState("newest");
   const [pagination, setPagination] = useState({
     page: 1,
     pages: 1,
@@ -181,6 +183,7 @@ export default function QuestionsViewer() {
         showHidden: showHidden ? "true" : undefined,
         type: filters.type || undefined,
         level: filters.level || undefined,
+        sort: sortBy,
       });
       setQuestions(res?.data?.questions || []);
       setPagination(res?.data?.pagination ?? { page: 1, pages: 1, total: 0 });
@@ -195,7 +198,7 @@ export default function QuestionsViewer() {
   useEffect(() => {
     fetchQuestions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pagination.page, filters, showHidden]);
+  }, [pagination.page, filters, showHidden, sortBy]);
 
   // ── Handlers ─────────────────────────────────────────────────────────────────
   const handleSearch = (e) => {
@@ -359,11 +362,31 @@ export default function QuestionsViewer() {
           </button>
         ))}
 
-        {(filters.type || filters.level || showHidden) && (
+        <span className="text-[12px] font-medium text-[var(--text-tertiary)] ml-4 mr-1">
+          Sort:
+        </span>
+        <SelectDropdown
+          options={[
+            { value: "newest", label: "Newest" },
+            { value: "old", label: "Oldest" },
+            { value: "verified", label: "Verified" },
+            { value: "unverified", label: "Unverified" },
+          ]}
+          value={sortBy}
+          onChange={(val) => {
+            setSortBy(val);
+            setPagination((prev) => ({ ...prev, page: 1 }));
+          }}
+          placeholder="Sort by"
+          className="min-w-[130px]"
+        />
+
+        {(filters.type || filters.level || showHidden || sortBy !== "newest") && (
           <button
             onClick={() => {
               setFilters({ type: "", level: "" });
               setShowHidden(false);
+              setSortBy("newest");
               setPagination((prev) => ({ ...prev, page: 1 }));
             }}
             className="ml-2 text-[12px] text-[var(--text-tertiary)] hover:text-[var(--danger)] transition-colors"
