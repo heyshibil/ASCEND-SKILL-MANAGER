@@ -71,7 +71,6 @@ function buildFilterParams(filters, search, page) {
   return params;
 }
 
-
 // ── QuestionCard ──────────────────────────────────────────────────────────────
 function QuestionCard({ question, isSelected, onClick }) {
   const levelStyle = LEVEL_COLORS[question.level] || {};
@@ -172,8 +171,16 @@ function TestCaseRow({ result, index }) {
       </div>
       <div className="grid grid-cols-1 gap-1 text-[12px] font-[var(--font-mono)]">
         {[
-          { label: "Input", value: result.input, color: "var(--text-secondary)" },
-          { label: "Expected", value: result.expected, color: "var(--success)" },
+          {
+            label: "Input",
+            value: result.input,
+            color: "var(--text-secondary)",
+          },
+          {
+            label: "Expected",
+            value: result.expected,
+            color: "var(--success)",
+          },
           {
             label: "Got",
             value: result.actual,
@@ -258,9 +265,7 @@ export default function RunCodeQuestions() {
         const res = await adminService.getAllQuestions(params);
         const loaded = res?.data?.questions || [];
         setQuestions(loaded);
-        setPagination(
-          res?.data?.pagination ?? { page: 1, pages: 1, total: 0 },
-        );
+        setPagination(res?.data?.pagination ?? { page: 1, pages: 1, total: 0 });
 
         // If navigated here from QuestionsViewer with ?id=<questionId>, auto-select
         const targetId = searchParams.get("id");
@@ -332,20 +337,22 @@ export default function RunCodeQuestions() {
     setRunError(null);
     try {
       const res = await adminService.adminRunCodeQuestion(
-        selectedQuestion._id,
+        selectedQuestion.questionId,
         runCode,
       );
       setRunResult(res.result);
     } catch (err) {
       setRunError(
-        err?.response?.data?.message ||
-          "Execution failed. Check server logs.",
+        err?.response?.data?.message || "Execution failed. Check server logs.",
       );
     } finally {
       setRunning(false);
       // Auto-scroll to results after a short paint delay
       setTimeout(() => {
-        resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        resultsRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
       }, 80);
     }
   };
@@ -355,14 +362,17 @@ export default function RunCodeQuestions() {
     const next = !selectedQuestion.isVerified;
     setVerifying(true);
     try {
-      await adminService.toggleQuestionVerified(selectedQuestion._id, next);
+      await adminService.toggleQuestionVerified(
+        selectedQuestion.questionId,
+        next,
+      );
       toast.success(
         next ? "Question marked as verified" : "Verified status removed",
       );
       const updated = { ...selectedQuestion, isVerified: next };
       setSelectedQuestion(updated);
       setQuestions((prev) =>
-        prev.map((q) => (q._id === selectedQuestion._id ? updated : q)),
+        prev.map((q) => (q._id === selectedQuestion.questionId ? updated : q)),
       );
     } catch (err) {
       toast.error(
@@ -386,10 +396,7 @@ export default function RunCodeQuestions() {
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     // Outer: fixed-height column — does NOT scroll itself
-    <div
-      className="flex flex-col"
-      style={{ height: "calc(100vh - 112px)" }}
-    >
+    <div className="flex flex-col" style={{ height: "calc(100vh - 112px)" }}>
       {/* ── Page header ── */}
       <div className="flex-none mb-5">
         <h1
@@ -492,7 +499,10 @@ export default function RunCodeQuestions() {
           {/* ── Question list — scrolls independently ── */}
           <div
             className="flex-1 overflow-y-auto min-h-0"
-            style={{ scrollbarColor: "var(--border-base) transparent", scrollbarWidth: "thin" }}
+            style={{
+              scrollbarColor: "var(--border-base) transparent",
+              scrollbarWidth: "thin",
+            }}
           >
             {loading ? (
               [...Array(6)].map((_, i) => (
@@ -527,7 +537,7 @@ export default function RunCodeQuestions() {
                 <QuestionCard
                   key={q._id}
                   question={q}
-                  isSelected={selectedQuestion?._id === q._id}
+                  isSelected={selectedQuestion?.questionId === q.questionId}
                   onClick={() => handleSelectQuestion(q)}
                 />
               ))
@@ -718,7 +728,10 @@ export default function RunCodeQuestions() {
               {/* ── Scrollable panel body ── */}
               <div
                 className="flex-1 overflow-y-auto min-h-0 p-6 flex flex-col gap-6"
-                style={{ scrollbarColor: "var(--border-base) transparent", scrollbarWidth: "thin" }}
+                style={{
+                  scrollbarColor: "var(--border-base) transparent",
+                  scrollbarWidth: "thin",
+                }}
               >
                 {/* Problem statement */}
                 <div>
@@ -767,12 +780,14 @@ export default function RunCodeQuestions() {
                           >
                             {tc.input || "—"}
                           </span>
-                          <span style={{ color: "var(--text-tertiary)" }}>→</span>
+                          <span style={{ color: "var(--text-tertiary)" }}>
+                            →
+                          </span>
                           <span
                             className="flex-1 truncate"
                             style={{ color: "var(--success)" }}
                           >
-                            {tc.output || "—"}
+                            {tc.output  || "—"}
                           </span>
                         </div>
                       ))}

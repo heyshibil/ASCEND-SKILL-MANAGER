@@ -113,7 +113,7 @@ function QuestionDetails({ question }) {
                   </span>
                   <span className="text-[var(--text-tertiary)]">→</span>
                   <span className="text-[var(--success)] flex-1 truncate">
-                    {tc.output || "—"}
+                    {tc.expectedOutput  || "—"}
                   </span>
                 </div>
               ))}
@@ -215,14 +215,14 @@ export default function QuestionsViewer() {
     if (!softDeleteTarget) return;
     const { question, nextIsHidden } = softDeleteTarget;
     try {
-      await adminService.toggleQuestionVisibility(question._id, nextIsHidden);
+      await adminService.toggleQuestionVisibility(question.questionId, nextIsHidden);
       toast.success(
         nextIsHidden ? "Question hidden from users" : "Question is now visible",
       );
       // Optimistic local update — no full refetch needed
       setQuestions((prev) =>
         prev.map((q) =>
-          q._id === question._id ? { ...q, isHidden: nextIsHidden } : q,
+          q._id === question.questionId ? { ...q, isHidden: nextIsHidden } : q,
         ),
       );
     } catch (error) {
@@ -237,7 +237,7 @@ export default function QuestionsViewer() {
   const confirmHardDelete = async () => {
     if (!hardDeleteTarget) return;
     try {
-      await adminService.deleteQuestion(hardDeleteTarget._id);
+      await adminService.deleteQuestion(hardDeleteTarget.questionId);
       toast.success("Question permanently deleted");
       // Remove from local list immediately
       setQuestions((prev) =>
@@ -460,11 +460,11 @@ export default function QuestionsViewer() {
                 </tr>
               ) : (
                 questions.map((question) => {
-                  const isExpanded = expandedId === question._id;
+                  const isExpanded = expandedId === question.questionId;
                   const isHidden = question.isHidden;
 
                   return (
-                    <React.Fragment key={question._id}>
+                    <React.Fragment key={question.questionId}>
                       {/* ── Summary row ── */}
                       <tr
                         className="hover:bg-[var(--bg-raised)] transition-colors"
@@ -618,7 +618,7 @@ export default function QuestionsViewer() {
 
                             {/* Expand toggle */}
                             <button
-                              onClick={() => toggleExpand(question._id)}
+                              onClick={() => toggleExpand(question.questionId)}
                               title={isExpanded ? "Collapse" : "View details"}
                               className="px-2 py-1 flex items-center gap-1 text-[12px] font-medium rounded-[var(--radius-sm)] border transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-raised)]"
                               style={{
