@@ -18,14 +18,14 @@ const router = Router();
 router.post("/", authenticate, isAdmin, createQuestion);
 router.post("/bulk", authenticate, isAdmin, seedBulkQuestions);
 router.get("/", authenticate, isAdmin, getAllQuestions);
-router.get("/:id", authenticate, isAdmin, getQuestionById);
-router.patch("/:id", authenticate, isAdmin, updateQuestion);
-router.patch("/:id/visibility", authenticate, isAdmin, toggleVisibility);
-router.patch("/:id/verified", authenticate, isAdmin, toggleVerified);
-router.delete("/:id", authenticate, isAdmin, deleteQuestion);
+router.get("/:questionId", authenticate, isAdmin, getQuestionById);
+router.patch("/:questionId", authenticate, isAdmin, updateQuestion);
+router.patch("/:questionId/visibility", authenticate, isAdmin, toggleVisibility);
+router.patch("/:questionId/verified", authenticate, isAdmin, toggleVerified);
+router.delete("/:questionId", authenticate, isAdmin, deleteQuestion);
 
 // Admin run-code: no rate limiter — auth + isAdmin only
-router.post("/:id/run", authenticate, isAdmin, adminRunCode);
+router.post("/:questionId/run", authenticate, isAdmin, adminRunCode);
 
 export default router;
 

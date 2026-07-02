@@ -43,7 +43,7 @@ export default function EditQuestionModal({ question, onClose, onSaved }) {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await adminService.updateQuestion(question._id, formData);
+      await adminService.updateQuestion(question.questionId, formData);
       toast.success("Question updated successfully");
       onSaved();
     } catch (error) {
