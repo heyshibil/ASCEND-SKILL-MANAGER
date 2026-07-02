@@ -25,6 +25,20 @@ type RandomQuestionRow = {
   level: string;
 };
 
+type UpdateQuestionInput = {
+  skill?: string | undefined;
+  level?: ("beginner" | "intermediate" | "advanced") | undefined;
+  topic?: string | undefined;
+  question?: string | undefined;
+  options?: string[] | undefined;
+  correctAnswerIndex?: number | undefined;
+  starterCode?: string | undefined;
+  validationScript?: string | undefined;
+  testCases?: { input: string; output: string }[] | undefined;
+  isHidden?: boolean | undefined;
+  isVerified?: boolean | undefined;
+};
+
 export const insertQuestion = async (data: NewQuestionInput) => {
   return prisma.$transaction(async (tx) => {
     const question = await tx.question.create({
@@ -94,14 +108,18 @@ export const findRandomQuestions = async (params: {
 
   const excludeList = excludeQuestionIds.length > 0 ? excludeQuestionIds : [""];
 
+  // Only code questions need isVerified check
+  const verifiedFilter =
+    type === "code" ? Prisma.sql`AND "isVerified" = true` : Prisma.sql``;
+
   const rows = await prisma.$queryRaw<RandomQuestionRow[]>(Prisma.sql`
   SELECT id, "questionId", question, options, level
   FROM "Question"
   WHERE skill = ${skill}
     AND type = ${type}::"QuestionType"
     AND level = ${level}::"QuestionLevel"
-    AND "isVerified" = true
     AND "isHidden" = false
+    ${verifiedFilter}
     AND "questionId" NOT IN (${Prisma.join(excludeList)})
   ORDER BY RANDOM()
   LIMIT ${count}
@@ -170,20 +188,6 @@ export const listQuestions = async (params: {
   ]);
 
   return { problems, total };
-};
-
-type UpdateQuestionInput = {
-  skill?: string | undefined;
-  level?: ("beginner" | "intermediate" | "advanced") | undefined;
-  topic?: string | undefined;
-  question?: string | undefined;
-  options?: string[] | undefined;
-  correctAnswerIndex?: number | undefined;
-  starterCode?: string | undefined;
-  validationScript?: string | undefined;
-  testCases?: { input: string; output: string }[] | undefined;
-  isHidden?: boolean | undefined;
-  isVerified?: boolean | undefined;
 };
 
 export const updateQuestion = async (
@@ -345,4 +349,34 @@ export const listQuestionsAdmin = async (params: {
 
 export const deleteQuestionByQuestionId = async (questionId: string) => {
   return prisma.question.delete({ where: { questionId } }).catch(() => null);
+};
+
+export const findVerifiedCodeQuestion = async (questionId: string) => {
+  return prisma.question.findFirst({
+    where: {
+      questionId,
+      type: "code",
+      isVerified: true,
+      isHidden: false,
+    },
+    include: {
+      testCases: {
+        orderBy: { sortOrder: "asc" },
+      },
+    },
+  });
+};
+
+export const findManyQuestionsForGrading = async (questionIds: string[]) => {
+  return prisma.question.findMany({
+    where: {
+      questionId: { in: questionIds },
+    },
+    select: {
+      questionId: true,
+      question: true,
+      options: true,
+      correctAnswerIndex: true,
+    },
+  });
 };
