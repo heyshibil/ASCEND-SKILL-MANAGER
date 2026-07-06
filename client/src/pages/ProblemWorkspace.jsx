@@ -246,7 +246,7 @@ export default function ProblemWorkspace() {
                       </div>
                       <div className="flex items-start border-t pt-2" style={{ borderColor: "var(--border-subtle)" }}>
                         <span className="text-[var(--text-tertiary)] w-20 shrink-0">Expected:</span>
-                        <span className="text-[var(--success)] font-medium">{tc.output}</span>
+                        <span className="text-[var(--success)] font-medium">{tc.expectedOutput}</span>
                       </div>
                     </div>
                   ))}

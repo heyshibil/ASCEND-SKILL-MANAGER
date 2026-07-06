@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// postgresql models
+
+enum QuestionType {
+  mcq
+  code
+}
+
+enum QuestionLevel {
+  beginner
+  intermediate
+  advanced
+}
+
+model Question {
+  id                 Int                @id @default(autoincrement())
+  questionId         String             @unique @db.VarChar(30)
+  skill              String             @db.VarChar(50)
+  level              QuestionLevel
+  topic              String             @db.VarChar(200)
+  type               QuestionType
+  question            String?            @db.Text
+
+  // MCQ-only fields
+  options            String[]
+  correctAnswerIndex Int?
+
+  // Code-only fields
+  starterCode        String?            @db.Text
+  validationScript   String?            @db.Text
+
+  // Admin workflow fields (from our earlier discussion)
+  isHidden           Boolean            @default(false)
+  isVerified         Boolean            @default(false)
+
+  // Relation to test cases
+  testCases          QuestionTestCase[]
+
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  @@index([skill])
+  @@index([level])
+  @@index([skill, level])
+  @@index([type])
+  @@index([skill, level, type])
+}
+
+model QuestionTestCase {
+  id             Int      @id @default(autoincrement())
+  questionPk     Int
+  sortOrder      Int      @default(0)
+  input          String   @db.Text
+  expectedOutput String   @db.Text
+
+  question       Question @relation(fields: [questionPk], references: [id], onDelete: Cascade)
+
+  @@unique([questionPk, sortOrder])
+  @@index([questionPk])
+}

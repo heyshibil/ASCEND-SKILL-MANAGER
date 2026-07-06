@@ -1,4 +1,4 @@
-import { Question } from "../../models/Question.js";
+import { generateNextQuestionId } from "./questions.repository.js";
 
 const SKILL_MAP: Record<string, string> = {
   javascript: "JS",
@@ -24,17 +24,5 @@ export const generateQuestionId = async (
 
   const prefix = `${typePrefix}-${safeSkill}-${safeLevel}`;
 
-  const lastQuestion = await Question.findOne({
-    questionId: { $regex: `^${prefix}-\\d+$` },
-  }).sort({ questionId: -1 });
-
-  let nextNumber = 1;
-  if (lastQuestion && lastQuestion.questionId) {
-    const match = lastQuestion.questionId.match(/\d+$/);
-    if (match) {
-      nextNumber = parseInt(match[0], 10) + 1;
-    }
-  }
-
-  return `${prefix}-${nextNumber.toString().padStart(3, "0")}`;
+  return generateNextQuestionId(prefix);
 };

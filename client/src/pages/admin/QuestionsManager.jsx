@@ -362,7 +362,7 @@ export default function QuestionsManager() {
                         </span>
                         <input
                           type="text"
-                          value={tc.output}
+                          value={tc.expectedOutput }
                           onChange={(e) =>
                             handleTestCaseChange(idx, "output", e.target.value)
                           }
