@@ -1,10 +1,13 @@
 import { AppError } from "../../middlewares/error.middleware.js";
-import { Question } from "../../models/Question.js";
 import { Submission } from "../../models/Submission.js";
 import { UserProblemStats } from "../../models/UserProblemStats.js";
 import type { RunCodeResult } from "../../types/index.js";
 import { invalidateCache } from "../../utils/cache.js";
 import { resolveRuntime } from "../../utils/runtimeResolver.js";
+import {
+  listQuestions,
+  findVerifiedCodeQuestion,
+} from "../questions/questions.repository.js";
 import { runCodeTest } from "../verification/compiler.service.js";
 
 // helper: getEffective streak rate
@@ -41,42 +44,16 @@ export const listProblems = async (
   const limit = Math.min(50, Math.max(1, query.limit || 20));
   const skip = (page - 1) * limit;
 
-  const filter: Record<string, any> = {
+  const { problems, total } = await listQuestions({
     type: "code",
-    isVerified: true,
-    isHidden: { $ne: true },
-  };
-
-  if (query.skill) {
-    filter.skill = query.skill;
-  }
-
-  if (query.level) {
-    filter.level = query.level;
-  }
-
-  if (query.search) {
-    filter.$or = [
-      { question: { $regex: query.search, $options: "i" } },
-      { topic: { $regex: query.search, $options: "i" } },
-      { skill: { $regex: query.search, $options: "i" } },
-    ];
-  }
-
-  const [problems, total] = await Promise.all([
-    Question.find(filter, {
-      questionId: 1,
-      skill: 1,
-      level: 1,
-      topic: 1,
-      question: 1,
-    })
-      .sort({ skill: 1, level: 1 })
-      .skip(skip)
-      .limit(limit)
-      .lean(),
-    Question.countDocuments(filter),
-  ]);
+    skip,
+    limit,
+    ...(query.skill ? { skill: query.skill } : {}),
+    ...(query.level
+      ? { level: query.level as "beginner" | "intermediate" | "advanced" }
+      : {}),
+    ...(query.search ? { search: query.search } : {}),
+  });
 
   // Get User stats
   const stats = await UserProblemStats.findOne({ userId }).lean();
@@ -101,10 +78,7 @@ export const listProblems = async (
 
 // -- Get single problem detail --
 export const getProblem = async (questionId: string, userId: string) => {
-  const problem = await Question.findOne(
-    { questionId, type: "code", isVerified: true, isHidden: { $ne: true } },
-    { correctAnswerIndex: 0 },
-  ).lean();
+  const problem = await findVerifiedCodeQuestion(questionId);
 
   if (!problem) {
     throw new AppError("Problem not found.", 404);
@@ -135,19 +109,19 @@ export const runProblem = async (
   questionId: string,
   code: string,
 ): Promise<RunCodeResult> => {
-  const problem = await Question.findOne({
-    questionId,
-    type: "code",
-    isVerified: true,
-    isHidden: { $ne: true },
-  });
+  const problem = await findVerifiedCodeQuestion(questionId);
 
   if (!problem || !problem.testCases) {
     throw new AppError("Problem not found or has no test cases.", 404);
   }
 
   const runtime = resolveRuntime(problem.skill);
-  return runCodeTest(code, problem.testCases, runtime);
+  const testCases = problem.testCases.map((tc) => ({
+    input: tc.input,
+    output: tc.expectedOutput,
+  }));
+
+  return runCodeTest(code, testCases, runtime);
 };
 
 // -- Update stats on accepted submission --
@@ -214,12 +188,7 @@ export const submitProblem = async (
   questionId: string,
   code: string,
 ) => {
-  const problem = await Question.findOne({
-    questionId,
-    type: "code",
-    isVerified: true,
-    isHidden: { $ne: true },
-  });
+  const problem = await findVerifiedCodeQuestion(questionId);
 
   if (!problem || !problem.testCases) {
     throw new AppError("Problem not found or has no test cases.", 404);
@@ -227,7 +196,13 @@ export const submitProblem = async (
 
   const runtime = resolveRuntime(problem.skill);
   const start = Date.now();
-  const result = await runCodeTest(code, problem.testCases, runtime);
+
+  const testCases = problem.testCases.map((tc) => ({
+    input: tc.input,
+    output: tc.expectedOutput,
+  }));
+
+  const result = await runCodeTest(code, testCases, runtime);
   const executionTimeMs = Date.now() - start;
 
   let status: "accepted" | "wrong_answer" | "runtime_error" | "time_limit";
