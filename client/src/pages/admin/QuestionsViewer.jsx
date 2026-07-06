@@ -113,7 +113,7 @@ function QuestionDetails({ question }) {
                   </span>
                   <span className="text-[var(--text-tertiary)]">→</span>
                   <span className="text-[var(--success)] flex-1 truncate">
-                    {tc.expectedOutput  || "—"}
+                    {tc.output  || "—"}
                   </span>
                 </div>
               ))}
