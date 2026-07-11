@@ -6,8 +6,18 @@ import { updateLastSeen } from "../../middlewares/user.middleware.js";
 
 const router = Router();
 
-router.get("/dashboard", authenticate, updateLastSeen, userController.getDashboardStats);
-router.patch("/profile", authenticate, updateLastSeen, userController.updateProfile);
+router.get(
+  "/dashboard",
+  authenticate,
+  updateLastSeen,
+  userController.getDashboardStats,
+);
+router.patch(
+  "/profile",
+  authenticate,
+  updateLastSeen,
+  userController.updateProfile,
+);
 router.post(
   "/email-change/request",
   authenticate,
@@ -21,7 +31,10 @@ router.post(
   updateLastSeen,
   userController.requestPasswordChange,
 );
-router.get("/password-change/verify/:token", userController.verifyPasswordChange);
+router.get(
+  "/password-change/verify/:token",
+  userController.verifyPasswordChange,
+);
 
 // --- ADMIN ROUTES ---
 router.get("/admin/all", authenticate, isAdmin, userController.getAllUsers);
@@ -33,8 +46,18 @@ router.patch(
   userController.updateUserStatus,
 );
 
-router.get("/admin/dashboard", authenticate, isAdmin, userController.getAdminDashboardStats);
+router.get(
+  "/admin/dashboard",
+  authenticate,
+  isAdmin,
+  userController.getAdminDashboardStats,
+);
 
-router.get("/admin/charts", authenticate, isAdmin, userController.getAdminChartData);
+router.get(
+  "/admin/charts",
+  authenticate,
+  isAdmin,
+  userController.getAdminChartData,
+);
 
 export default router;
