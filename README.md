@@ -1,4 +1,5 @@
 # ⚡Ascend — Developer Skill Intelligence Platform
+![CI](https://github.com/heyshibil/ASCEND-SKILL-MANAGER/actions/workflows/ci.yml/badge.svg)
 
 Ascend is a full-stack web application that measures, tracks, and grows your technical skills using a science-backed decay model. It is built for software developers who want to stay sharp, identify skill gaps, and understand where the job market is heading. Unlike static portfolios or self-reported skill lists, Ascend treats your skills as living assets, they grow when you practise and decay when you don't, giving you an honest, real-time picture of your developer profile.
 
