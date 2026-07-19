@@ -42,6 +42,7 @@ Ascend is a full-stack web application that measures, tracks, and grows your tec
 | Logging | Morgan |
 | Security headers | Helmet |
 | Rate limiting | express-rate-limit |
+| Testing | Jest 30, ts-jest, Supertest 7 |
 
 ### 🛠️ Tools & Integrations
 
@@ -410,15 +411,42 @@ All routes are prefixed with `/api`. Rate limiting is applied at the route group
 
 **Real-Time Data with SSE** — Using Server-Sent Events for the market intelligence feed was a practical lesson in when SSE is a better fit than WebSockets (one-directional push, simpler infrastructure, HTTP/2 compatible) and how to manage persistent connections on the server.
 
+**ESM-Compatible Mocking with Jest** — Writing test suites for Node.js ES Modules taught me how to work around hoisting limitations. I leveraged `jest.unstable_mockModule` combined with dynamic `await import()` statements to register mocks in the module loader before resolving application code.
+
+---
+
+## 🧪 Automated Testing Suite
+
+Ascend has a complete automated test suite comprising **14 test files and 174 test cases** with a 100% success rate. The suite is structured into three execution phases designed to minimize external handles, isolate features, and verify endpoints:
+
+### 1. Pure Unit Tests (No Mocks)
+Zero-dependency tests covering pure functions, mathematical formulas, and schema rules:
+* `runtimeResolver.test.ts` (17 tests) — Verifies skill-to-runtime execution mappings.
+* `skillConstants.test.ts` (20 tests) — Enforces status classification (healthy/draining/debt) and practice hikes.
+* `skillMap.test.ts` (13 tests) — Checks stability constants and dependency associations.
+* `getEffectiveStreak.test.ts` (8 tests) — Tests daily problem-solving streak preservation/reset thresholds.
+* `questions.validation.test.ts` (27 tests) — Tests input schemas for MCQs (exactly 4 options) and code templates.
+* `auth.validation.test.ts` (18 tests) — Validates user registration fields (email, passwords, regex username constraints).
+* `error.middleware.test.ts` (9 tests) — Confirms central error classifications (400 ZodError, 409 Mongo duplicates, custom AppErrors).
+
+### 2. Mocked Unit Tests (Isolated Services)
+Tests services and utilities using `jest.unstable_mockModule` to intercept all database queries and external integrations (Redis, AWS Lambda, BullMQ, mail delivery):
+* `auth.service.test.ts` (12 tests) — Validates password checks, blocked status, unverified registration, and OAuth credentials bypass.
+* `questions.service.test.ts` (14 tests) — Verifies atomic, unique questionId prefix generation (e.g. `MCQ-JS-BEG-NNN`).
+* `cache.test.ts` (10 tests) — Confirms Stale-While-Revalidate (SWR) stale caching and background refresh triggers.
+* `user.service.test.ts` (9 tests) — Tests composite average liquidity score updates, date-based history pushing, and array capping (keeps last 100 entries).
+* `verification.session.test.ts` (9 tests) — Validates verification sessions, anti-cheat question/code tampering guards, test timings, and the score ceiling (capped at 100).
+
+### 3. Integration Tests (API Endpoints)
+Uses `Supertest` to invoke endpoint requests over the Express server app:
+* `auth.logout.integration.test.ts` (1 test) — Confirms the token cookie is successfully cleared via standard headers.
+* `questions.admin.integration.test.ts` (9 tests) — Checks admin-only double-gated permission (authenticate + isAdmin) and full CRUD execution (Create, List, Update, Toggle Visibility, Toggle Verification, Delete).
+
 ---
 
 ## 📈 How It Can Be Improved
 
-**Testing** — There are currently no automated tests.
-
-**CI/CD Pipeline** — Setting up GitHub Actions to run lint, type-check, and tests on every pull request, and to automate deployment on merges to `main`, would remove manual deployment steps.
-
-**Monitoring and Observability** — Adding structured logging (e.g. Pino), error tracking (e.g. Sentry), and application performance monitoring would make it easier to diagnose issues in production.
+**Monitoring and Observability** — Adding structured logging (e.g. Pino), error tracking (e.g. Sentry), and APM tools to simplify production diagnostics.
 
 **More Languages in the Compiler** — The Lambda executor currently supports JavaScript and Python. Adding Java, Go, and C++ would expand the problem set and make boost tests more relevant for a wider range of developers.
 
@@ -523,6 +551,21 @@ npm run dev
 
 The backend runs on `http://localhost:5000` and the frontend on `http://localhost:5173`.
 
+### Run Tests
+
+Run the full automated Jest test suite (14 files, 174 test cases):
+
+```bash
+# Run all tests
+npm test
+
+# Run tests and generate code coverage report
+npm test -- --coverage
+
+# Run specific test suites matching a pattern
+npm test -- --testPathPatterns="auth"
+```
+
 ### Seed the Database (Optional)
 
 ```bash
@@ -574,22 +617,29 @@ ascend/
         ├── config/                 # DB connection, Redis client, email transporter
         ├── jobs/                   # BullMQ job registrations (decay, liquidity, microtask)
         ├── middlewares/            # auth, admin, error, rate limiter, upload, user
+        │   └── __tests__/          # Middleware test suites
         ├── models/                 # Mongoose models (User, Skill, SkillDefinition, Question, etc.)
         ├── modules/
         │   ├── auth/               # GitHub OAuth + manual auth
+        │   │   └── __tests__/      # Auth service/validation integration tests
         │   ├── decay-engine/       # Decay calculation service + constants
         │   ├── leaderboard/        # Leaderboard aggregation + caching
         │   ├── market/             # Trending skills + SSE stream
         │   ├── problems/           # Problem listing, run, submit
+        │   │   └── __tests__/      # Problems streak test suites
         │   ├── questions/          # Admin question management
+        │   │   └── __tests__/      # Question validation & admin controller integration tests
         │   ├── skills/             # Skill CRUD, boost, resume parser, catalogue
         │   ├── users/              # Dashboard, profile, account settings
+        │   │   └── __tests__/      # User service/liquidity test suites
         │   └── verification/       # Test generation, submission, Lambda compiler
+        │       └── __tests__/      # Session verification and grading test suites
         ├── queues/                 # BullMQ queue definitions
         ├── scripts/                # Seed scripts, decay test scripts
         ├── seeds/                  # Seed data (questions.json)
         ├── types/                  # Shared TypeScript interfaces
         ├── utils/                  # Cache helper, decay calculator, normaliser, skill constants
+        │   └── __test__/           # Utility unit test suites
         ├── workers/                # BullMQ workers (scan, decay, liquidity, microtask)
         ├── app.ts                  # Express app setup (middlewares, routes)
         └── server.ts               # Entry point (DB connect, job register, listen)
