@@ -166,13 +166,13 @@ export default function NotificationPanel({ isOpen, onClose, bellRef }) {
   const { mutate: markAsRead } = useMarkAsRead();
   const { mutate: markAllAsRead, isPending: markingAll } = useMarkAllAsRead();
 
-  if (!isOpen) return null;
 
   return (
     <div
       ref={panelRef}
       className="absolute right-0 top-full mt-2 z-50 flex flex-col"
       style={{
+        display: isOpen ? "flex" : "none",
         width: "360px",
         maxHeight: "520px",
         background: "var(--bg-surface)",
