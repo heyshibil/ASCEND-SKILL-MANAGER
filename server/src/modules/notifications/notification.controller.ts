@@ -39,6 +39,10 @@ export const markNotificationAsRead = async (
   try {
     const { id } = req.params;
 
+    if (typeof id !== 'string') {
+      throw new AppError("Invalid notification ID", 400);
+    }
+
     const notification = await notificationService.markAsRead(id, req.userId!);
 
     if (!notification) {
