@@ -11,4 +11,8 @@ export const queryKeys = {
 
   // Problems list — one entry per filter combination
   problems: (filters) => ["problems", filters],
+
+  // Notifications — separate cache entry per status (unread / read)
+  notifications: (status) => ["notifications", status],
 };
+
