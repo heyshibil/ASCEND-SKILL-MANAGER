@@ -10,6 +10,7 @@
     "start": "node dist/server.js",
     "seed": "tsx src/scripts/seed.ts",
     "testdecay": "tsx src/scripts/testDecay.ts",
+    "trigger-notif": "tsx src/scripts/triggerNotification.ts",
     "migrate:pg": "tsx src/scripts/migrate-questions-to-pg.ts"
   },
   "keywords": [],

@@ -70,6 +70,21 @@ export interface ISkill extends IBaseEntity {
   stabilityConstant: number; // Stability Constant
   masteryMultiplier: number; // Bonus for experiance
   dependsOn?: Types.ObjectId[]; // Dependency graph
+  // Tracks last status for which a notification was sent — guards against re-notifying on every decay tick
+  lastNotifiedStatus?: string | null;
+}
+
+// Notification
+export type NotificationType = "DECAYING" | "DEBT" | "REVERIFY";
+
+export interface INotification extends IBaseEntity {
+  userId: Types.ObjectId;
+  skillId: Types.ObjectId;
+  type: NotificationType;
+  message: string;
+  isRead: boolean;
+  readAt: Date | null;
+  createdAt: Date;
 }
 
 // Admin-managed skill preset
