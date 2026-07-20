@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import {
   Search,
@@ -42,6 +42,12 @@ export default function DashboardLayout() {
 
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
+
+  // Ref attached to the bell button — passed to NotificationPanel so its
+  // outside-click handler can exclude the bell itself. Without this, clicking
+  // the bell while open would fire onClose (outside click) then toggle open
+  // again, making the bell unable to close the panel.
+  const bellRef = useRef(null);
 
   // Unread count for badge
   const { data: unreadNotifs = [] } = useUnreadNotifications();
@@ -181,6 +187,7 @@ export default function DashboardLayout() {
             {/* Bell */}
             <div className="relative">
               <button
+                ref={bellRef}
                 id="notification-bell-btn"
                 onClick={() => setIsNotifOpen((prev) => !prev)}
                 className="relative w-8 h-8 flex items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-raised)] transition-colors"
@@ -199,6 +206,7 @@ export default function DashboardLayout() {
               <NotificationPanel
                 isOpen={isNotifOpen}
                 onClose={() => setIsNotifOpen(false)}
+                bellRef={bellRef}
               />
             </div>
 

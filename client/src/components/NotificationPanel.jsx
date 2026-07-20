@@ -135,20 +135,23 @@ const EmptyState = ({ icon: Icon, message }) => (
  * @param {boolean}    isOpen   - controls visibility
  * @param {function}   onClose  - called when clicking outside
  */
-export default function NotificationPanel({ isOpen, onClose }) {
+export default function NotificationPanel({ isOpen, onClose, bellRef }) {
   const panelRef = useRef(null);
 
-  // Close on outside click
+  // Close on outside click — but NOT when clicking the bell button itself.
+  // The bell has its own toggle (setIsNotifOpen prev => !prev), so if we also
+  // call onClose here the panel would close-then-reopen on every bell click.
   useEffect(() => {
     if (!isOpen) return;
     const handler = (e) => {
-      if (panelRef.current && !panelRef.current.contains(e.target)) {
+      const clickedBell = bellRef?.current?.contains(e.target);
+      if (!clickedBell && panelRef.current && !panelRef.current.contains(e.target)) {
         onClose();
       }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, bellRef]);
 
   const {
     data: unread = [],
