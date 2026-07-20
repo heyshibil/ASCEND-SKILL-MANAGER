@@ -1,5 +1,5 @@
 import type { Types } from "mongoose";
-import type { DecayTickResult } from "../../types/index.js";
+import type { DecayTickResult, NotificationType } from "../../types/index.js";
 import { User } from "../../models/User.js";
 import {
   DECAY_BATCH_SIZE,
@@ -15,6 +15,7 @@ import {
 } from "../../utils/decayCalculator.js";
 import { determineSkillStatus } from "../../utils/skillConstants.js";
 import { refreshLiquidityScore } from "../users/user.service.js";
+import { createOrUpdateNotification } from "../notifications/notification.service.js";
 
 /**
  * Build a lookup map of SkillDefinition _id → document
@@ -55,11 +56,35 @@ const getSkillDefinitionMap = async () => {
 };
 
 /**
+ * Maps a skill status string to the Notification type enum value.
+ */
+const mapStatusToType = (status: string): NotificationType => {
+  if (status === "debt") return "DEBT";
+  if (status === "draining") return "DECAYING";
+  return "REVERIFY"; // healthy — skill recovered
+};
+
+/**
+ * Builds a human-readable notification message for a skill status change.
+ */
+const buildMessage = (skillName: string, newStatus: string): string => {
+  if (newStatus === "debt") {
+    return `\u26A0\uFE0F ${skillName} has entered skill debt. Verify it now to stop the decay.`;
+  }
+  if (newStatus === "draining") {
+    return `\uD83D\uDCC9 ${skillName} is draining. Consider a quick verification to recover your score.`;
+  }
+  // healthy — skill recovered
+  return `\u2705 ${skillName} has recovered to a healthy score. Keep it up!`;
+};
+
+/**
  * Process decay for a single user's skills.
  * 1. Apply direct decay to each skill
  * 2. Apply dependency cascade
  * 3. Transition skills to debt if below threshold
- * 4. Refresh liquidity score
+ * 4. Fire notifications on status transitions (never on every tick)
+ * 5. Refresh liquidity score
  */
 const processUserDecay = async (
   userId: string,
@@ -117,10 +142,13 @@ const processUserDecay = async (
     }
   }
 
-  // Phase 3: Apply all drops and save
+  // Phase 3: Apply all drops, fire notifications on status transitions, then save
   let decayed = 0;
   let enteredDebt = 0;
   const bulkOps = [];
+
+  // Collect notification promises to fire concurrently after bulkWrite
+  const notificationPromises: Promise<void>[] = [];
 
   for (const skill of skills) {
     const skillId = skill._id!.toString();
@@ -139,12 +167,46 @@ const processUserDecay = async (
 
     if (newStatus === "debt" && previousStatus !== "debt") enteredDebt++;
 
+    // Determine if a notification should fire:
+    // - Only when status actually changed
+    // - Notify on any move into debt or draining
+    // - Also notify when recovering back to healthy from a previously notified non-healthy state
+    const lastNotified = skill.lastNotifiedStatus ?? null;
+    const statusChanged = newStatus !== previousStatus;
+    const shouldNotify =
+      statusChanged &&
+      (newStatus !== "healthy" ||
+        (newStatus === "healthy" &&
+          lastNotified !== null &&
+          lastNotified !== "healthy"));
+
+    const $setFields: Record<string, unknown> = {
+      currentScore: newScoreRounded,
+    };
+
+    if (shouldNotify) {
+      $setFields.lastNotifiedStatus = newStatus;
+
+      notificationPromises.push(
+        createOrUpdateNotification(
+          userId,
+          skillId,
+          mapStatusToType(newStatus),
+          buildMessage(skill.name, newStatus),
+        ).catch((err) => {
+          // Log but never crash the decay tick for a notification failure
+          console.error(
+            `[DECAY] ⚠️ Failed to upsert notification for skill ${skill.name}:`,
+            err,
+          );
+        }),
+      );
+    }
+
     bulkOps.push({
       updateOne: {
         filter: { _id: skill._id },
-        update: {
-          $set: { currentScore: newScoreRounded },
-        },
+        update: { $set: $setFields },
       },
     });
 
@@ -153,6 +215,8 @@ const processUserDecay = async (
 
   if (bulkOps.length > 0) {
     await Skill.bulkWrite(bulkOps);
+    // Fire notifications concurrently after the bulk save succeeds
+    await Promise.allSettled(notificationPromises);
     await refreshLiquidityScore(userId);
   }
 
@@ -214,5 +278,5 @@ export const runDecayTick = async (
     lastId = users[users.length - 1]?._id!;
   }
 
-  return result
+  return result;
 };

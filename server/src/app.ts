@@ -7,6 +7,7 @@ import questionRoutes from "./modules/questions/questions.routes.js";
 import marketRoutes from "./modules/market/market.routes.js";
 import problemRoutes from "./modules/problems/problems.routes.js";
 import leaderboardRoutes from "./modules/leaderboard/leaderboard.routes.js";
+import notificationRoutes from "./modules/notifications/notification.routes.js";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
@@ -43,6 +44,7 @@ app.use("/api/verification", apiAbuseLimiter, verificationRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/problems", problemRoutes);
 app.use("/api/leaderboard", leaderboardRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 // -- Admin Routes --
 app.use("/api/admin/questions", questionRoutes);

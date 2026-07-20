@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import {
   Search,
@@ -13,7 +13,9 @@ import {
   Trophy
 } from "lucide-react";
 import { useDashboard } from "../hooks/useDashboard";
+import { useUnreadNotifications } from "../hooks/useNotifications";
 import LogoutModal from "../components/LogoutModal";
+import NotificationPanel from "../components/NotificationPanel";
 import useAuthStore from "../store/useAuthStore";
 import { useMarketStore } from "../store/useMarketStore";
 
@@ -39,6 +41,17 @@ export default function DashboardLayout() {
   const navigate = useNavigate();
 
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+
+  // Ref attached to the bell button — passed to NotificationPanel so its
+  // outside-click handler can exclude the bell itself. Without this, clicking
+  // the bell while open would fire onClose (outside click) then toggle open
+  // again, making the bell unable to close the panel.
+  const bellRef = useRef(null);
+
+  // Unread count for badge
+  const { data: unreadNotifs = [] } = useUnreadNotifications();
+  const unreadCount = unreadNotifs.length;
 
   const username = user?.username || "Guest";
   const displayInitial = user?.username.charAt(0).toUpperCase() || "G";
@@ -172,10 +185,30 @@ export default function DashboardLayout() {
             </button>
 
             {/* Bell */}
-            <button className="relative w-8 h-8 flex items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-raised)] transition-colors">
-              <Bell className="w-4 h-4" />
-              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-[var(--danger)] rounded-full"></span>
-            </button>
+            <div className="relative">
+              <button
+                ref={bellRef}
+                id="notification-bell-btn"
+                onClick={() => setIsNotifOpen((prev) => !prev)}
+                className="relative w-8 h-8 flex items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-raised)] transition-colors"
+                aria-label="Toggle notifications"
+              >
+                <Bell className="w-4 h-4" />
+                {unreadCount > 0 && (
+                  <span
+                    className="absolute top-0.5 right-0.5 min-w-[16px] h-4 flex items-center justify-center rounded-full text-[9px] font-bold text-white px-1"
+                    style={{ background: 'var(--danger)', lineHeight: 1 }}
+                  >
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </button>
+              <NotificationPanel
+                isOpen={isNotifOpen}
+                onClose={() => setIsNotifOpen(false)}
+                bellRef={bellRef}
+              />
+            </div>
 
             {/* User */}
             <div className="flex items-center gap-2 pl-3 border-l ml-1" style={{ borderColor: 'var(--border-subtle)' }}>
