@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { adminService } from "../../services/adminServices";
+import { useSyncStore } from "../../store/useSyncStore";
 import { CustomSelect } from "../../components/ui/CustomSelect";
 import ConfirmModal from "../../components/ui/ConfirmModal";
 
@@ -37,6 +38,8 @@ export default function AdminSkills() {
   const [formData, setFormData] = useState(emptyForm);
   const [editSkillId, setEditSkillId] = useState(null);
   const [deleteSkill, setDeleteSkill] = useState(null);
+  // Re-fetch whenever the layout's Sync button increments syncKey
+  const syncKey = useSyncStore((state) => state.syncKey);
 
   const editMode = Boolean(editSkillId);
 
@@ -54,7 +57,8 @@ export default function AdminSkills() {
 
   useEffect(() => {
     fetchSkills();
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [syncKey]);
 
   const dependencyOptions = useMemo(
     () => skills.filter((skill) => skill._id !== editSkillId),

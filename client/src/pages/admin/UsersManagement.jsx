@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { adminService } from '../../services/adminServices';
 import { toast } from "sonner";
+import { useSyncStore } from '../../store/useSyncStore';
 
 
 export default function UsersManagement() {
@@ -23,10 +24,13 @@ export default function UsersManagement() {
   const [search, setSearch] = useState('');
   const [pagination, setPagination] = useState({ page: 1, pages: 1 });
   const [copiedId, setCopiedId] = useState(null);
+  // Re-fetch whenever the layout's Sync button increments syncKey
+  const syncKey = useSyncStore((state) => state.syncKey);
 
   useEffect(() => {
     fetchUsers();
-  }, [pagination.page]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pagination.page, syncKey]);
 
   const fetchUsers = async () => {
     try {

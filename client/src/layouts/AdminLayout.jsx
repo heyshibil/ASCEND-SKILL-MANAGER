@@ -1,5 +1,5 @@
 // src/layouts/AdminLayout.jsx
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import {
   RotateCw,
@@ -15,11 +15,34 @@ import {
 } from "lucide-react";
 import useAuthStore from "../store/useAuthStore";
 import LogoutModal from "../components/LogoutModal";
+import { useAdminStore } from "../store/useAdminStore";
+import { useSyncStore } from "../store/useSyncStore";
+import { toast } from "sonner";
 
 export default function AdminLayout() {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const fetchDashboardBase = useAdminStore((state) => state.fetchDashboardBase);
+  const resetChartCache = useAdminStore((state) => state.resetChartCache);
+  const { isSyncing, startSync, endSync } = useSyncStore();
+
+  
+  const handleSync = useCallback(async () => {
+    if (isSyncing) return;
+    startSync();
+    try {
+      resetChartCache();
+      await fetchDashboardBase();
+      toast.success("You're up to date.", {
+        description: "All data has been refreshed from the server.",
+      });
+    } catch {
+      toast.error("Sync failed. Please try again.");
+    } finally {
+      endSync();
+    }
+  }, [isSyncing, startSync, endSync, fetchDashboardBase, resetChartCache]);
 
   const username = user?.username || "Admin User";
   const displayInitial = username.charAt(0).toUpperCase();
@@ -108,8 +131,20 @@ export default function AdminLayout() {
 
           <div className="flex items-center gap-3">
             {/* Sync */}
-            <button className="flex items-center gap-2 px-3 h-9 rounded-[var(--radius-md)] border text-[var(--text-secondary)] text-[13px] font-medium hover:bg-[var(--bg-raised)] transition-colors group" style={{ borderColor: 'var(--border-base)' }}>
-              <RotateCw className="w-3.5 h-3.5 text-[var(--text-tertiary)] group-hover:text-[var(--accent)] transition-colors" />
+            <button
+              onClick={handleSync}
+              disabled={isSyncing}
+              aria-label="Sync data"
+              className="flex items-center gap-2 px-3 h-9 rounded-[var(--radius-md)] border text-[var(--text-secondary)] text-[13px] font-medium hover:bg-[var(--bg-raised)] transition-colors disabled:opacity-60 disabled:cursor-not-allowed group"
+              style={{ borderColor: 'var(--border-base)' }}
+            >
+              <RotateCw
+                className={`w-3.5 h-3.5 transition-colors ${
+                  isSyncing
+                    ? "animate-spin text-[var(--accent)]"
+                    : "text-[var(--text-tertiary)] group-hover:text-[var(--accent)]"
+                }`}
+              />
               Sync
             </button>
 

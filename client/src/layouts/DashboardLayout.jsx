@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import {
   Search,
@@ -12,12 +12,16 @@ import {
   Swords,
   Trophy
 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { useDashboard } from "../hooks/useDashboard";
 import { useUnreadNotifications } from "../hooks/useNotifications";
 import LogoutModal from "../components/LogoutModal";
 import NotificationPanel from "../components/NotificationPanel";
 import useAuthStore from "../store/useAuthStore";
 import { useMarketStore } from "../store/useMarketStore";
+import { useSkillStore } from "../store/useSkillStore";
+import { useSyncStore } from "../store/useSyncStore";
 
 export default function DashboardLayout() {
   const initializeMarketStream = useMarketStore(
@@ -39,9 +43,36 @@ export default function DashboardLayout() {
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const fetchSkills = useSkillStore((state) => state.fetchSkills);
+  const { isSyncing, startSync, endSync } = useSyncStore();
 
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
+
+  /**
+   * Sync handler — invalidates the entire React Query cache so every active
+   * query refetches from the server, then refreshes the Zustand skill store.
+   * The useSyncStore coordinates the spinning icon state.
+   */
+  const handleSync = useCallback(async () => {
+    if (isSyncing) return;
+    startSync();
+    try {
+      await Promise.all([
+        // Bust every React Query cache key — covers dashboard, leaderboard,
+        // problems, problemStats, notifications, and any future keys.
+        queryClient.invalidateQueries(),
+        // Zustand skill store (not managed by React Query)
+        fetchSkills(),
+      ]);
+      toast.success("You're up to date");
+    } catch {
+      toast.error("Sync failed. Please try again.");
+    } finally {
+      endSync();
+    }
+  }, [isSyncing, startSync, endSync, queryClient, fetchSkills]);
 
   // Ref attached to the bell button — passed to NotificationPanel so its
   // outside-click handler can exclude the bell itself. Without this, clicking
@@ -179,8 +210,20 @@ export default function DashboardLayout() {
             </div>
 
             {/* Sync */}
-            <button className="flex items-center gap-2 px-3 h-9 rounded-[var(--radius-md)] border text-[var(--text-secondary)] text-[13px] font-medium hover:bg-[var(--bg-raised)] transition-colors" style={{ borderColor: 'var(--border-base)' }}>
-              <RotateCw className="w-3.5 h-3.5" />
+            <button
+              onClick={handleSync}
+              disabled={isSyncing}
+              aria-label="Sync data"
+              className="flex items-center gap-2 px-3 h-9 rounded-[var(--radius-md)] border text-[var(--text-secondary)] text-[13px] font-medium hover:bg-[var(--bg-raised)] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              style={{ borderColor: 'var(--border-base)' }}
+            >
+              <RotateCw
+                className={`w-3.5 h-3.5 transition-colors ${
+                  isSyncing
+                    ? "animate-spin text-[var(--accent)]"
+                    : ""
+                }`}
+              />
               Sync
             </button>
 
