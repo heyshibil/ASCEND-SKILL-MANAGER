@@ -24,6 +24,15 @@ export const useAdminStore = create((set, get) => ({
     }
   },
 
+  /**
+   * Clears all cached chart data so that the next call to setTimeframe or
+   * fetchChartData will always hit the server (used by the Sync button).
+   */
+  resetChartCache: () =>
+    set({
+      chartData: { days: null, week: null, month: null },
+    }),
+
   fetchDashboardBase: async () => {
     set({ loadingBase: true, error: null });
     try {

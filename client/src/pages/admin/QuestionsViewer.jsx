@@ -19,6 +19,7 @@ import { adminService } from "../../services/adminServices";
 import ConfirmModal from "../../components/ui/ConfirmModal";
 import EditQuestionModal from "../../components/admin/EditQuestionModal";
 import SelectDropdown from "../../components/ui/SelectDropdown";
+import { useSyncStore } from "../../store/useSyncStore";
 
 // ── QuestionDetails ────────────────────────────────────────────────────────────
 // Renders the full expanded detail panel below a question row.
@@ -195,10 +196,13 @@ export default function QuestionsViewer() {
     }
   };
 
+  // Re-fetch whenever the layout's Sync button increments syncKey
+  const syncKey = useSyncStore((state) => state.syncKey);
+
   useEffect(() => {
     fetchQuestions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pagination.page, filters, showHidden, sortBy]);
+  }, [pagination.page, filters, showHidden, sortBy, syncKey]);
 
   // ── Handlers ─────────────────────────────────────────────────────────────────
   const handleSearch = (e) => {
