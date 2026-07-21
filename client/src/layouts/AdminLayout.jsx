@@ -24,7 +24,8 @@ export default function AdminLayout() {
   const navigate = useNavigate();
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const fetchDashboardBase = useAdminStore((state) => state.fetchDashboardBase);
-  const resetChartCache = useAdminStore((state) => state.resetChartCache);
+  const fetchChartData = useAdminStore((state) => state.fetchChartData);
+  const timeframe = useAdminStore((state) => state.timeframe);
   const { isSyncing, startSync, endSync } = useSyncStore();
 
   
@@ -32,8 +33,13 @@ export default function AdminLayout() {
     if (isSyncing) return;
     startSync();
     try {
-      resetChartCache();
-      await fetchDashboardBase();
+      // Run both fetches in parallel — base metrics and the currently-visible
+      // chart timeframe — so charts are populated immediately on re-render
+      // without the user having to manually click a timeframe button.
+      await Promise.all([
+        fetchDashboardBase(),
+        fetchChartData(timeframe),
+      ]);
       toast.success("You're up to date.", {
         description: "All data has been refreshed from the server.",
       });
@@ -42,7 +48,7 @@ export default function AdminLayout() {
     } finally {
       endSync();
     }
-  }, [isSyncing, startSync, endSync, fetchDashboardBase, resetChartCache]);
+  }, [isSyncing, startSync, endSync, fetchDashboardBase, fetchChartData, timeframe]);
 
   const username = user?.username || "Admin User";
   const displayInitial = username.charAt(0).toUpperCase();
