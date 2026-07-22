@@ -10,7 +10,7 @@ import { isAdmin } from "../../middlewares/admin.middleware.js";
 
 const router = Router();
 
-router.get("/stream", streamMarketUpdates);
+router.get("/stream", authenticate, streamMarketUpdates);
 router.post("/trending", authenticate, isAdmin, addTrendingSkill);
 router.put("/trending/:id", authenticate, isAdmin, updateTrendingSkill);
 router.delete("/trending/:id", authenticate, isAdmin, deleteTrendingSkill);
