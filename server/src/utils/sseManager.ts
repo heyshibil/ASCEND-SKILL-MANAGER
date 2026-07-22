@@ -22,8 +22,6 @@ const clients = new Map<string, SSEClient>();
  */
 let publisher: Redis | null = null;
 let subscriber: Redis | null = null;
-let isSubscribed = false;
-
 // ─── Initialization ─────────────────────────────────────────────────────────────
 
 /**
@@ -51,7 +49,6 @@ export function initSSEManager(): void {
       console.error("❌ Failed to subscribe to", CHANNEL, err);
       return;
     }
-    isSubscribed = true;
     console.log(`✅ SSE Manager subscribed to Redis channel: ${CHANNEL}`);
   });
 
