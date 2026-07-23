@@ -30,26 +30,39 @@ let subscriber: Redis | null = null;
  * subscription handler that feeds all local SSE clients.
  */
 export function initSSEManager(): void {
-  const redisUrl = process.env.REDIS_URL as string;
-  const opts = { maxRetriesPerRequest: null, enableReadyCheck: false };
+  const redisUrl = process.env.REDIS_URL;
+  const isTestEnv =
+    process.env.NODE_ENV === "test" || process.env.JEST_WORKER_ID !== undefined;
 
-  publisher = new Redis(redisUrl, opts);
-  subscriber = new Redis(redisUrl, opts);
+  // In test environment do not start real Redis Pub/Sub listeners
+  if (isTestEnv && !redisUrl) return;
 
-  publisher.on("error", (err) =>
-    console.error("❌ SSE Publisher Redis error:", err),
-  );
-  subscriber.on("error", (err) =>
-    console.error("❌ SSE Subscriber Redis error:", err),
-  );
+  const opts = {
+    maxRetriesPerRequest: null,
+    enableReadyCheck: false,
+    ...(isTestEnv
+      ? { lazyConnect: true, enableOfflineQueue: false, retryStrategy: () => null }
+      : { retryStrategy: (times: number) => Math.min(times * 100, 3000) }),
+  };
+
+  publisher = new Redis(redisUrl || "redis://localhost:6379", opts);
+  subscriber = new Redis(redisUrl || "redis://localhost:6379", opts);
+
+  publisher.on("error", (err) => {
+    if (!isTestEnv) console.error("❌ SSE Publisher Redis error:", err);
+  });
+  subscriber.on("error", (err) => {
+    if (!isTestEnv) console.error("❌ SSE Subscriber Redis error:", err);
+  });
 
   // Subscribe once — the handler broadcasts to every local SSE client
   subscriber.subscribe(CHANNEL, (err) => {
     if (err) {
-      console.error("❌ Failed to subscribe to", CHANNEL, err);
+      if (!isTestEnv) console.error("❌ Failed to subscribe to", CHANNEL, err);
       return;
     }
-    console.log(`✅ SSE Manager subscribed to Redis channel: ${CHANNEL}`);
+    if (!isTestEnv)
+      console.log(`✅ SSE Manager subscribed to Redis channel: ${CHANNEL}`);
   });
 
   subscriber.on("message", (_channel: string, message: string) => {
