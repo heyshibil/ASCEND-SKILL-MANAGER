@@ -1,18 +1,28 @@
 import type { Request, Response } from "express";
 import * as marketService from "./market.service.js";
+import {
+  addClient,
+  removeClient,
+  publishMarketEvent,
+} from "../../utils/sseManager.js";
 
-let clients: Response[] = [];
 
-//  Establish SSE Connection
+/**
+ * GET /market/stream
+ *  - A 25s heartbeat to survive reverse-proxy idle timeouts
+ * 
+ *  - Automatic cleanup on disconnect
+ *
+ * Broadcasts are handled via Redis Pub/Sub (see sseManager.ts)
+ */
 export const streamMarketUpdates = async (req: Request, res: Response) => {
   // Required HTTP headers for Server-Sent Events
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");
   res.setHeader("Connection", "keep-alive");
 
-  res.write(`data: ${JSON.stringify({ type: "CONNECTED" })}\n\n`);
-
-  clients.push(res);
+  // Register this client — starts heartbeat automatically
+  const clientId = addClient(res);
 
   try {
     const activeSkills = await marketService.getActiveMarketSkills();
@@ -20,38 +30,34 @@ export const streamMarketUpdates = async (req: Request, res: Response) => {
       `data: ${JSON.stringify({ type: "INITIAL_DATA", payload: activeSkills })}\n\n`,
     );
   } catch (error) {
-    console.error("Error while SSE connection:", error);
+    console.error("SSE initial data fetch failed:", error);
     res.write(
       `data: ${JSON.stringify({ type: "ERROR", message: "Failed to load market data." })}\n\n`,
     );
-    res.end();
   }
 
-  // Clean up dead connections to prevent memory leaks
+  // Clean up when the client disconnects
   req.on("close", () => {
-    clients = clients.filter((client) => client !== res);
+    removeClient(clientId);
   });
 };
+// Each mutation persists to MongoDB first, then publishes an event to Redis.
 
 export const addTrendingSkill = async (req: Request, res: Response) => {
   try {
     const { skillName, demandPercentage, parentLanguage, openRoles } = req.body;
 
-    const newSKill = await marketService.createTrendingSkill({
+    const newSkill = await marketService.createTrendingSkill({
       skillName,
       demandPercentage,
       parentLanguage,
       openRoles,
     });
 
-    // Loop through and broadcast
-    clients.forEach((client) => {
-      client.write(
-        `data: ${JSON.stringify({ type: "NEW_SKILL", payload: newSKill })}\n\n`,
-      );
-    });
+    // Publish via Redis → all processes broadcast to their SSE clients
+    publishMarketEvent({ type: "NEW_SKILL", payload: newSkill });
 
-    res.status(201).json({ success: true, data: newSKill });
+    res.status(201).json({ success: true, data: newSkill });
   } catch (error) {
     console.error("Error creating trending skill:", error);
     res.status(500).json({ success: false, message: "Server Error" });
@@ -73,12 +79,8 @@ export const updateTrendingSkill = async (req: Request, res: Response) => {
       return;
     }
 
-    // Update broadcast
-    clients.forEach((client) => {
-      client.write(
-        `data: ${JSON.stringify({ type: "UPDATE_SKILL", payload: updatedSkill })}\n\n`,
-      );
-    });
+    // Publish via Redis → all processes broadcast to their SSE clients
+    publishMarketEvent({ type: "UPDATE_SKILL", payload: updatedSkill });
 
     res.json({ success: true, data: updatedSkill });
   } catch (error) {
@@ -98,12 +100,8 @@ export const deleteTrendingSkill = async (req: Request, res: Response) => {
       return;
     }
 
-    // Broadcast the ID to be removed
-    clients.forEach((client) => {
-      client.write(
-        `data: ${JSON.stringify({ type: "DELETE_SKILL", payload: skillId })}\n\n`,
-      );
-    });
+    // Publish via Redis → all processes broadcast to their SSE clients
+    publishMarketEvent({ type: "DELETE_SKILL", payload: skillId });
 
     res.json({ success: true, message: "Skill deleted" });
   } catch (error) {

@@ -40,37 +40,40 @@ type UpdateQuestionInput = {
 };
 
 export const insertQuestion = async (data: NewQuestionInput) => {
-  return prisma.$transaction(async (tx) => {
-    const question = await tx.question.create({
-      data: {
-        questionId: data.questionId,
-        skill: data.skill,
-        level: data.level,
-        topic: data.topic,
-        type: data.type,
-        question: data.question ?? null,
-        options: data.options ?? [],
-        correctAnswerIndex: data.correctAnswerIndex ?? null,
-        starterCode: data.starterCode ?? null,
-        validationScript: data.validationScript ?? null,
-        isHidden: data.isHidden ?? false,
-        isVerified: data.isVerified ?? false,
-      },
-    });
-
-    if (data.testCases && data.testCases.length > 0) {
-      await tx.questionTestCase.createMany({
-        data: data.testCases.map((tc, i) => ({
-          questionPk: question.id,
-          sortOrder: i,
-          input: tc.input,
-          expectedOutput: tc.output,
-        })),
+  return prisma.$transaction(
+    async (tx) => {
+      const question = await tx.question.create({
+        data: {
+          questionId: data.questionId,
+          skill: data.skill,
+          level: data.level,
+          topic: data.topic,
+          type: data.type,
+          question: data.question ?? null,
+          options: data.options ?? [],
+          correctAnswerIndex: data.correctAnswerIndex ?? null,
+          starterCode: data.starterCode ?? null,
+          validationScript: data.validationScript ?? null,
+          isHidden: data.isHidden ?? false,
+          isVerified: data.isVerified ?? false,
+        },
       });
-    }
 
-    return question;
-  });
+      if (data.testCases && data.testCases.length > 0) {
+        await tx.questionTestCase.createMany({
+          data: data.testCases.map((tc, i) => ({
+            questionPk: question.id,
+            sortOrder: i,
+            input: tc.input,
+            expectedOutput: tc.output,
+          })),
+        });
+      }
+
+      return question;
+    },
+    { maxWait: 10000, timeout: 15000 },
+  );
 };
 
 export const findByQuestionId = async (questionId: string) => {
@@ -195,79 +198,85 @@ export const updateQuestion = async (
   questionId: string,
   data: UpdateQuestionInput,
 ) => {
-  return prisma.$transaction(async (tx) => {
-    const existing = await tx.question.findUnique({
-      where: { questionId },
-      select: { id: true },
-    });
-
-    if (!existing) {
-      return null;
-    }
-
-    const question = await tx.question.update({
-      where: { questionId },
-      data: {
-        ...(data.skill !== undefined && { skill: data.skill }),
-        ...(data.level !== undefined && { level: data.level }),
-        ...(data.topic !== undefined && { topic: data.topic }),
-        ...(data.question !== undefined && { question: data.question }),
-        ...(data.options !== undefined && { options: data.options }),
-        ...(data.correctAnswerIndex !== undefined && {
-          correctAnswerIndex: data.correctAnswerIndex,
-        }),
-        ...(data.starterCode !== undefined && {
-          starterCode: data.starterCode,
-        }),
-        ...(data.validationScript !== undefined && {
-          validationScript: data.validationScript,
-        }),
-        ...(data.isHidden !== undefined && { isHidden: data.isHidden }),
-        ...(data.isVerified !== undefined && {
-          isVerified: data.isVerified,
-        }),
-      },
-    });
-
-    // Replace test cases entirely if new ones were provided
-    if (data.testCases) {
-      await tx.questionTestCase.deleteMany({
-        where: { questionPk: existing.id },
+  return prisma.$transaction(
+    async (tx) => {
+      const existing = await tx.question.findUnique({
+        where: { questionId },
+        select: { id: true },
       });
 
-      if (data.testCases.length > 0) {
-        await tx.questionTestCase.createMany({
-          data: data.testCases.map((tc, i) => ({
-            questionPk: existing.id,
-            sortOrder: i,
-            input: tc.input,
-            expectedOutput: tc.output,
-          })),
-        });
+      if (!existing) {
+        return null;
       }
-    }
 
-    return question;
-  });
+      const question = await tx.question.update({
+        where: { questionId },
+        data: {
+          ...(data.skill !== undefined && { skill: data.skill }),
+          ...(data.level !== undefined && { level: data.level }),
+          ...(data.topic !== undefined && { topic: data.topic }),
+          ...(data.question !== undefined && { question: data.question }),
+          ...(data.options !== undefined && { options: data.options }),
+          ...(data.correctAnswerIndex !== undefined && {
+            correctAnswerIndex: data.correctAnswerIndex,
+          }),
+          ...(data.starterCode !== undefined && {
+            starterCode: data.starterCode,
+          }),
+          ...(data.validationScript !== undefined && {
+            validationScript: data.validationScript,
+          }),
+          ...(data.isHidden !== undefined && { isHidden: data.isHidden }),
+          ...(data.isVerified !== undefined && {
+            isVerified: data.isVerified,
+          }),
+        },
+      });
+
+      // Replace test cases entirely if new ones were provided
+      if (data.testCases) {
+        await tx.questionTestCase.deleteMany({
+          where: { questionPk: existing.id },
+        });
+
+        if (data.testCases.length > 0) {
+          await tx.questionTestCase.createMany({
+            data: data.testCases.map((tc, i) => ({
+              questionPk: existing.id,
+              sortOrder: i,
+              input: tc.input,
+              expectedOutput: tc.output,
+            })),
+          });
+        }
+      }
+
+      return question;
+    },
+    { maxWait: 10000, timeout: 15000 },
+  );
 };
 
 export const generateNextQuestionId = async (
   prefix: string,
 ): Promise<string> => {
-  return prisma.$transaction(async (tx) => {
-    const rows = await tx.$queryRaw<{ next_number: number }[]>(Prisma.sql`
-      SELECT COALESCE(
-        MAX(CAST(SPLIT_PART("questionId", '-', 4) AS INTEGER)), 0
-      ) + 1 AS next_number
-      FROM "Question"
-      WHERE "questionId" LIKE ${prefix + "-%"}
-    `);
+  return prisma.$transaction(
+    async (tx) => {
+      const rows = await tx.$queryRaw<{ next_number: number }[]>(Prisma.sql`
+        SELECT COALESCE(
+          MAX(CAST(SPLIT_PART("questionId", '-', 4) AS INTEGER)), 0
+        ) + 1 AS next_number
+        FROM "Question"
+        WHERE "questionId" LIKE ${prefix + "-%"}
+      `);
 
-    const nextNumber = rows[0]?.next_number ?? 1;
-    const padded = String(nextNumber).padStart(3, "0");
-    const newQuestionId = `${prefix}-${padded}`;
-    return newQuestionId;
-  });
+      const nextNumber = rows[0]?.next_number ?? 1;
+      const padded = String(nextNumber).padStart(3, "0");
+      const newQuestionId = `${prefix}-${padded}`;
+      return newQuestionId;
+    },
+    { maxWait: 10000, timeout: 15000 },
+  );
 };
 
 // #Admin

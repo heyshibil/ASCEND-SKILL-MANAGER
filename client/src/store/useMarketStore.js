@@ -5,14 +5,20 @@ export const useMarketStore = create((set, get) => ({
   skills: [],
   sseConnections: null,
 
-  // Connect to stream
   initializeMarketStream: () => {
     // If connection already exists, dont need another
     if (get().sseConnections) return;
 
     const serverUrl = import.meta.env.VITE_SERVER_URL || "http://localhost:5000/api";
     const streamUrl = `${serverUrl.replace(/\/$/, "")}/market/stream`;
-    const eventSource = new EventSource(streamUrl);
+
+    // withCredentials: true causes the browser to include cookies (JWT auth)
+    // with the SSE request — required now that the stream endpoint is protected.
+    const eventSource = new EventSource(streamUrl, { withCredentials: true });
+
+    eventSource.onopen = () => {
+      console.log("Market SSE connected.");
+    };
 
     eventSource.onmessage = (event) => {
       const parsedData = JSON.parse(event.data);
@@ -42,16 +48,16 @@ export const useMarketStore = create((set, get) => ({
       }
     };
 
+    // Do NOT call eventSource.close() here.
+    // We just log the error; the browser handles reconnection.
     eventSource.onerror = () => {
-      console.error("Market SSE Connection Lost.");
-      eventSource.close();
-      set({ sseConnections: null }); // Allow reconnect later
+      console.warn("Market SSE connection error — browser will auto-reconnect.");
     };
 
     set({ sseConnections: eventSource });
   },
 
-  // Clean up
+  // Clean up — called on unmount (layout change, logout, etc.)
   closeMarketStream: () => {
     const { sseConnections } = get();
     if (sseConnections) {
