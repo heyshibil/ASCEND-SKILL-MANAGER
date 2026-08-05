@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config({ path: ".env.test" });
 
-import { test, expect, describe, beforeAll, afterAll } from "@jest/globals";
+import { test, expect, describe, beforeAll, afterAll, jest } from "@jest/globals";
 
 // in CI (GitHub Actions). Default Jest timeout of 5000ms is not enough.
 const DB_TIMEOUT = 30_000;
