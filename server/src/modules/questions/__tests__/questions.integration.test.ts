@@ -1,7 +1,12 @@
 import dotenv from "dotenv";
 dotenv.config({ path: ".env.test" });
 
-import { test, expect, describe, afterAll } from "@jest/globals";
+import { test, expect, describe, beforeAll, afterAll, jest } from "@jest/globals";
+
+// in CI (GitHub Actions). Default Jest timeout of 5000ms is not enough.
+const DB_TIMEOUT = 30_000;
+jest.setTimeout(DB_TIMEOUT);
+
 const { prisma } = await import("../../../config/prisma.js");
 const { insertQuestion, findByQuestionId } =
   await import("../questions.repository.js");
@@ -9,11 +14,16 @@ const { insertQuestion, findByQuestionId } =
 describe("questions.repository", () => {
   const testQuestionId = "test-q-001";
 
+  // Warm up the Neon WebSocket connection before the test clock starts ticking.
+  beforeAll(async () => {
+    await prisma.$queryRaw`SELECT 1`;
+  }, DB_TIMEOUT);
+
   // Clean up after all tests in this file run
   afterAll(async () => {
     await prisma.question.deleteMany({ where: { questionId: testQuestionId } });
     await prisma.$disconnect();
-  });
+  }, DB_TIMEOUT);
 
   test("should create a question and fetch it by questionId", async () => {
     // 1. Insert a real row into the test database
@@ -43,3 +53,4 @@ describe("questions.repository", () => {
     expect(result).toBeNull();
   });
 });
+

@@ -5,13 +5,26 @@ export const API = axios.create({
   withCredentials: true,
 });
 
+// Routes where a 403 is a domain/business error, NOT an auth failure.
+// The global interceptor must NOT force-logout on these.
+const SKIP_FORCE_LOGOUT_PATHS = [
+  "/verification/submit",
+  "/verification/boost/mcq/submit",
+  "/verification/boost/compiler/submit",
+];
+
 API.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (response) => response,
   (error) => {
-    // If user is blocked (403) or unauthorized (401), kick them out
-    if (error.response?.status === 401 || error.response?.status === 403) {
+    const status = error.response?.status;
+    const requestUrl = error.config?.url ?? "";
+
+    const isAuthFailure = status === 401;
+    const isBlockedUser =
+      status === 403 &&
+      !SKIP_FORCE_LOGOUT_PATHS.some((path) => requestUrl.includes(path));
+
+    if (isAuthFailure || isBlockedUser) {
       import("../store/useAuthStore").then((module) => {
         const store = module.default;
         if (store.getState().isAuthenticated) {
@@ -20,6 +33,7 @@ API.interceptors.response.use(
         }
       });
     }
+
     return Promise.reject(error);
   }
 );

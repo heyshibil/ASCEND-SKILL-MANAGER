@@ -31,12 +31,23 @@ export const generateTest = async (
   if (existingSession) {
     const activeTest = JSON.parse(existingSession);
 
-    // Reload exact same questions assigned
-    const mcqs = await findManyByQuestionIds(activeTest.mcqIds);
+    const requestedLevel = expectedLevel.toLowerCase();
 
-    const codeTest = await findByQuestionId(activeTest.codeId);
+    // Guard: if the cached session is for a different skill or level, discard it and fall through to generate a fresh session.
+    if (
+      activeTest.skillName !== skillName ||
+      activeTest.level !== requestedLevel
+    ) {
+      await redisConnection.del(`test_session:${userId}`);
+    } else {
+      // Same skill + level: reset TTL and return the existing questions
+      await redisConnection.expire(`test_session:${userId}`, 1200);
 
-    return { mcqs, codeTest };
+      const mcqs = await findManyByQuestionIds(activeTest.mcqIds);
+      const codeTest = await findByQuestionId(activeTest.codeId);
+
+      return { mcqs, codeTest };
+    }
   }
 
   // Find questions seen in the last 4 weeks
@@ -102,7 +113,7 @@ export const generateTest = async (
     `test_session:${userId}`,
     JSON.stringify(sessionData),
     "EX",
-    600,
+    1200, // 20 minutes — matches the "You took longer than 20 minutes" error contract
   );
 
   return { mcqs, codeTest };
@@ -172,6 +183,10 @@ export const gradeVerificationTest = async (
   }
 
   const activeSession = JSON.parse(sessionString);
+
+  // DEBUG: confirm codeId match before tamper-check (remove after diagnosis)
+  console.log("[submit] session codeId     :", activeSession.codeId);
+  console.log("[submit] request codeQuestionId:", codeQuestionId);
 
   // Ban the test - manipulated question
   if (activeSession.codeId !== codeQuestionId) {
