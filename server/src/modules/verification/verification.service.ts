@@ -100,7 +100,7 @@ export const generateTest = async (
 
   const codeTest = await findByQuestionId(questionId);
 
-  // -- Redis test caching --
+  // -- Redis test caching (NX prevents concurrent /start race conditions) --
   const sessionData = {
     skillName,
     level,
@@ -109,12 +109,23 @@ export const generateTest = async (
     startTime: Date.now(),
   };
 
-  await redisConnection.set(
+  const written = await redisConnection.set(
     `test_session:${userId}`,
     JSON.stringify(sessionData),
     "EX",
-    1200, // 20 minutes — matches the "You took longer than 20 minutes" error contract
+    1200,
+    "NX", // Only write if no session exists — prevents concurrent /start from overwriting
   );
+
+  if (!written) {
+    const winnerSession = await redisConnection.get(`test_session:${userId}`);
+    if (winnerSession) {
+      const winnerData = JSON.parse(winnerSession);
+      const winnerMcqs = await findManyByQuestionIds(winnerData.mcqIds);
+      const winnerCode = await findByQuestionId(winnerData.codeId);
+      return { mcqs: winnerMcqs, codeTest: winnerCode };
+    }
+  }
 
   return { mcqs, codeTest };
 };
