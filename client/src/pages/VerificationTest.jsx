@@ -100,7 +100,7 @@ export default function VerificationTest() {
     return () => {
       isActive = false;
     };
-  }, [skillName, expectedLevel, testKey, user?.coreLanguage]);
+  }, [skillName, expectedLevel, user?.coreLanguage]);
 
   const handleOptionSelect = (index) => {
     const questionId = mcqQuestions[currentMcqIndex].questionId;
